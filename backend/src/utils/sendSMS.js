@@ -1,5 +1,6 @@
 import twilio from "twilio";
 
+<<<<<<< HEAD
 const client = new twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
 
 export const sendSMS = async (phone, otp) => {
@@ -16,4 +17,14 @@ export const sendSMS = async (phone, otp) => {
     console.error("Error sending OTP SMS:", error);
     throw error;
   }
+=======
+const client = new twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH);
+
+export const sendSMS = async (phone, otp) => {
+  await client.messages.create({
+    body: `Your OTP is ${otp}`,
+    to: phone,
+    from: process.env.TWILIO_PHONE
+  });
+>>>>>>> 04d5531 (first)
 };
