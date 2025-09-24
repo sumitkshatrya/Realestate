@@ -7,6 +7,7 @@ import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { connectDB } from './lib/db.js';
 import User from "./models/User.js";
 import authRoutes from "./routes/authRoutes.js";
+import { generateTokens } from './utils/token.js';
 
 dotenv.config();
 connectDB();
@@ -105,8 +106,7 @@ app.get("/auth/google/callback",
   },
   async (req, res) => {
     try {
-      console.log('Google authentication successful, user:', req.user);
-
+      console.log('Google authentication successful, user:', req.user)
       // Generate tokens
       const { accessToken, refreshToken } = generateTokens(req.user._id);
       
