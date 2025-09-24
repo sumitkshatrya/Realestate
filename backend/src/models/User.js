@@ -58,4 +58,8 @@ UserSchema.index({ resetToken: 1 });
 UserSchema.index({ resetTokenExpiry: 1 });
 
 const User = mongoose.model("User", UserSchema);
+<<<<<<< HEAD
 export default User;
+=======
+export default User;
+>>>>>>> c8c5b41e68847d95016426445812822212b27e0d
