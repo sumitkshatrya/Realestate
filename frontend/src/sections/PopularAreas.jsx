@@ -30,7 +30,7 @@ const PopularAreas = () => {
           <h1
             data-aos="zoom-in"
             className={`text-5xl font-bold leading-tight mb-6 ${
-              darkMode ? "text-red-500" : "text-black"
+              darkMode ? "text-red-500" : "text-red-600"
             }`}
           >
             Popular Areas

@@ -32,10 +32,10 @@ const Client = () => {
     <div className={`min-h-screen ${darkMode ? "dark bg-gray-900" : "bg-white"}`}>
       <section 
         id='testimonials' 
-        className='lg:w-[95%] w-full h-fit m-auto rounded-xl flex justify-center flex-col items-start lg:px-20 px-6 py-20 gap-20'
+        className='lg:w-[95%] w-full h-fit m-auto rounded-xl flex justify-center flex-col lg:px-20 px-6 py-20 gap-20'
       >
         {/* Header Section */}
-        <div className="flex flex-col justify-center items-start gap-6 w-full">
+        <div className="flex flex-col justify-center items-center gap-6 w-full">
           <h1 
             data-aos="zoom-in" 
             className={`text-4xl font-bold ${darkMode ? "text-white" : "text-red-500"}`}
@@ -43,7 +43,7 @@ const Client = () => {
             OUR CLIENTS
           </h1>
           <h1 className={`text-3xl lg:text-[40px] font-semibold leading-tight ${darkMode ? "text-white" : "text-gray-900"}`}>
-            What our clients <br /> are saying about us
+            What our clients are saying about us
           </h1>
           <div className={`w-20 h-1 rounded-full ${darkMode ? "bg-red-500" : "bg-red-500"}`}></div>
         </div>

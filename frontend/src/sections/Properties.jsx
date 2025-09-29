@@ -74,7 +74,7 @@ const Properties = () => {
                 className="bg-cover bg-center h-[250px] rounded-t-xl p-4 flex flex-col justify-between items-end relative"
                 style={{ backgroundImage: `url(${item.images})` }}
               >
-                <div className="absolute inset-0 bg-black bg-opacity-30 rounded-t-xl"></div>
+                <div className="absolute inset-0 bg-opacity-30 rounded-t-xl"></div>
                 
                 {/* Top Buttons */}
                 <div className="flex justify-between items-center w-full z-10">
