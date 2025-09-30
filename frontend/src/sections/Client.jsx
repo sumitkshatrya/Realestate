@@ -18,7 +18,7 @@ const Client = () => {
   
   const { darkMode } = useDarkMode();
 
-  // Function to render stars based on rating - FIXED SYNTAX
+ 
   const renderStars = (rating) => {
     return [...Array(5)].map((_, index) => (
       <FaStar 
@@ -108,7 +108,6 @@ const Client = () => {
           ))}
         </div>
 
-        {/* Call to Action
         <div className="flex justify-center items-center w-full mt-8">
           <button className={`px-8 py-3 rounded-lg font-semibold transition-all duration-300 ${
             darkMode 
@@ -117,7 +116,7 @@ const Client = () => {
           } transform hover:scale-105`}>
             View All Testimonials
           </button>
-        </div> */}
+        </div>
       </section>
     </div>
   )
