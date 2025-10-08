@@ -3,7 +3,7 @@ import { service } from '../components/export';
 import AOS from "aos";
 import "aos/dist/aos.css";
 import { useEffect } from "react";
-
+import React from "react";
 const Services = () => {
   useEffect(() => {
     AOS.init({

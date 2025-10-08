@@ -4,7 +4,7 @@ import { Link } from "react-scroll";
 import { IoMdMail } from 'react-icons/io';
 import prop7 from '../assets/images/prop7.jpg';
 import prop8 from '../assets/images/prop8.jpg';
-
+import React from "react";
 const Footer = () => {
     const { darkMode, toggleDarkMode } = useDarkMode();
 

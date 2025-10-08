@@ -5,7 +5,7 @@ import area3 from "../assets/images/area3.jpg";
 import AOS from "aos";
 import "aos/dist/aos.css";
 import { useEffect } from "react";
-
+import React from "react";
 const PopularAreas = () => {
   useEffect(() => {
     AOS.init({

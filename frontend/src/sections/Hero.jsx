@@ -1,9 +1,10 @@
 import { useEffect } from "react";
 import { useDarkMode } from "../components/DarkModeContext";
 import heroimg from "../assets/images/hero1.webp";
+import SubmitTestimonial from "../pages/SubmitTestimonial";
 import AOS from "aos";
 import "aos/dist/aos.css";
-
+import React from "react";
 const Hero = () => {
   useEffect(() => {
     AOS.init({

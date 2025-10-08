@@ -1,65 +1,53 @@
 import mongoose from "mongoose";
+import bcrypt from "bcrypt";
 
-const UserSchema = new mongoose.Schema(
-  {
-    name: { type: String, required: true },
-    email: {
-      type: String,
-      unique: true,
-      sparse: true,
-      validate: {
-        validator: function (v) {
-          return !v || /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(v);
-        },
-        message: "Please enter a valid email",
-      },
-    },
-    phone: {
-      type: String,
-      unique: true,
-      sparse: true,
-      validate: {
-        validator: function (v) {
-          return !v || /^\+?[1-9]\d{1,14}$/.test(v);
-        },
-        message: "Please enter a valid phone number",
-      },
-    },
-    password: {
-      type: String,
-      minlength: [6, "Password must be at least 6 characters"],
-    },
-    googleId: { type: String, unique: true, sparse: true },
-    otp: String,
-    otpExpiry: Date,
-    isVerified: { type: Boolean, default: false },
-    refreshToken: { type: String, default: null },
-    resetToken: String,
-    resetTokenExpiry: Date,
+const UserSchema = new mongoose.Schema({
+  username: { type: String, required: true, unique: true, trim: true },
+  email: { type: String, required: true, unique: true },
+  password: {
+    type: String,
+    required: true,
+    minlength: [6, "Password must have at least 6 characters"],
+    maxlength: 100,
   },
-  {
-    timestamps: true,
-    // Ensure at least one auth method exists
-    validate: {
-      validator: function () {
-        return this.email || this.phone || this.googleId;
-      },
-      message:
-        "User must have at least one authentication method (email, phone, or Google)",
-    },
-  }
-);
+  phone: { type: String, required: true, unique: true },
+  accountVerified: { type: Boolean, default: false },
+  verificationMethod: {
+    type: String,
+    enum: ["email", "phone", "call"],
+    required: true,
+  },
+  verificationCode: Number,
+  verificationCodeExpire: Date,
+  resetPassword: String,
+  resetPasswordExpire: Date,
+  createdAt: { type: Date, default: Date.now },
+});
 
-// Index for better query performance
-UserSchema.index({ email: 1 });
-UserSchema.index({ phone: 1 });
-UserSchema.index({ googleId: 1 });
-UserSchema.index({ resetToken: 1 });
-UserSchema.index({ resetTokenExpiry: 1 });
+// Hash password before saving
+UserSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) return next();
+  this.password = await bcrypt.hash(this.password, 10);
+  next();
+});
+
+// Compare entered password with hashed password
+UserSchema.methods.comparePassword = async function (enteredPassword) {
+  return await bcrypt.compare(enteredPassword, this.password);
+};
+
+// Generate a 5-digit verification code (1xxxxx)
+UserSchema.methods.generateVerificationCode = function () {
+  const firstDigit = Math.floor(Math.random() * 9) + 1;
+  const randomDigit = Math.floor(Math.random() * 10000)
+    .toString()
+    .padStart(4, "0");
+  const code = parseInt(firstDigit + randomDigit);
+
+  this.verificationCode = code;
+  this.verificationCodeExpire = Date.now() + 10 * 60 * 1000; // 10 min
+  return code;
+};
 
 const User = mongoose.model("User", UserSchema);
-<<<<<<< HEAD
 export default User;
-=======
-export default User;
->>>>>>> c8c5b41e68847d95016426445812822212b27e0d

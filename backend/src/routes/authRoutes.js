@@ -1,50 +1,31 @@
-import express from "express";
-import { 
-  signup, 
-  login,
-  verifyOTP, 
-  resendOTP,
-  refreshAccessToken, 
-  logout, 
-  requestPasswordReset,
-  resetPassword,
-  changePassword
-} from "../controllers/authController.js";
-
-import validationMiddleware from "../middleware/validation.js";
+import { Router } from "express";
 import {
-  signupSchema,
-  verifyOtpSchema,
-  resendOtpSchema,
-  refreshTokenSchema,
-  logoutSchema,
-  requestPasswordResetSchema,
-  resetPasswordSchema,
-  changePasswordSchema
-} from "../validators/authValidators.js";
+  register,
+  loginUser,
+  logoutUser,
+  refreshAccessToken,
+  verifyUser,
+  updateUsername,
+  changePassword,
+  deleteAccount,
+  verifyOtp,
+} from "../controllers/UserController.js";
+import { verifyToken } from "../middleware/auth.js";
 
-import { otpLimiter, passwordResetLimiter } from "../middleware/rateLimit.js";
+const router = Router();
 
-const router = express.Router();
+router.route("/").get((req, res) => {
+  res.status(200).json({ message: "User route is working" });
+});
 
-// Auth routes
-router.post("/signup", otpLimiter, validationMiddleware(signupSchema), signup);
-router.post("/login", login);
-
-router.post("/verify-otp", validationMiddleware(verifyOtpSchema), verifyOTP);
-router.post("/resend-otp", otpLimiter, validationMiddleware(resendOtpSchema), resendOTP);
-
-router.post("/refresh-token", validationMiddleware(refreshTokenSchema), refreshAccessToken);
-router.post("/logout", validationMiddleware(logoutSchema), logout);
-
-// Password reset routes
-router.post(
-  "/request-password-reset",
-  passwordResetLimiter,
-  validationMiddleware(requestPasswordResetSchema),
-  requestPasswordReset
-);
-router.post("/reset-password", validationMiddleware(resetPasswordSchema), resetPassword);
-router.post("/change-password", validationMiddleware(changePasswordSchema), changePassword);
+router.route("/create").post(register);
+router.route("/login").post(loginUser);
+router.route("/verify").post(verifyToken, verifyUser);
+router.route("/logout").post(verifyToken, logoutUser);
+router.route("/refresh-token").post(refreshAccessToken);
+router.post("/verify-otp", verifyOtp);
+router.put("/update-username/", verifyToken, updateUsername);
+router.put("/change-password", verifyToken, changePassword);
+router.delete("/delete-account", verifyToken, deleteAccount);
 
 export default router;
