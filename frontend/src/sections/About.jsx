@@ -14,7 +14,7 @@ const About = () => {
     });
   }, []);
 
-  const { darkMode } = useDarkMode(); // Removed toggleDarkMode since it's not used
+  const { darkMode } = useDarkMode(); 
 
   return (
     <section
@@ -32,7 +32,7 @@ const About = () => {
         />
       </div>
       <div className="flex flex-col justify-center items-start gap-8">
-        <h1 data-aos="zoom-in" className="text-5xl font-bold leading-tight">
+        <h1 data-aos="zoom-in" className={`text-5xl font-bold leading-tight ${darkMode ? "text-red-600": "text-red-500"}`}>
           Excellence in Every Project
         </h1>
         <p

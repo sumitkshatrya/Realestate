@@ -25,7 +25,7 @@ const Services = () => {
             OUR SERVICES
           </h1>
           <h1 data-aos="zoom-in" className={`text-4xl font-semibold ${darkMode ? "text-white" : "text-black"}`}>
-            Top real estate <br /> services available
+            Top real estate services available
           </h1>
         </div>
 
