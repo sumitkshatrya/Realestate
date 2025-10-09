@@ -1,14 +1,13 @@
 import axios from "axios";
 import React from "react";
-const API = axios.create({ baseURL: "http://localhost:5000/api/testimonials" });
-
+const API = axios.create({ baseURL: "http://localhost:8080/api/testimonials" });
 
 export const adminLogin = async (credentials) => {
   const res = await axios.post(
-    "http://localhost:5000/api/admin/login",
+    "http://localhost:8080/api/admin/login",
     credentials
   );
-  return res.data; 
+  return res.data;
 };
 
 export const adminFetchAll = async () => {
@@ -28,7 +27,6 @@ export const adminUpdateStatus = async (id, status) => {
   );
   return res.data;
 };
-
 
 export const adminDeleteTestimonial = async (id) => {
   const token = localStorage.getItem("adminToken");

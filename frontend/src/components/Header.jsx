@@ -251,36 +251,35 @@
 // export default Header;
 // src/components/Header.js
 import { useState } from 'react';
-import { Link } from 'react-scroll';
+import { Link, useNavigate } from 'react-router-dom'; // Change import
 import { FaXmark, FaBars } from 'react-icons/fa6';
 import logo from '../assets/images/logo.png';
 import { useDarkMode } from './DarkModeContext';
 import { useAuth } from '../context/AuthContext';
-import LoginForm from './LoginForm';
-import SignupForm from './SignupForm';
 import React from "react";
+
 const Header = () => {
   const { darkMode } = useDarkMode();
   const { user, logout } = useAuth();
+  const navigate = useNavigate(); // Add this hook
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [showLogin, setShowLogin] = useState(false);
-  const [showSignup, setShowSignup] = useState(false);
+  // Remove these states since we're using routes
+  // const [showLogin, setShowLogin] = useState(false);
+  // const [showSignup, setShowSignup] = useState(false);
 
   // Toggle Mobile Menu
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
   const closeMenu = () => setIsMenuOpen(false);
 
-  // Auth modal handlers
+  // Auth handlers - use navigation instead of modal state
   const handleLoginClick = () => {
-    setShowLogin(true);
-    setShowSignup(false);
+    navigate('/login');
     closeMenu();
   };
 
   const handleSignupClick = () => {
-    setShowSignup(true);
-    setShowLogin(false);
+    navigate('/signup');
     closeMenu();
   };
 
@@ -289,27 +288,12 @@ const Header = () => {
     closeMenu();
   };
 
-  const switchToSignup = () => {
-    setShowLogin(false);
-    setShowSignup(true);
-  };
-
-  const switchToLogin = () => {
-    setShowSignup(false);
-    setShowLogin(true);
-  };
-
-  const closeModals = () => {
-    setShowLogin(false);
-    setShowSignup(false);
-  };
-
   const navItems = [
     { link: 'Home', path: 'home' },
     { link: 'About', path: 'about' },
     { link: 'Properties', path: 'properties' },
     { link: 'Services', path: 'services' },
-    { link: 'Testimonials', path: 'testimonials' },
+    { link: 'Testimonial', path: 'client' },
     { link: 'Contact', path: 'contact' },
   ];
 
@@ -486,16 +470,6 @@ const Header = () => {
           </div>
         )}
       </nav>
-
-      {/* Login Modal */}
-      {showLogin && (
-        <LoginForm onClose={closeModals} switchToSignup={switchToSignup} />
-      )}
-
-      {/* Signup Modal */}
-      {showSignup && (
-        <SignupForm onClose={closeModals} switchToLogin={switchToLogin} />
-      )}
     </>
   );
 };

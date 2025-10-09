@@ -1,5 +1,6 @@
 import aboutimg from '../assets/images/about.jpg';
 import { useDarkMode } from '../components/DarkModeContext';
+import Header from '../components/Header';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import { useEffect } from 'react';
@@ -17,6 +18,7 @@ const About = () => {
   const { darkMode } = useDarkMode(); 
 
   return (
+    
     <section
       id="about"
       className={`w-full m-auto lg:px-40 px-10 py-20 grid lg:grid-cols-2 grid-cols-1 justify-center items-center gap-10 ${

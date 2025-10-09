@@ -1,4 +1,4 @@
-import Testimonial from "../models/Testimonial.js";
+ import Testimonial from "../models/Testimonial.js";
 
 export const createTestimonial = async (req, res) => {
   try {

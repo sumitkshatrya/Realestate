@@ -1,6 +1,6 @@
 import React from "react";
 
-const BASE_URL = "http://localhost:5000"; // Backend base URL
+const BASE_URL = "http://localhost:8080"; // Backend base URL
 
 const AdminTable = ({ testimonials, onStatusChange, onDelete }) => {
   return (

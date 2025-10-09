@@ -182,7 +182,8 @@
 
 // export default SignupForm;
 import { useState } from "react";
-
+import React from "react";
+import { useNavigate } from "react-router-dom";
 const SignupForm = () => {
   const [formData, setFormData] = useState({
     username: "",
@@ -196,7 +197,7 @@ const SignupForm = () => {
   const [step, setStep] = useState(1);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-
+const navigator = useNavigate()
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
   const handleOtpChange = (e) => setOtp(e.target.value);
 
@@ -239,6 +240,7 @@ const SignupForm = () => {
         setSuccess(data.message); setStep(1);
         setFormData({ username: "", email: "", password: "", confirmPassword: "", phone: "", verificationMethod: "email" });
         setOtp("");
+        navigator("/login")
       } else { setError(data.message); }
     } catch (err) { setError(err.message || "Something went wrong"); }
   };

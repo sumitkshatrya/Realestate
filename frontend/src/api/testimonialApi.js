@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "http://localhost:5000/api/testimonials",
+  baseURL: "http://localhost:8080/api/testimonials",
 });
 
 // Public routes
