@@ -1,5 +1,5 @@
 import React from "react";
-import { motion } from "framer-motion";
+import { motion as Motion } from "framer-motion";
 import {
   FaArrowRight,
   FaBath,
@@ -11,16 +11,19 @@ import { MdSpaceDashboard } from "react-icons/md";
 import { Link as ScrollLink } from "react-scroll";
 import { property } from "../components/export";
 import { useDarkMode } from "../components/useDarkMode";
+import { useState } from "react";
 
 const Properties = () => {
   const { darkMode } = useDarkMode();
+  const [selectedProperty, setSelectedProperty] = useState(property[0]);
+  const mapUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${selectedProperty.longitude - 0.08}%2C${selectedProperty.latitude - 0.05}%2C${selectedProperty.longitude + 0.08}%2C${selectedProperty.latitude + 0.05}&layer=mapnik&marker=${selectedProperty.latitude}%2C${selectedProperty.longitude}`;
 
   return (
     <section
       id="properties"
       className={`section-shell ${darkMode ? "text-white" : "text-slate-900"}`}
     >
-      <motion.div
+      <Motion.div
         initial={{ opacity: 0, y: 28 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.2 }}
@@ -64,11 +67,11 @@ const Properties = () => {
           Book a private consultation
           <FaArrowRight />
         </ScrollLink>
-      </motion.div>
+      </Motion.div>
 
       <div className="grid gap-7 md:grid-cols-2 xl:grid-cols-3">
         {property.map((item, index) => (
-          <motion.article
+          <Motion.article
             key={`${item.name}-${index}`}
             initial={{ opacity: 0, y: 34 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -161,24 +164,36 @@ const Properties = () => {
                   <p className="mt-1 text-base font-semibold">{item.owner}</p>
                 </div>
 
-                <ScrollLink
-                  to="contact"
-                  smooth
-                  offset={-90}
-                  className={`inline-flex cursor-pointer items-center gap-2 rounded-full px-4 py-3 text-sm font-semibold transition duration-300 ${
-                    darkMode
-                      ? "bg-white text-slate-900 hover:bg-amber-100"
-                      : "bg-rose-600 text-white hover:bg-rose-700"
-                  }`}
-                >
-                  Schedule tour
-                  <FaArrowRight className="text-xs" />
-                </ScrollLink>
+                <div className="flex items-center gap-2">
+                  <button type="button" onClick={() => setSelectedProperty(item)} className={`rounded-full border px-4 py-3 text-sm font-semibold transition hover:border-rose-500 hover:text-rose-600 ${darkMode ? "border-white/20 text-white" : "border-slate-200 text-slate-700"}`}>
+                    View location
+                  </button>
+                  <ScrollLink
+                    to="contact"
+                    smooth
+                    offset={-90}
+                    className={`inline-flex cursor-pointer items-center gap-2 rounded-full px-4 py-3 text-sm font-semibold transition duration-300 ${
+                      darkMode
+                        ? "bg-white text-slate-900 hover:bg-amber-100"
+                        : "bg-rose-600 text-white hover:bg-rose-700"
+                    }`}
+                  >
+                    Schedule tour
+                    <FaArrowRight className="text-xs" />
+                  </ScrollLink>
+                </div>
               </div>
             </div>
-          </motion.article>
+          </Motion.article>
         ))}
       </div>
+      <Motion.div initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="mt-10 overflow-hidden rounded-[30px] border border-white/70 bg-white/90 shadow-[0_24px_60px_rgba(15,23,42,0.1)]">
+        <div className="flex flex-col gap-3 p-6 sm:flex-row sm:items-center sm:justify-between">
+          <div><p className="text-xs font-semibold uppercase tracking-[0.24em] text-rose-600">Property map</p><h3 className="mt-2 font-serif text-2xl text-slate-900">{selectedProperty.name}</h3><p className="mt-1 text-sm text-slate-600">{selectedProperty.address}</p></div>
+          <a href={`https://www.openstreetmap.org/?mlat=${selectedProperty.latitude}&mlon=${selectedProperty.longitude}#map=14/${selectedProperty.latitude}/${selectedProperty.longitude}`} target="_blank" rel="noreferrer" className="text-sm font-semibold text-rose-600 hover:underline">Open full map</a>
+        </div>
+        <iframe title={`Map showing ${selectedProperty.name}`} src={mapUrl} className="h-80 w-full border-0" loading="lazy" />
+      </Motion.div>
     </section>
   );
 };

@@ -7,6 +7,7 @@ const pageTitle = {
   "/dashboard": "Dashboard Overview",
   "/testimonials": "Testimonial Control",
   "/services": "Service Management",
+  "/property-map": "Property Map",
 };
 
 const Navbar = () => {

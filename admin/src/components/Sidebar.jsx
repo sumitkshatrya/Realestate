@@ -1,12 +1,13 @@
 import React from "react";
 import { motion as Motion } from "framer-motion";
 import { NavLink } from "react-router-dom";
-import { FaChartPie, FaCommentDots, FaLayerGroup } from "react-icons/fa";
+import { FaChartPie, FaCommentDots, FaLayerGroup, FaMapMarkedAlt } from "react-icons/fa";
 
 const navItems = [
   { to: "/dashboard", label: "Dashboard", icon: FaChartPie },
   { to: "/testimonials", label: "Testimonials", icon: FaCommentDots },
   { to: "/services", label: "Services", icon: FaLayerGroup },
+  { to: "/property-map", label: "Property Map", icon: FaMapMarkedAlt },
 ];
 
 const Sidebar = () => {

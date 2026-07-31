@@ -7,6 +7,7 @@ import Sidebar from "./components/Sidebar";
 import Dashboard from "./pages/Dashboard";
 import ServicesManager from "./pages/ServicesManager";
 import TestimonialsManager from "./pages/TestimonialsManager";
+import PropertyMap from "./pages/PropertyMap";
 
 const AdminLayout = () => {
   return (
@@ -21,6 +22,7 @@ const AdminLayout = () => {
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="testimonials" element={<TestimonialsManager />} />
               <Route path="services" element={<ServicesManager />} />
+              <Route path="property-map" element={<PropertyMap />} />
             </Routes>
           </main>
         </div>

@@ -31,6 +31,8 @@ export const property = [
     bath: 3,
     area: "250 sq ft",
     owner: "Alice adams",
+    latitude: 36.1716,
+    longitude: -115.1391,
   },
   {
     images: prop2,
@@ -43,6 +45,8 @@ export const property = [
     bath: 3,
     area: "450 sq ft",
     owner: "Drew Alice",
+    latitude: 36.1699,
+    longitude: -115.1398,
   },
   {
     images: prop3,
@@ -55,6 +59,8 @@ export const property = [
     bath: 3,
     area: "129 sq ft",
     owner: "Fursi Bam",
+    latitude: 40.7128,
+    longitude: -74.006,
   },
   {
     images: prop4,
@@ -67,6 +73,8 @@ export const property = [
     bath: 3,
     area: "453 sq ft",
     owner: "Neon Alice",
+    latitude: 29.7604,
+    longitude: -95.3698,
   },
   {
     images: prop5,
@@ -79,6 +87,8 @@ export const property = [
     bath: 3,
     area: "320 sq ft",
     owner: "Firari Alice",
+    latitude: 51.5074,
+    longitude: -0.1278,
   },
   {
     images: prop6,
@@ -91,6 +101,8 @@ export const property = [
     bath: 3,
     area: "340 sq ft",
     owner: "Jordan Bram",
+    latitude: 43.6532,
+    longitude: -79.3832,
   },
 ];
 

@@ -3,6 +3,7 @@ import { useDarkMode } from "./useDarkMode";
 import aboutImage from "../assets/images/about.jpg";
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { motion as Motion } from "framer-motion";
 
 const LoginForm = ({ onClose, switchToSignup }) => {
   const { darkMode } = useDarkMode();
@@ -60,9 +61,18 @@ const LoginForm = ({ onClose, switchToSignup }) => {
         backgroundColor: "#1f2937",
       }}
     >
-      <div className="absolute inset-0 bg-black bg-opacity-30"></div>
+      <Motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.25 }}
+        className="absolute inset-0 bg-black bg-opacity-30"
+      />
 
-      <div
+      <Motion.div
+        initial={{ opacity: 0, y: 28, scale: 0.96 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.45, ease: "easeOut" }}
         className={`relative w-full max-w-md rounded-xl shadow-2xl ${
           darkMode
             ? "bg-gray-900 bg-opacity-95 text-white"
@@ -71,7 +81,7 @@ const LoginForm = ({ onClose, switchToSignup }) => {
       >
         {/* Close button */}
         <button
-          onClick={onClose}
+          onClick={onClose || (() => navigate("/"))}
           className={`absolute top-4 right-4 p-2 rounded-full z-10 transition-colors duration-200 ${
             darkMode
               ? "hover:bg-gray-700 text-white"
@@ -165,7 +175,7 @@ const LoginForm = ({ onClose, switchToSignup }) => {
             >
               Don't have an account?{" "}
               <button
-                onClick={switchToSignup}
+                onClick={switchToSignup || (() => navigate("/signup"))}
                 className="text-red-500 hover:text-red-600 font-semibold underline transition-colors duration-200"
               >
                 Create account here
@@ -180,7 +190,7 @@ const LoginForm = ({ onClose, switchToSignup }) => {
             </p>
           </div>
         </div>
-      </div>
+      </Motion.div>
     </div>
   );
 };
