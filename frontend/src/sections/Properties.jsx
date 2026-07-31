@@ -1,185 +1,185 @@
 import React from "react";
-import { useEffect } from "react";
-import { useDarkMode } from "../components/DarkModeContext";
-import { property } from "../components/export";
+import { motion } from "framer-motion";
 import {
+  FaArrowRight,
   FaBath,
   FaBed,
-  FaShareAlt,
-  FaUserCircle,
-  FaPlus,
-  FaMapMarkerAlt,
-  FaVideo,
-  FaCamera,
   FaHeart,
+  FaMapMarkerAlt,
 } from "react-icons/fa";
 import { MdSpaceDashboard } from "react-icons/md";
-import AOS from "aos";
-import "aos/dist/aos.css";
+import { Link as ScrollLink } from "react-scroll";
+import { property } from "../components/export";
+import { useDarkMode } from "../components/useDarkMode";
 
 const Properties = () => {
-  useEffect(() => {
-    AOS.init({
-      offset: 200,
-      duration: 800,
-      easing: "ease-in-sine",
-      delay: 100,
-    });
-  }, []);
-
   const { darkMode } = useDarkMode();
 
   return (
-    <div
-      className={`w-full min-h-screen flex justify-center items-center m-auto lg:px-40 px-10 py-20 ${
-        darkMode ? "bg-gray-900 text-white" : "bg-white text-black"
-      }`}
+    <section
+      id="properties"
+      className={`section-shell ${darkMode ? "text-white" : "text-slate-900"}`}
     >
-      <section
-        id="properties"
-        className="lg:w-[90%] w-full max-w-7xl flex flex-col justify-center items-center gap-10"
+      <motion.div
+        initial={{ opacity: 0, y: 28 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ duration: 0.6 }}
+        className="mb-10 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between"
       >
-        
-        <div className="flex flex-col justify-center items-center gap-4 text-center">
-          <h1
-            data-aos="zoom-in"
-            className={`font-bold text-5xl ${
-              darkMode ? "text-red-700" : "text-red-600"
+        <div className="space-y-4">
+          <span
+            className={`inline-flex rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-[0.32em] ${
+              darkMode
+                ? "border-white/10 bg-white/5 text-amber-200"
+                : "border-amber-200 bg-white/80 text-amber-700"
             }`}
           >
-            PROPERTIES
-          </h1>
-          <h1
-            data-aos="zoom-in"
-            className={`font-semibold text-4xl ${
-              darkMode ? "text-white" : "text-black"
+            Featured Collection
+          </span>
+          <h2 className="max-w-2xl font-serif text-4xl leading-tight sm:text-5xl">
+            Homes selected for design quality, light, and livability.
+          </h2>
+          <p
+            className={`max-w-2xl text-base leading-7 sm:text-lg ${
+              darkMode ? "text-slate-300" : "text-slate-600"
             }`}
           >
-            Explore the latest properties
-          </h1>
+            Browse standout listings curated to give you a sharper starting
+            point, whether you are buying your first home or upgrading into a
+            more ambitious neighborhood.
+          </p>
         </div>
 
-        {/* Properties Grid - Centered */}
-        <div className="w-full grid lg:grid-cols-3 grid-cols-1 gap-8 justify-center items-center">
-          {property.map((item, index) => (
+        <ScrollLink
+          to="contact"
+          smooth
+          offset={-90}
+          className={`inline-flex cursor-pointer items-center gap-3 rounded-full px-6 py-3 text-sm font-semibold transition duration-300 ${
+            darkMode
+              ? "bg-white text-slate-900 hover:bg-amber-100"
+              : "bg-slate-900 text-white hover:bg-slate-800"
+          }`}
+        >
+          Book a private consultation
+          <FaArrowRight />
+        </ScrollLink>
+      </motion.div>
+
+      <div className="grid gap-7 md:grid-cols-2 xl:grid-cols-3">
+        {property.map((item, index) => (
+          <motion.article
+            key={`${item.name}-${index}`}
+            initial={{ opacity: 0, y: 34 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.55, delay: index * 0.06 }}
+            className={`group overflow-hidden rounded-[30px] border ${
+              darkMode
+                ? "border-white/10 bg-slate-950/70"
+                : "border-white/70 bg-white/90 shadow-[0_24px_60px_rgba(15,23,42,0.1)]"
+            }`}
+          >
             <div
-              data-aos="zoom-in"
-              data-aos-delay={index * 200}
-              key={index}
-              className={`${
-                darkMode ? "bg-gray-800 text-white" : "bg-white text-black"
-              } rounded-xl w-full max-w-md shadow-lg hover:shadow-xl transition-shadow duration-300 mx-auto`}
+              className="relative h-72 bg-cover bg-center"
+              style={{ backgroundImage: `url(${item.images})` }}
             >
-              {/* Image Section */}
-              <div
-                className="bg-cover bg-center h-[250px] rounded-t-xl p-4 flex flex-col justify-between items-end relative"
-                style={{ backgroundImage: `url(${item.images})` }}
-              >
-                <div className="absolute inset-0 bg-opacity-30 rounded-t-xl"></div>
-                
-                {/* Top Buttons */}
-                <div className="flex justify-between items-center w-full z-10">
-                  <div>
-                    <button className="px-3 py-1 bg-red-600 hover:bg-white hover:text-black text-white rounded-full text-[13px] transition-colors duration-300">
-                      Featured
-                    </button>
-                  </div>
-                  <div className="flex justify-between items-center gap-3">
-                    <button className="px-3 py-1 bg-red-600 hover:bg-white hover:text-black text-white rounded-full text-[13px] transition-colors duration-300">
-                      Sales
-                    </button>
-                    <button className="px-3 py-1 bg-red-600 hover:bg-white hover:text-black text-white rounded-full text-[13px] transition-colors duration-300">
-                      Active
-                    </button>
-                  </div>
-                </div>
-                
-                {/* Bottom Info */}
-                <div className="flex justify-between items-center w-full z-10">
-                  <div className="flex justify-start items-center gap-2">
-                    <FaMapMarkerAlt className="size-4 text-white" />
-                    <h1 className="text-white text-sm">{item.address}</h1>
-                  </div>
-
-                  <div className="flex justify-center items-center gap-4">
-                    <FaVideo className="size-4 text-white cursor-pointer hover:text-red-300 transition-colors duration-300" />
-                    <FaCamera className="size-4 text-white cursor-pointer hover:text-red-300 transition-colors duration-300" />
-                  </div>
-                </div>
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/25 to-transparent" />
+              <div className="absolute left-5 right-5 top-5 flex items-center justify-between">
+                <span className="rounded-full bg-white/15 px-3 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-white backdrop-blur-md">
+                  Signature Home
+                </span>
+                <button
+                  className="flex h-11 w-11 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-md transition duration-300 hover:scale-105"
+                  aria-label={`Save ${item.name}`}
+                >
+                  <FaHeart />
+                </button>
               </div>
-
-              {/* Content Section */}
-              <div className="px-6 py-6 flex flex-col justify-center items-center gap-4 w-full text-center">
-                <div className="w-full">
-                  <h1 className={`text-xl font-semibold ${
-                    darkMode ? "text-white" : "text-black"
-                  }`}>
-                    {item.name}
-                  </h1>
-                  <h1 className={`text-xl font-semibold mt-2 ${
-                    darkMode ? "text-red-400" : "text-red-600"
-                  }`}>
+              <div className="absolute inset-x-0 bottom-0 p-6 text-white">
+                <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-black/25 px-3 py-2 text-xs backdrop-blur-sm">
+                  <FaMapMarkerAlt />
+                  {item.address}
+                </div>
+                <div className="flex items-end justify-between gap-4">
+                  <div>
+                    <h3 className="font-serif text-2xl">{item.name}</h3>
+                    <p className="mt-2 text-sm leading-6 text-white/75">
+                      {item.about}
+                    </p>
+                  </div>
+                  <p className="whitespace-nowrap text-2xl font-semibold">
                     {item.price}
-                  </h1>
-                </div>
-                
-                <p className={`w-full ${
-                  darkMode ? "text-gray-300" : "text-gray-700"
-                }`}>
-                  {item.about}
-                </p>
-
-                {/* Icons Section */}
-                <div className="flex justify-center items-center gap-6 w-full">
-                  <div className="flex justify-center items-center gap-2">
-                    <FaBath className="size-5 text-red-400" />
-                    <span className={`${darkMode ? "text-white" : "text-black"}`}>
-                      {item.bath}
-                    </span>
-                  </div>
-                  <div className="flex justify-center items-center gap-2">
-                    <FaBed className="size-5 text-red-400" />
-                    <span className={`${darkMode ? "text-white" : "text-black"}`}>
-                      {item.bed}
-                    </span>
-                  </div>
-                  <div className="flex justify-center items-center gap-2">
-                    <MdSpaceDashboard className="size-5 text-red-400" />
-                    <span className={`${darkMode ? "text-white" : "text-black"}`}>
-                      {item.area}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="w-full h-[1px] bg-gray-200 mt-4"></div>
-                
-                {/* Owner Info */}
-                <div className="flex justify-between items-center w-full mt-4">
-                  <div className="flex justify-center items-center gap-2">
-                    <FaUserCircle className="size-5 text-red-400" />
-                    <span className={`${darkMode ? "text-white" : "text-black"}`}>
-                      {item.owner}
-                    </span>
-                  </div>
-
-                  <div className="flex justify-center items-center gap-3">
-                    <div className="p-2 border-2 border-gray-200 hover:bg-red-600 cursor-pointer transform hover:scale-110 transition-all duration-300 rounded">
-                      <FaShareAlt className="size-4 text-red-400 hover:text-white transition-colors duration-300" />
-                    </div>
-                    <div className="p-2 border-2 border-gray-200 hover:bg-red-600 cursor-pointer transform hover:scale-110 transition-all duration-300 rounded">
-                      <FaHeart className="size-4 text-red-400 hover:text-white transition-colors duration-300" />
-                    </div>
-                    <div className="p-2 border-2 border-gray-200 hover:bg-red-600 cursor-pointer transform hover:scale-110 transition-all duration-300 rounded">
-                      <FaPlus className="size-4 text-red-400 hover:text-white transition-colors duration-300" />
-                    </div>
-                  </div>
+                  </p>
                 </div>
               </div>
             </div>
-          ))}
-        </div>
-      </section>
-    </div>
+
+            <div className="space-y-6 p-6">
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { icon: <FaBed />, value: item.bed, label: "Beds" },
+                  { icon: <FaBath />, value: item.bath, label: "Baths" },
+                  {
+                    icon: <MdSpaceDashboard />,
+                    value: item.area,
+                    label: "Area",
+                  },
+                ].map((detail) => (
+                  <div
+                    key={detail.label}
+                    className={`rounded-2xl border px-4 py-4 text-center ${
+                      darkMode
+                        ? "border-white/10 bg-white/5"
+                        : "border-slate-100 bg-slate-50"
+                    }`}
+                  >
+                    <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-rose-500/10 text-rose-500">
+                      {detail.icon}
+                    </div>
+                    <p className="text-sm font-semibold">{detail.value}</p>
+                    <p
+                      className={`text-xs uppercase tracking-[0.22em] ${
+                        darkMode ? "text-slate-400" : "text-slate-500"
+                      }`}
+                    >
+                      {detail.label}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <p
+                    className={`text-xs uppercase tracking-[0.24em] ${
+                      darkMode ? "text-slate-400" : "text-slate-500"
+                    }`}
+                  >
+                    Listed with
+                  </p>
+                  <p className="mt-1 text-base font-semibold">{item.owner}</p>
+                </div>
+
+                <ScrollLink
+                  to="contact"
+                  smooth
+                  offset={-90}
+                  className={`inline-flex cursor-pointer items-center gap-2 rounded-full px-4 py-3 text-sm font-semibold transition duration-300 ${
+                    darkMode
+                      ? "bg-white text-slate-900 hover:bg-amber-100"
+                      : "bg-rose-600 text-white hover:bg-rose-700"
+                  }`}
+                >
+                  Schedule tour
+                  <FaArrowRight className="text-xs" />
+                </ScrollLink>
+              </div>
+            </div>
+          </motion.article>
+        ))}
+      </div>
+    </section>
   );
 };
 

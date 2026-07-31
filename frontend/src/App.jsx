@@ -17,12 +17,6 @@ import SignupForm from "./components/SignupForm";
 import TestimonialCard from "./components/TestimonialCard";
 import TestimonialsList from "./components/TestimonialsList";
 import SubmitTestimonial from "./pages/SubmitTestimonial";
-import AdminLogin from "./pages/AdminLogin";
-import AdminPanel from "./pages/AdminPanel";
-import AdminServices from "./components/AdminServices";
-import AdminServicesList from "./components/AdminServicesList";
-import AdminDashboard from "./components/AdminDashboard";
-import AdminSidebar from "./components/AdminSidebar";
 
 const Home = () => {
   return (
@@ -47,8 +41,6 @@ const App = () => {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/SubmitTestimonial" element={<SubmitTestimonial />} />
-          <Route path="/admin" element={<AdminPanel />} />
-          <Route path="/adminlogin" element={<AdminLogin />} />
           <Route path="/testimonials" element={<TestimonialsList />} />
           <Route path="/signup" element={<SignupForm/>} />
           <Route path="/login" element={<LoginForm/>} /> {/* Add this route */}
@@ -58,10 +50,6 @@ const App = () => {
           <Route path="/services" element={<Services/>}></Route>
           <Route path="/about" element={<About/>}></Route>
           <Route path="/properties" element={<Properties/>}></Route>
-          <Route path="/adminservices" element={<AdminServices/>}></Route>
-            <Route path="/adminserviceslist" element={<AdminServicesList/>}></Route>
-            <Route path="/admindashboard" element={<AdminDashboard/>}></Route>
-            <Route path="/adminsidebar" element={<AdminSidebar/>}></Route>
         </Routes>
       </DarkModeProvider>
     </AuthProvider>

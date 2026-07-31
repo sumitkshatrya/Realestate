@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { useDarkMode } from "./DarkModeContext";
+import { useDarkMode } from "./useDarkMode";
 import aboutImage from "../assets/images/about.jpg";
 import React from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const LoginForm = ({ onClose, switchToSignup }) => {
   const { darkMode } = useDarkMode();
@@ -171,12 +171,12 @@ const LoginForm = ({ onClose, switchToSignup }) => {
                 Create account here
               </button>
               <br />
-              <Link
-                to="/adminlogin"
+              {/* <a
+                href="http://localhost:5174/login"
                 className="text-red-500 hover:text-red-600 font-semibold underline transition-colors duration-200"
               >
                 Login as Admin
-              </Link>
+              </a> */}
             </p>
           </div>
         </div>

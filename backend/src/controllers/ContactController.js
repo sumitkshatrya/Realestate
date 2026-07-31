@@ -64,7 +64,7 @@ export const createContact = async (req, res) => {
 
     // Send email notification to admin
     try {
-      const adminEmail = process.env.ADMIN_EMAIL || 'admin@yourcompany.com'; // Set this in your .env
+      const adminEmail = process.env.ADMIN_EMAIL 
       const emailSubject = `New Contact Message from ${fullname}`;
       const emailHtml = generateAdminNotificationTemplate(
         fullname, 
@@ -117,5 +117,43 @@ export const getContacts = async (req, res) => {
     res
       .status(500)
       .json({ message: error.message || "Failed to fetch contacts" });
+  }
+};
+
+// GET: Get all contacts for admin
+export const getAllContacts = async (req, res) => {
+  try {
+    const contacts = await Contact.find().sort({ createdAt: -1 }).populate('user', 'username email phone');
+
+    res
+      .status(200)
+      .json(new ApiResponse(contacts, "All contacts fetched successfully", 200));
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: error.message || "Failed to fetch contacts" });
+  }
+};
+
+// DELETE: Delete a contact by ID (admin only)
+export const deleteContact = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const contact = await Contact.findByIdAndDelete(id);
+
+    if (!contact) {
+      return res
+        .status(404)
+        .json(new ApiResponse(null, "Contact not found", 404));
+    }
+
+    res
+      .status(200)
+      .json(new ApiResponse(contact, "Contact deleted successfully", 200));
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: error.message || "Failed to delete contact" });
   }
 };

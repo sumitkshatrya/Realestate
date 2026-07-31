@@ -1,36 +1,35 @@
-// pages/Services.js
-import React, { useEffect, useState, useCallback } from "react";
-import { useDarkMode } from "../components/DarkModeContext";
+import React, { useCallback, useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import { Link as RouterLink } from "react-router-dom";
+import { Link as ScrollLink } from "react-scroll";
+import {
+  FaArrowRight,
+  FaBuilding,
+  FaChartLine,
+  FaCity,
+  FaClipboardList,
+  FaHandshake,
+  FaHome,
+  FaKey,
+  FaMapMarkerAlt,
+  FaSearchDollar,
+  FaSyncAlt,
+  FaTools,
+} from "react-icons/fa";
+import { useDarkMode } from "../components/useDarkMode";
 import { servicesAPI } from "../api/servicesApi";
-import AOS from "aos";
-import "aos/dist/aos.css";
-import { Link } from "react-router-dom";
-import { 
-  FaHome, 
-  FaKey, 
-  FaMapMarkerAlt, 
-  FaChartLine, 
-  FaBuilding, 
+
+const iconMap = {
+  FaHome,
+  FaKey,
+  FaMapMarkerAlt,
+  FaChartLine,
+  FaBuilding,
   FaTools,
   FaHandshake,
   FaCity,
   FaSearchDollar,
   FaClipboardList,
-  FaSyncAlt
-} from "react-icons/fa";
-
-// Enhanced icon map with more options
-const iconMap = {
-  FaHome: FaHome,
-  FaKey: FaKey,
-  FaMapMarkerAlt: FaMapMarkerAlt,
-  FaChartLine: FaChartLine,
-  FaBuilding: FaBuilding,
-  FaTools: FaTools,
-  FaHandshake: FaHandshake,
-  FaCity: FaCity,
-  FaSearchDollar: FaSearchDollar,
-  FaClipboardList: FaClipboardList,
 };
 
 const Services = () => {
@@ -39,69 +38,26 @@ const Services = () => {
   const [error, setError] = useState(null);
   const { darkMode } = useDarkMode();
 
-  // Initialize AOS
-  useEffect(() => {
-    AOS.init({
-      offset: 100,
-      duration: 600,
-      easing: "ease-in-out",
-      delay: 50,
-      once: true,
-      mirror: false
-    });
-  }, []);
-
-  // Refresh AOS when services load
-  useEffect(() => {
-    if (services.length > 0) {
-      AOS.refresh();
-    }
-  }, [services]);
-
-  // Memoized fetch function
   const fetchServices = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      console.log('🔄 Starting to fetch services...');
-      
+
       const servicesData = await servicesAPI.getServices();
-      console.log('📦 Raw API response:', servicesData);
-      
-      // Validate and transform data
-      let validatedServices = [];
-      
-      if (Array.isArray(servicesData)) {
-        console.log('✅ API returned array with', servicesData.length, 'items');
-        
-        // Filter active services
-        const activeServices = servicesData.filter(service => {
-          const isActive = service.isActive !== false;
-          console.log(`Service: ${service.title}, isActive: ${service.isActive}, Display: ${isActive}`);
-          return isActive;
-        });
-        
-        console.log('🎯 Active services after filtering:', activeServices.length);
-        
-        // Sort by order
-        validatedServices = activeServices
-          .sort((a, b) => (a.order || 0) - (b.order || 0))
-          .map(service => ({
-            ...service,
-            title: service.title || 'Untitled Service',
-            description: service.description || 'No description available.',
-            icon: service.icon in iconMap ? service.icon : 'FaBuilding'
-          }));
-      } else {
-        console.log('❌ API did not return an array:', typeof servicesData);
-      }
-      
-      console.log('🎨 Final processed services:', validatedServices);
+      const validatedServices = servicesData
+        .filter((service) => service?.isActive !== false)
+        .sort((a, b) => (a.order || 0) - (b.order || 0))
+        .map((service) => ({
+          ...service,
+          title: service.title || "Untitled Service",
+          description: service.description || "No description available.",
+          icon: service.icon in iconMap ? service.icon : "FaBuilding",
+        }));
+
       setServices(validatedServices);
-      
     } catch (err) {
-      console.error("❌ Error fetching services:", err);
-      setError("Unable to load services. Please try again later.");
+      console.error("Error fetching services:", err);
+      setError("Unable to load services right now. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -111,249 +67,224 @@ const Services = () => {
     fetchServices();
   }, [fetchServices]);
 
-  // Add this function to manually check the API
-  const checkAPI = async () => {
-    try {
-      console.log('🔍 Manually checking API...');
-      const response = await servicesAPI.getServices();
-      console.log('🔍 Manual API check:', response);
-      fetchServices(); // Refresh the list
-    } catch (error) {
-      console.error('🔍 Manual API check failed:', error);
-    }
-  };
-
-  // Loading component
   if (loading) {
     return (
-      <div className={`${darkMode ? "bg-gray-900" : "bg-gray-50"} min-h-screen flex items-center justify-center py-20`}>
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-4 border-red-600 border-t-transparent mx-auto mb-4"></div>
-          <p className={`text-lg font-medium ${darkMode ? "text-gray-300" : "text-gray-700"}`}>
-            Loading our services...
-          </p>
-          <button 
-            onClick={checkAPI}
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg"
-          >
-            Debug API
-          </button>
+      <section className="section-shell">
+        <div
+          className={`rounded-[36px] border p-8 sm:p-10 ${
+            darkMode
+              ? "border-white/10 bg-slate-950/70 text-white"
+              : "border-white/80 bg-white/90 text-slate-900 shadow-[0_24px_60px_rgba(15,23,42,0.1)]"
+          }`}
+        >
+          <div className="mb-10 flex items-center gap-4">
+            <div className="h-14 w-14 animate-spin rounded-full border-4 border-rose-500 border-t-transparent" />
+            <div>
+              <p className="text-lg font-semibold">Loading our services</p>
+              <p className={darkMode ? "text-slate-300" : "text-slate-600"}>
+                Preparing the latest offerings for you.
+              </p>
+            </div>
+          </div>
+          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <div
+                key={index}
+                className={`animate-pulse rounded-[28px] border p-6 ${
+                  darkMode
+                    ? "border-white/10 bg-white/5"
+                    : "border-slate-100 bg-slate-50"
+                }`}
+              >
+                <div className="mb-5 h-14 w-14 rounded-2xl bg-rose-200/60" />
+                <div className="mb-3 h-5 w-32 rounded-full bg-slate-200/70" />
+                <div className="mb-2 h-4 w-full rounded-full bg-slate-200/60" />
+                <div className="h-4 w-4/5 rounded-full bg-slate-200/60" />
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      </section>
     );
   }
 
-  // Error component
   if (error) {
     return (
-      <div className={`${darkMode ? "bg-gray-900" : "bg-gray-50"} min-h-screen flex items-center justify-center py-20`}>
-        <div className="text-center max-w-md mx-auto px-4">
-          <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-            <FaSyncAlt className="text-red-600 dark:text-red-400 text-2xl" />
+      <section className="section-shell">
+        <div
+          className={`mx-auto max-w-2xl rounded-[36px] border p-10 text-center ${
+            darkMode
+              ? "border-white/10 bg-slate-950/70 text-white"
+              : "border-white/80 bg-white/90 text-slate-900 shadow-[0_24px_60px_rgba(15,23,42,0.1)]"
+          }`}
+        >
+          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-rose-500/10 text-rose-500">
+            <FaSyncAlt className="text-xl" />
           </div>
-          <h3 className={`text-xl font-semibold mb-2 ${darkMode ? "text-white" : "text-gray-900"}`}>
-            Something went wrong
-          </h3>
-          <p className={`mb-6 ${darkMode ? "text-gray-400" : "text-gray-600"}`}>
+          <h3 className="font-serif text-3xl">Services unavailable</h3>
+          <p
+            className={`mx-auto mt-3 max-w-lg text-base leading-7 ${
+              darkMode ? "text-slate-300" : "text-slate-600"
+            }`}
+          >
             {error}
           </p>
-          <div className="flex gap-2 justify-center">
-            <button
-              onClick={fetchServices}
-              className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors duration-300"
-            >
-              Try Again
-            </button>
-            <button
-              onClick={checkAPI}
-              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-300"
-            >
-              Debug API
-            </button>
-          </div>
+          <button
+            onClick={fetchServices}
+            className="mt-8 inline-flex items-center gap-3 rounded-full bg-rose-600 px-6 py-3 font-semibold text-white transition duration-300 hover:bg-rose-700"
+          >
+            Reload services
+            <FaArrowRight className="text-xs" />
+          </button>
         </div>
-      </div>
+      </section>
     );
   }
 
   return (
-    <div className={`${darkMode ? "bg-gray-900" : "bg-gray-50"} min-h-screen`}>
-      <section
-        id="services"
-        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24"
+    <section
+      id="services"
+      className={`section-shell ${darkMode ? "text-white" : "text-slate-900"}`}
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 28 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ duration: 0.6 }}
+        className="mb-10 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between"
       >
-        {/* Header Section */}
-        <div className="text-center mb-16 lg:mb-20">
-          <div className="inline-flex items-center px-4 py-2 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-sm font-medium mb-4">
-            What We Offer
-          </div>
-          <h1
-            data-aos="fade-up"
-            className={`text-4xl lg:text-5xl font-bold mb-4 ${darkMode ? "text-white" : "text-gray-900"}`}
+        <div className="space-y-4">
+          <span
+            className={`inline-flex rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-[0.32em] ${
+              darkMode
+                ? "border-white/10 bg-white/5 text-emerald-200"
+                : "border-emerald-200 bg-white/80 text-emerald-700"
+            }`}
           >
-            Our <span className="text-red-600 dark:text-red-500">Services</span>
-          </h1>
+            Concierge Services
+          </span>
+          <h2 className="max-w-2xl font-serif text-4xl leading-tight sm:text-5xl">
+            Practical support across search, purchase, selling, and aftercare.
+          </h2>
           <p
-            data-aos="fade-up"
-            data-aos-delay="100"
-            className={`text-xl max-w-3xl mx-auto ${darkMode ? "text-gray-400" : "text-gray-600"}`}
+            className={`max-w-2xl text-base leading-7 sm:text-lg ${
+              darkMode ? "text-slate-300" : "text-slate-600"
+            }`}
           >
-            Comprehensive real estate solutions tailored to meet your unique needs and aspirations
+            From valuation and strategy to legal coordination and relocation
+            planning, our team keeps the process calm, clear, and efficient.
           </p>
-          
-          {/* Debug Info */}
-          <div className="mt-4 p-4 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
-            <p className="text-sm text-yellow-800 dark:text-yellow-200">
-              <strong>Debug Info:</strong> Showing {services.length} services | 
-              <button 
-                onClick={checkAPI} 
-                className="ml-2 px-2 py-1 bg-yellow-500 text-white rounded text-xs"
-              >
-                Check API
-              </button>
-              <button 
-                onClick={fetchServices} 
-                className="ml-2 px-2 py-1 bg-green-500 text-white rounded text-xs"
-              >
-                Refresh
-              </button>
-            </p>
-          </div>
         </div>
 
-        {/* Services Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {services.length > 0 ? (
-            services.map((service, index) => {
-              const IconComponent = iconMap[service.icon];
-              
-              return (
-                <div
-                  data-aos="fade-up"
-                  data-aos-delay={index * 100}
-                  key={service._id || index}
-                  className={`group relative overflow-hidden rounded-2xl p-8 transition-all duration-500 ${
-                    darkMode 
-                      ? "bg-gray-800 hover:bg-gray-750 border border-gray-700" 
-                      : "bg-white hover:bg-gray-50 border border-gray-200"
-                  } hover:shadow-xl hover:-translate-y-2`}
-                >
-                  {/* Hover effect background */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-red-600/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                  
-                  {/* Icon */}
-                  <div className="relative mb-6">
-                    <div className="w-16 h-16 bg-gradient-to-br from-red-600 to-red-700 rounded-2xl flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                      <IconComponent className="text-white text-2xl" />
-                    </div>
-                  </div>
+        <ScrollLink
+          to="contact"
+          smooth
+          offset={-90}
+          className={`inline-flex cursor-pointer items-center gap-3 rounded-full px-6 py-3 text-sm font-semibold transition duration-300 ${
+            darkMode
+              ? "bg-white text-slate-900 hover:bg-emerald-100"
+              : "bg-slate-900 text-white hover:bg-slate-800"
+          }`}
+        >
+          Talk with an advisor
+          <FaArrowRight />
+        </ScrollLink>
+      </motion.div>
 
-                  {/* Content */}
-                  <div className="relative">
-                    <h3 className={`text-xl font-bold mb-3 ${darkMode ? "text-white" : "text-gray-900"}`}>
-                      {service.title}
-                    </h3>
-                    
-                    <p className={`leading-relaxed mb-6 ${darkMode ? "text-gray-400" : "text-gray-600"}`}>
-                      {service.description}
-                    </p>
+      <div className="grid gap-7 md:grid-cols-2 xl:grid-cols-3">
+        {services.length > 0 ? (
+          services.map((service, index) => {
+            const IconComponent = iconMap[service.icon] || FaBuilding;
 
-                    {/* Read More Button */}
-                    <Link
-                      to={`/services/${service.slug || service._id}`}
-                      className="inline-flex items-center font-semibold text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-colors duration-300 group/btn"
-                    >
-                      Learn More
-                      <svg 
-                        className="w-4 h-4 ml-2 transform group-hover/btn:translate-x-1 transition-transform duration-300" 
-                        fill="none" 
-                        stroke="currentColor" 
-                        viewBox="0 0 24 24"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </Link>
+            return (
+              <motion.article
+                key={service._id || index}
+                initial={{ opacity: 0, y: 34 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.2 }}
+                transition={{ duration: 0.55, delay: index * 0.06 }}
+                className={`group overflow-hidden rounded-[30px] border p-7 ${
+                  darkMode
+                    ? "border-white/10 bg-slate-950/70"
+                    : "border-white/80 bg-white/90 shadow-[0_24px_60px_rgba(15,23,42,0.1)]"
+                }`}
+              >
+                <div className="mb-8 flex items-start justify-between gap-4">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-[22px] bg-gradient-to-br from-rose-500 to-amber-500 text-2xl text-white shadow-lg">
+                    <IconComponent />
                   </div>
-
-                  {/* Debug info for each service */}
-                  <div className="absolute bottom-2 right-2">
-                    <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded">
-                      {service.icon}
-                    </span>
-                  </div>
+                  <span
+                    className={`rounded-full px-3 py-2 text-xs font-semibold uppercase tracking-[0.24em] ${
+                      darkMode
+                        ? "bg-white/5 text-slate-300"
+                        : "bg-slate-100 text-slate-500"
+                    }`}
+                  >
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
                 </div>
-              );
-            })
-          ) : (
-            // Empty state
-            <div className="col-span-full text-center py-16">
-              <div className="w-24 h-24 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-6">
-                <FaTools className="text-gray-400 dark:text-gray-500 text-3xl" />
-              </div>
-              <h3 className={`text-2xl font-bold mb-3 ${darkMode ? "text-white" : "text-gray-900"}`}>
-                No Services Available
-              </h3>
-              <p className={`text-lg max-w-md mx-auto ${darkMode ? "text-gray-400" : "text-gray-600"}`}>
-                We're currently updating our services. Please check back later.
-              </p>
-              <div className="flex gap-2 justify-center mt-4">
-                <button
-                  onClick={fetchServices}
-                  className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors duration-300"
-                >
-                  Refresh Page
-                </button>
-                <button
-                  onClick={checkAPI}
-                  className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-300"
-                >
-                  Debug API
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
 
-        {/* CTA Section */}
-        {services.length > 0 && (
-          <div 
-            data-aos="fade-up"
-            className="text-center mt-16 lg:mt-20"
-          >
-            <div className={`rounded-2xl p-8 lg:p-12 ${
-              darkMode 
-                ? "bg-gray-800 border border-gray-700" 
-                : "bg-white border border-gray-200"
-            }`}>
-              <h2 className={`text-3xl lg:text-4xl font-bold mb-4 ${darkMode ? "text-white" : "text-gray-900"}`}>
-                Ready to Get Started?
-              </h2>
-              <p className={`text-lg mb-8 max-w-2xl mx-auto ${darkMode ? "text-gray-400" : "text-gray-600"}`}>
-                Let us help you find the perfect property or service for your needs.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link
-                  to="/contact"
-                  className="px-8 py-4 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
-                >
-                  Get In Touch
-                </Link>
-                <Link
-                  to="/about"
-                  className={`px-8 py-4 font-semibold rounded-lg transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 ${
-                    darkMode 
-                      ? "bg-gray-700 hover:bg-gray-600 text-white" 
-                      : "bg-gray-100 hover:bg-gray-200 text-gray-900"
+                <h3 className="font-serif text-2xl">{service.title}</h3>
+                <p
+                  className={`mt-4 min-h-24 text-base leading-7 ${
+                    darkMode ? "text-slate-300" : "text-slate-600"
                   }`}
                 >
-                  Learn More About Us
-                </Link>
+                  {service.description}
+                </p>
+
+                <div className="mt-8 flex items-center justify-between gap-4">
+                  <RouterLink
+                    to={`/services/${service.slug || service._id}`}
+                    className="inline-flex items-center gap-2 text-sm font-semibold text-rose-500 transition duration-300 hover:text-rose-600"
+                  >
+                    Explore service
+                    <FaArrowRight className="text-xs transition duration-300 group-hover:translate-x-1" />
+                  </RouterLink>
+                  <div
+                    className={`h-px flex-1 ${
+                      darkMode ? "bg-white/10" : "bg-slate-200"
+                    }`}
+                  />
+                </div>
+              </motion.article>
+            );
+          })
+        ) : (
+          <div className="col-span-full">
+            <div
+              className={`rounded-[32px] border p-10 text-center ${
+                darkMode
+                  ? "border-white/10 bg-slate-950/70"
+                  : "border-white/80 bg-white/90 shadow-[0_24px_60px_rgba(15,23,42,0.1)]"
+              }`}
+            >
+              <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-rose-500/10 text-rose-500">
+                <FaTools className="text-xl" />
               </div>
+              <h3 className="font-serif text-3xl">New services are on the way</h3>
+              <p
+                className={`mx-auto mt-3 max-w-xl text-base leading-7 ${
+                  darkMode ? "text-slate-300" : "text-slate-600"
+                }`}
+              >
+                We are refreshing this section with new advisory and property
+                support options. Check back shortly or contact us directly.
+              </p>
+              <ScrollLink
+                to="contact"
+                smooth
+                offset={-90}
+                className="mt-8 inline-flex cursor-pointer items-center gap-3 rounded-full bg-rose-600 px-6 py-3 font-semibold text-white transition duration-300 hover:bg-rose-700"
+              >
+                Contact our team
+                <FaArrowRight className="text-xs" />
+              </ScrollLink>
             </div>
           </div>
         )}
-      </section>
-    </div>
+      </div>
+    </section>
   );
 };
 

@@ -1,14 +1,15 @@
 
-import { createContext, useState, useContext, useEffect } from 'react';
-import React from 'react';
-const DarkModeContext = createContext(); 
+import React, { useEffect, useState } from "react";
+import { DarkModeContext } from "./darkModeContextValue";
 
 const DarkModeProvider = ({ children }) => {
   const [darkMode, setDarkMode] = useState(false);
 
   useEffect(() => {
-    // Apply the theme to the document
-    document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : 'light');
+    document.documentElement.setAttribute(
+      "data-theme",
+      darkMode ? "dark" : "light"
+    );
   }, [darkMode]);
 
   const toggleDarkMode = () => {
@@ -22,12 +23,4 @@ const DarkModeProvider = ({ children }) => {
   );
 };
 
-const useDarkMode = () => {
-  const context = useContext(DarkModeContext);
-  if (!context) {
-    throw new Error('useDarkMode must be used within a DarkModeProvider');
-  }
-  return context;
-};
-
-export { DarkModeProvider, useDarkMode };
+export { DarkModeProvider };

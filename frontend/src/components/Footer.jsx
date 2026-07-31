@@ -1,4 +1,4 @@
-import { useDarkMode } from '../components/DarkModeContext';
+import { useDarkMode } from "./useDarkMode";
 import { FaFacebookF, FaInstagram, FaTwitter, FaYoutube, FaBuilding, FaMobile, FaFax, FaArrowUp, FaMoon, FaSun } from 'react-icons/fa';
 import { Link } from "react-scroll";
 import { IoMdMail } from 'react-icons/io';

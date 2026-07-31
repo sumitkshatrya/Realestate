@@ -480,25 +480,13 @@
 // };
 
 // export default Contact;
-import { useRef, useEffect } from "react";
-import { useDarkMode } from "../components/DarkModeContext";
+import { useRef } from "react";
+import { useDarkMode } from "../components/useDarkMode";
 import emailjs from "@emailjs/browser";
-import Header from "../components/Header";
-import AOS from "aos";
-import "aos/dist/aos.css";
-import React from "react";
+// import Header from "../components/Header";
 const Contact = () => {
   const { darkMode } = useDarkMode();
   const form = useRef();
-
-  useEffect(() => {
-    AOS.init({
-      offset: 200,
-      duration: 800,
-      easing: "ease-in-sine",
-      delay: 100,
-    });
-  }, []);
 
   const sendEmail = (e) => {
     e.preventDefault();
@@ -521,7 +509,7 @@ const Contact = () => {
 
   return (
     <>
-    <Header/>
+    {/* <Header/> */}
     <div className={`${darkMode ? "bg-gray-900" : "bg-white"} pb-20`}>
       <section
         id="contact"
@@ -531,7 +519,6 @@ const Contact = () => {
       >
         {/* Contact Form Column */}
         <div
-          data-aos="zoom-in"
           className={`${
             darkMode ? "bg-gray-900 text-white" : "bg-white text-black"
           } p-10 flex flex-col justify-center items-center gap-6 rounded-xl w-full text-center`}
@@ -591,8 +578,6 @@ const Contact = () => {
         {/* Information Column */}
         <div className="flex flex-col justify-center items-start gap-8 lg:p-10 p-6">
           <h1
-            data-aos="zoom-in"
-            data-aos-delay="200"
             className={`text-2xl font-bold ${
               darkMode ? "text-red-500" : "text-red-600"
             }`}
@@ -600,8 +585,6 @@ const Contact = () => {
             REACH US
           </h1>
           <h1
-            data-aos="zoom-in"
-            data-aos-delay="200"
             className={`text-4xl font-semibold leading-tight ${
               darkMode ? "text-white" : "text-gray-900"
             }`}
@@ -609,8 +592,6 @@ const Contact = () => {
             Get in touch with us today and our team will assist you
           </h1>
           <p
-            data-aos="zoom-in"
-            data-aos-delay="200"
             className={`text-xl leading-tight ${
               darkMode ? "text-white" : "text-gray-900"
             }`}

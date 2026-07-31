@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { fetchTestimonialById } from "../api/testimonialApi";
-import { motion } from "framer-motion";
+import { motion as Motion } from "framer-motion";
 
 const TestimonialDetail = () => {
   const { id } = useParams();
@@ -25,7 +25,7 @@ const TestimonialDetail = () => {
   const BASE_URL = "http://localhost:5000";
 
   return (
-    <motion.div
+    <Motion.div
       className="max-w-3xl mx-auto p-6 bg-white rounded-2xl shadow-lg mt-10"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -109,7 +109,7 @@ const TestimonialDetail = () => {
           {testimonial.rating} / 5
         </span>
       </div>
-    </motion.div>
+    </Motion.div>
   );
 };
 

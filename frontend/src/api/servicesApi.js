@@ -1,6 +1,18 @@
 // services/api.js
 const API_BASE_URL = "http://localhost:8080/api";
 
+const normalizeServicesList = (payload) => {
+  if (Array.isArray(payload)) {
+    return payload;
+  }
+
+  if (Array.isArray(payload?.data)) {
+    return payload.data;
+  }
+
+  return [];
+};
+
 export const servicesAPI = {
   // Get all services
   getServices: async () => {
@@ -8,7 +20,8 @@ export const servicesAPI = {
     if (!response.ok) {
       throw new Error("Failed to fetch services");
     }
-    return response.json();
+    const payload = await response.json();
+    return normalizeServicesList(payload);
   },
 
   // Create new service

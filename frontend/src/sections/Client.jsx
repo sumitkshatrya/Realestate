@@ -114,11 +114,10 @@
 // }
 //////////////////////////////////
 import React, { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { motion as Motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import TestimonialCard from "../components/TestimonialCard";
-import SubmitTestimonial from "../pages/SubmitTestimonial";
 
 export default function Client() {
   const [testimonials, setTestimonials] = useState([]);
@@ -177,7 +176,7 @@ export default function Client() {
     );
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div id="testimonials" className="p-6 max-w-6xl mx-auto">
       <h1 className="text-4xl font-bold mb-6 text-center text-red-600">
         Customer Testimonials
       </h1>
@@ -194,14 +193,14 @@ export default function Client() {
       {/* Testimonials Grid */}
       <div className="grid gap-8 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         {testimonials.map((t) => (
-          <motion.div
+          <Motion.div
             key={t._id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
           >
             <TestimonialCard testimonial={t} />
-          </motion.div>
+          </Motion.div>
         ))}
       </div>
 
@@ -226,14 +225,14 @@ export default function Client() {
       {/* Add Review Button */}
       <div className="mt-10 flex justify-center">
         <Link to="/SubmitTestimonial">
-          <motion.button
+          <Motion.button
             whileHover={{ scale: 1.05, x: 5 }}
             whileTap={{ scale: 0.95 }}
             className="flex items-center gap-2 bg-red-500 text-white font-semibold px-6 py-3 rounded-full shadow-lg hover:bg-red-600 transition"
           >
             Add Your Review
             <ArrowRight className="w-5 h-5" />
-          </motion.button>
+          </Motion.button>
         </Link>
       </div>
     </div>

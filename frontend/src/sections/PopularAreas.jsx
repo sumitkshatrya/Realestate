@@ -1,123 +1,167 @@
-import { useDarkMode } from "../components/DarkModeContext";
+import React from "react";
+import { motion } from "framer-motion";
+import { FaArrowRight, FaMapMarkerAlt } from "react-icons/fa";
+import { useDarkMode } from "../components/useDarkMode";
 import area1 from "../assets/images/area1.jpg";
 import area2 from "../assets/images/area2.jpg";
 import area3 from "../assets/images/area3.jpg";
-import AOS from "aos";
-import "aos/dist/aos.css";
-import { useEffect } from "react";
-import React from "react";
-const PopularAreas = () => {
-  useEffect(() => {
-    AOS.init({
-      offset: 200,
-      duration: 800,
-      easing: "ease-in-sine",
-      delay: 100,
-    });
-  }, []);
 
+const areas = [
+  {
+    image: area1,
+    city: "Downtown Residences",
+    tagline: "Skyline homes with walkable retail and nightlife.",
+    stat: "320",
+    label: "active homes",
+  },
+  {
+    image: area2,
+    city: "Central Business District",
+    tagline: "High-demand apartments near offices and transit.",
+    stat: "92%",
+    label: "occupancy rate",
+  },
+  {
+    image: area3,
+    city: "Harbor Family Quarter",
+    tagline: "Quiet streets, schools, and larger living spaces.",
+    stat: "18m",
+    label: "average close time",
+  },
+];
+
+const PopularAreas = () => {
   const { darkMode } = useDarkMode();
 
   return (
     <section
-      className={`w-full m-auto lg:px-40 px-10 py-20 ${
-        darkMode ? "bg-gray-900 text-white" : "bg-white text-black"
+      className={`section-shell overflow-hidden ${
+        darkMode ? "text-white" : "text-slate-900"
       }`}
     >
-      <div className="w-full grid lg:grid-cols-4 grid-cols-1 gap-8 justify-center items-center">
-        {/* Title Section - takes 1 column */}
-        <div className="lg:col-span-1">
-          <h1
-            data-aos="zoom-in"
-            className={`text-5xl font-bold leading-tight mb-6 ${
-              darkMode ? "text-red-500" : "text-red-600"
+      <div className="grid gap-10 lg:grid-cols-[1.05fr_1.95fr] lg:items-end">
+        <motion.div
+          initial={{ opacity: 0, y: 28 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.3 }}
+          transition={{ duration: 0.6 }}
+          className="space-y-6"
+        >
+          <span
+            className={`inline-flex rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-[0.32em] ${
+              darkMode
+                ? "border-white/10 bg-white/5 text-rose-200"
+                : "border-rose-200 bg-white/80 text-rose-600"
             }`}
           >
-            Popular Areas
-          </h1>
-          <h1
-            data-aos="zoom-in"
-            data-aos-delay="400"
-            className={`text-lg font-semibold leading-10 mt-4 ${
-              darkMode ? "text-white" : "text-black"
-            }`}
-          >
-            Explore most <br /> popular areas
-          </h1>
-        </div>
+            City Intelligence
+          </span>
 
-        {/* Images Section - takes 3 columns */}
-        <div className="lg:col-span-3 grid lg:grid-cols-3 grid-cols-1 gap-6">
-          <div
-            data-aos="zoom-in"
-            data-aos-delay="400"
-            style={{ backgroundImage: `url(${area1})` }}
-            className="h-[400px] bg-cover bg-center rounded-xl"
-            role="img"
-            aria-label="Modern residential area with luxury apartments"
-          ></div>
-          <div
-            data-aos="zoom-in"
-            data-aos-delay="600"
-            style={{ backgroundImage: `url(${area2})` }}
-            className="h-[400px] bg-cover bg-center rounded-xl"
-            role="img"
-            aria-label="Urban downtown district with commercial buildings"
-          ></div>
-          <div
-            data-aos="zoom-in"
-            data-aos-delay="800"
-            style={{ backgroundImage: `url(${area3})` }}
-            className="h-[400px] bg-cover bg-center rounded-xl"
-            role="img"
-            aria-label="Suburban neighborhood with family homes"
-          ></div>
-        </div>
-      </div>
-      
-      {/* Stats Section */}
-      <div className="w-full grid lg:grid-cols-3 grid-cols-1 lg:justify-center justify-start items-center gap-6 mt-12">
-        <div 
-          data-aos="slide-up" 
-          data-aos-delay="200" 
-          className="flex justify-center items-center gap-8 w-full"
-        >
-          <h1 className={`text-7xl font-semibold ${
-            darkMode ? "text-white" : "text-black"
-          }`}>
-            5K
-          </h1>
-          <h1 className={darkMode ? "text-white" : "text-black"}>
-            ACTIVE<br />LISTINGS
-          </h1>
-        </div>
-        <div 
-          data-aos="slide-up" 
-          data-aos-delay="200" 
-          className="flex justify-center items-center gap-8 w-full"
-        >
-          <h1 className={`text-7xl font-semibold ${
-            darkMode ? "text-white" : "text-black"
-          }`}>
-            5K
-          </h1>
-          <h1 className={darkMode ? "text-white" : "text-black"}>
-            ACTIVE<br />LISTINGS
-          </h1>
-        </div>
-        <div 
-          data-aos="slide-up" 
-          data-aos-delay="200" 
-          className="flex justify-center items-center gap-8 w-full"
-        >
-          <h1 className={`text-7xl font-semibold ${
-            darkMode ? "text-white" : "text-black"
-          }`}>
-            5K
-          </h1>
-          <h1 className={darkMode ? "text-white" : "text-black"}>
-            ACTIVE<br />LISTINGS
-          </h1>
+          <div className="space-y-4">
+            <h2 className="max-w-xl font-serif text-4xl leading-tight sm:text-5xl">
+              Explore neighborhoods that match your pace and priorities.
+            </h2>
+            <p
+              className={`max-w-lg text-base leading-7 sm:text-lg ${
+                darkMode ? "text-slate-300" : "text-slate-600"
+              }`}
+            >
+              We curate locations by lifestyle, demand, and long-term value so
+              your search starts with the right environment, not just the right
+              floor plan.
+            </p>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div
+              className={`rounded-[28px] border p-5 ${
+                darkMode
+                  ? "border-white/10 bg-white/5"
+                  : "border-white/70 bg-white/80 shadow-[0_18px_45px_rgba(15,23,42,0.08)]"
+              }`}
+            >
+              <p className="text-3xl font-semibold">12+</p>
+              <p className={darkMode ? "text-slate-300" : "text-slate-600"}>
+                districts actively tracked by our advisors
+              </p>
+            </div>
+            <div
+              className={`rounded-[28px] border p-5 ${
+                darkMode
+                  ? "border-white/10 bg-white/5"
+                  : "border-white/70 bg-white/80 shadow-[0_18px_45px_rgba(15,23,42,0.08)]"
+              }`}
+            >
+              <p className="text-3xl font-semibold">24/7</p>
+              <p className={darkMode ? "text-slate-300" : "text-slate-600"}>
+                local insight for buyers, renters, and investors
+              </p>
+            </div>
+          </div>
+        </motion.div>
+
+        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+          {areas.map((area, index) => (
+            <motion.article
+              key={area.city}
+              initial={{ opacity: 0, y: 36 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.25 }}
+              transition={{ duration: 0.55, delay: index * 0.08 }}
+              className={`group overflow-hidden rounded-[32px] border ${
+                darkMode
+                  ? "border-white/10 bg-slate-950/60"
+                  : "border-white/70 bg-white/85 shadow-[0_24px_60px_rgba(15,23,42,0.1)]"
+              }`}
+            >
+              <div
+                className="relative h-80 bg-cover bg-center"
+                style={{ backgroundImage: `url(${area.image})` }}
+              >
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/30 to-transparent" />
+                <div className="absolute left-5 top-5 inline-flex items-center gap-2 rounded-full bg-white/16 px-3 py-2 text-xs font-medium text-white backdrop-blur-md">
+                  <FaMapMarkerAlt className="text-[11px]" />
+                  Handpicked zone
+                </div>
+                <div className="absolute inset-x-0 bottom-0 p-6 text-white">
+                  <p className="text-sm uppercase tracking-[0.28em] text-white/70">
+                    {area.label}
+                  </p>
+                  <div className="mt-2 flex items-end justify-between gap-4">
+                    <div>
+                      <h3 className="font-serif text-2xl">{area.city}</h3>
+                      <p className="mt-2 max-w-xs text-sm leading-6 text-white/80">
+                        {area.tagline}
+                      </p>
+                    </div>
+                    <div className="rounded-full border border-white/20 bg-white/10 px-4 py-3 text-xl font-semibold backdrop-blur-md">
+                      {area.stat}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between p-6">
+                <p
+                  className={`text-sm ${
+                    darkMode ? "text-slate-300" : "text-slate-600"
+                  }`}
+                >
+                  Market profile and lifestyle guidance included
+                </p>
+                <button
+                  className={`inline-flex h-11 w-11 items-center justify-center rounded-full transition duration-300 group-hover:translate-x-1 ${
+                    darkMode
+                      ? "bg-white/10 text-white"
+                      : "bg-rose-50 text-rose-600"
+                  }`}
+                  aria-label={`Explore ${area.city}`}
+                >
+                  <FaArrowRight />
+                </button>
+              </div>
+            </motion.article>
+          ))}
         </div>
       </div>
     </section>

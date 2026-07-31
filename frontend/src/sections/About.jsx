@@ -1,56 +1,86 @@
 import aboutimg from '../assets/images/about.jpg';
-import { useDarkMode } from '../components/DarkModeContext';
-import Header from '../components/Header';
-import AOS from 'aos';
-import 'aos/dist/aos.css';
-import { useEffect } from 'react';
+import { motion as Motion } from "framer-motion";
+import { useDarkMode } from "../components/useDarkMode";
 import React from "react";
-const About = () => {
-  useEffect(() => {
-    AOS.init({ 
-      offset: 200,
-      duration: 800,
-      easing: 'ease-in-sine',
-      delay: 100,
-    });
-  }, []);
 
+const About = () => {
   const { darkMode } = useDarkMode(); 
 
   return (
-    
     <section
       id="about"
-      className={`w-full m-auto lg:px-40 px-10 py-20 grid lg:grid-cols-2 grid-cols-1 justify-center items-center gap-10 ${
-        darkMode ? "bg-gray-900 text-white" : "bg-white text-black"
+      className={`py-24 ${
+        darkMode ? "bg-slate-950 text-white" : "bg-transparent text-slate-900"
       }`}
     >
-      <div>
-        <img
-          data-aos="zoom-in"
-          src={aboutimg}
-          alt="About our company"
-          className="rounded-2xl lg:w-[500px] lg:h-[600px] w-full object-cover"
-        />
-      </div>
-      <div className="flex flex-col justify-center items-start gap-8">
-        <h1 data-aos="zoom-in" className={`text-5xl font-bold leading-tight ${darkMode ? "text-red-600": "text-red-500"}`}>
-          Excellence in Every Project
-        </h1>
-        <p
-          data-aos="zoom-in"
-          data-aos-delay="400"
-          className="text-2xl text-justify"
+      <div className="section-shell grid items-center gap-12 lg:grid-cols-[0.95fr_1.05fr]">
+        <Motion.div
+          initial={{ opacity: 0, x: -22 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true, amount: 0.3 }}
+          transition={{ duration: 0.45 }}
+          className="relative"
         >
-          With over two decades of experience in real estate development, we've
-          established ourselves as industry leaders. Our commitment to
-          excellence, innovation, and customer satisfaction has earned us a
-          reputation for delivering exceptional properties that stand the test of
-          time.
-        </p>
-        <button className="bg-red-700 text-white hover:bg-blue-800 text-lg p-4 rounded-lg mt-6 font-semibold cursor-pointer transition-colors duration-300">
-          Read More
-        </button>
+          <div className="absolute -left-5 -top-5 h-24 w-24 rounded-3xl bg-orange-500/20 blur-2xl" />
+          <img
+            src={aboutimg}
+            alt="About our company"
+            className="relative z-10 h-[520px] w-full rounded-[2rem] object-cover shadow-2xl"
+          />
+        </Motion.div>
+
+        <Motion.div
+          initial={{ opacity: 0, x: 22 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true, amount: 0.3 }}
+          transition={{ duration: 0.45 }}
+          className={`rounded-[2rem] border p-8 lg:p-10 ${
+            darkMode
+              ? "border-white/10 bg-white/5"
+              : "border-orange-100 bg-white/80 shadow-xl shadow-orange-100/50"
+          }`}
+        >
+          <p className={`text-xs font-semibold uppercase tracking-[0.35em] ${
+            darkMode ? "text-orange-200/70" : "text-orange-600/70"
+          }`}>
+            About us
+          </p>
+          <h2 className={`mt-4 text-4xl font-semibold leading-tight lg:text-5xl ${
+            darkMode ? "text-white" : "text-slate-900"
+          }`}>
+            Development expertise with the calm of a private advisor.
+          </h2>
+          <p className={`mt-6 text-lg leading-8 ${
+            darkMode ? "text-slate-300" : "text-slate-600"
+          }`}>
+            For more than two decades, we have shaped residential experiences
+            that balance architecture, neighborhood character, and long-term
+            value. Every recommendation is filtered through how people actually
+            want to live, invest, and grow.
+          </p>
+
+          <div className="mt-8 grid gap-4 sm:grid-cols-2">
+            {[
+              "Design-forward developments",
+              "Transparent acquisition guidance",
+              "End-to-end transaction support",
+              "Long-term value strategy",
+            ].map((item) => (
+              <div
+                key={item}
+                className={`rounded-2xl px-4 py-4 text-sm font-medium ${
+                  darkMode ? "bg-white/5 text-slate-200" : "bg-orange-50 text-slate-700"
+                }`}
+              >
+                {item}
+              </div>
+            ))}
+          </div>
+
+          <button className="mt-8 rounded-full bg-orange-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-orange-700">
+            Discover Our Story
+          </button>
+        </Motion.div>
       </div>
     </section>
   );

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import React from "react";
 import { submitTestimonial } from "../api/testimonialApi";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion as Motion } from "framer-motion";
 
 const steps = ["User Info", "Rating", "Content", "Consent"];
 
@@ -97,7 +97,7 @@ export default function SubmitTestimonial() {
       </div>
 
       {/* Step Form */}
-      <motion.div
+      <Motion.div
         key={step}
         initial={{ opacity: 0, x: 50 }}
         animate={{ opacity: 1, x: 0 }}
@@ -221,7 +221,7 @@ export default function SubmitTestimonial() {
             </label>
           </div>
         )}
-      </motion.div>
+      </Motion.div>
 
       {/* Navigation Buttons */}
       <div className="flex justify-between mt-6">
@@ -253,13 +253,13 @@ export default function SubmitTestimonial() {
       {/* Success Popup */}
       <AnimatePresence>
         {success && (
-          <motion.div
+          <Motion.div
             className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            <motion.div
+            <Motion.div
               className="bg-white rounded-3xl p-10 flex flex-col items-center justify-center shadow-2xl"
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
@@ -275,15 +275,15 @@ export default function SubmitTestimonial() {
               <p className="text-gray-600 mb-4 text-center">
                 Your testimonial has been submitted successfully.
               </p>
-              <motion.div
+              <Motion.div
                 className="text-green-500 text-6xl animate-bounce"
                 animate={{ y: [0, -20, 0] }}
                 transition={{ repeat: Infinity, duration: 1 }}
               >
                 ⬇️
-              </motion.div>
-            </motion.div>
-          </motion.div>
+              </Motion.div>
+            </Motion.div>
+          </Motion.div>
         )}
       </AnimatePresence>
     </div>

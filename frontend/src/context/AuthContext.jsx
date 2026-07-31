@@ -1,24 +1,10 @@
-// src/context/AuthContext.jsx
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import { AuthContext } from "./authContextValue";
 
-// Create AuthContext
-const AuthContext = createContext();
-
-// Custom hook to use AuthContext
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
-};
-
-// AuthProvider component
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null); // stores user info
-  const [loading, setLoading] = useState(true); // true until localStorage is checked
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Load user from localStorage on mount
   useEffect(() => {
     try {
       const savedUser = localStorage.getItem("user");
@@ -35,27 +21,23 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  // Login function
   const login = (userData) => {
     if (!userData) return;
     setUser(userData);
     localStorage.setItem("user", JSON.stringify(userData));
   };
 
-  // Signup function (same as login)
   const signup = (userData) => {
     if (!userData) return;
     setUser(userData);
     localStorage.setItem("user", JSON.stringify(userData));
   };
 
-  // Logout function
   const logout = () => {
     setUser(null);
     localStorage.removeItem("user");
   };
 
-  // Context value
   const value = {
     user,
     login,

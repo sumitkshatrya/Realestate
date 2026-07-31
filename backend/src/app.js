@@ -34,7 +34,7 @@ app.get("/", (req, res) => {
   res.send("this is server");
 });
 app.use("/uploads", express.static("uploads"));
-// ✅ Error handler must be last
+//  Error handler must be last
 app.use(errorMiddleware);
 
 export default app;

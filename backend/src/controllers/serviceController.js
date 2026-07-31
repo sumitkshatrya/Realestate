@@ -5,7 +5,8 @@ import multer from "../middleware/multer.js";
 
 const upload = multer.single("image");
 export const getServices = asyncHandler(async (req, res) => {
-  const services = await Service.find({ isActive: true })
+  const includeInactive = req.query.includeInactive === "true";
+  const services = await Service.find(includeInactive ? {} : { isActive: true })
     .sort({ order: 1, createdAt: 1 })
     .select("-__v");
 

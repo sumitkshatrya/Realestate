@@ -1,5 +1,5 @@
 // import { useState } from 'react';
-// import { useAuth } from '../context/AuthContext';
+// import { useAuth } from '../context/useAuth';
 // import { useDarkMode } from './DarkModeContext';
 // import aboutImage from '../assets/images/about.jpg';
 
