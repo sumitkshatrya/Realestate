@@ -1,142 +1,198 @@
-import { useDarkMode } from "../components/useDarkMode";
+import React, { useState } from "react";
 import { motion as Motion } from "framer-motion";
-import heroimg from "../assets/images/hero1.webp";
-import React from "react";
+import { FaSearch } from "react-icons/fa";
+import { scroller } from "react-scroll";
+import heroImage from "../assets/images/hero1.webp";
 
 const stats = [
-  { value: "18+", label: "Years shaping communities" },
-  { value: "240+", label: "Homes sold last year" },
-  { value: "96%", label: "Client satisfaction score" },
+  {
+    value: "18+",
+    label: "Years shaping communities",
+  },
+  {
+    value: "240+",
+    label: "Homes sold last year",
+  },
+  {
+    value: "96%",
+    label: "Client satisfaction",
+  },
 ];
 
-const Hero = () => {
-  const { darkMode } = useDarkMode();
+const Hero = ({ setSearchCriteria = () => {} }) => {
+  const [formState, setFormState] = useState({
+    q: "",
+    type: "",
+    category: "",
+  });
+
+  const handleChange = (e) => {
+    setFormState({
+      ...formState,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+
+    setSearchCriteria(formState);
+
+    scroller.scrollTo("properties", {
+      duration: 800,
+      smooth: "easeInOutQuart",
+      offset: -80,
+    });
+  };
 
   return (
     <section
       id="home"
-      className={`overflow-hidden pt-10 pb-24 ${
-        darkMode ? "bg-slate-950 text-white" : "bg-transparent text-slate-900"
-      }`}
+      className="relative min-h-screen bg-cover bg-center bg-no-repeat bg-fixed"
+      style={{
+        backgroundImage: `url(${heroImage})`,
+      }}
     >
-      <div className="section-shell">
-        <div
-          className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-cover bg-center px-6 py-16 shadow-2xl lg:px-12 lg:py-20"
-          style={{ backgroundImage: `url(${heroimg})` }}
-        >
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/88 via-slate-950/62 to-slate-950/30" />
-          <div className="absolute -right-20 top-10 h-60 w-60 rounded-full bg-orange-500/20 blur-3xl" />
+      {/* Dark Overlay */}
+      <div className="absolute inset-0 bg-black/60"></div>
 
-          <div className="relative z-10 grid gap-10 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
-            <Motion.div
-              initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="max-w-3xl"
-            >
-              <span className="inline-flex rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.35em] text-orange-200">
-                Curated city living
+      {/* Content */}
+      <div className="relative z-10 container mx-auto px-6 py-24 min-h-screen flex items-center">
+        <div className="grid lg:grid-cols-2 gap-16 items-center w-full">
+
+          {/* Left Side */}
+          <Motion.div
+            initial={{ opacity: 0, x: -40 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8 }}
+          >
+            <span className="inline-block rounded-full bg-white/20 backdrop-blur-md px-5 py-2 text-sm font-semibold uppercase tracking-widest text-white border border-white/20">
+              Curated Luxury Living
+            </span>
+
+            <h1 className="mt-8 text-5xl md:text-6xl lg:text-7xl font-extrabold leading-tight text-white">
+              Spaces That Feel
+              <span className="block text-yellow-400">
+                Already Yours.
               </span>
-              <h1 className="mt-6 text-4xl font-semibold leading-tight text-white sm:text-5xl lg:text-7xl">
-                Spaces that feel
-                <span className="block text-orange-300">already yours.</span>
-              </h1>
-              <p className="mt-6 max-w-2xl text-base leading-8 text-slate-200 sm:text-lg">
-                Find refined homes, investment-ready properties, and high-touch
-                advisory from a team that treats design, location, and long-term
-                value as one conversation.
-              </p>
+            </h1>
 
-              <div className="mt-8 grid gap-4 sm:grid-cols-3">
-                {stats.map((stat, index) => (
-                  <Motion.div
-                    key={stat.label}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.08 * index, duration: 0.35 }}
-                    className="rounded-3xl border border-white/12 bg-white/8 p-4 backdrop-blur"
-                  >
-                    <p className="text-2xl font-semibold text-white">{stat.value}</p>
-                    <p className="mt-2 text-sm leading-6 text-slate-200">{stat.label}</p>
-                  </Motion.div>
-                ))}
-              </div>
-            </Motion.div>
+            <p className="mt-8 max-w-xl text-lg leading-8 text-gray-200">
+              Discover premium homes, luxury apartments, villas, and
+              investment-ready properties with expert guidance and
+              personalized service.
+            </p>
 
-            <Motion.div
-              initial={{ opacity: 0, x: 22 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.12, duration: 0.45 }}
-              className="rounded-[1.75rem] border border-white/12 bg-white/10 p-6 backdrop-blur-xl"
+            {/* Stats */}
+            <div className="mt-12 grid gap-5 sm:grid-cols-3">
+              {stats.map((stat, index) => (
+                <Motion.div
+                  key={stat.label}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    delay: index * 0.15,
+                  }}
+                  className="rounded-xl bg-white/10 backdrop-blur-md border border-white/20 p-5 text-center"
+                >
+                  <h2 className="text-3xl font-bold text-yellow-400">
+                    {stat.value}
+                  </h2>
+
+                  <p className="mt-2 text-sm text-gray-200">
+                    {stat.label}
+                  </p>
+                </Motion.div>
+              ))}
+            </div>
+          </Motion.div>
+
+          {/* Search Card */}
+          <Motion.div
+            initial={{ opacity: 0, x: 40 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8 }}
+            className="rounded-3xl bg-white/95 backdrop-blur-lg shadow-2xl p-8"
+          >
+            <h2 className="text-3xl font-bold text-center text-gray-800">
+              Find Your Dream Home
+            </h2>
+
+            <p className="text-center text-gray-500 mt-2">
+              Search properties by location and category.
+            </p>
+
+            <form
+              onSubmit={handleSearch}
+              className="mt-8 space-y-6"
             >
-              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-orange-200">
-                Quick Search
-              </p>
-              <h2 className="mt-3 text-2xl font-semibold text-white">
-                Start with the lifestyle you want
-              </h2>
+              {/* Location */}
+              <div>
+                <label className="block mb-2 font-medium text-gray-700">
+                  Location
+                </label>
 
-              <div className="mt-6 space-y-4">
-                <div>
-                  <label htmlFor="location" className="mb-2 block text-sm font-medium text-slate-100">
-                    Location
-                  </label>
-                  <input
-                    id="location"
-                    type="text"
-                    placeholder="Downtown, waterfront, gated community..."
-                    className="w-full rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3 text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-400"
-                  />
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <label htmlFor="type" className="mb-2 block text-sm font-medium text-slate-100">
-                      Type
-                    </label>
-                    <select
-                      id="type"
-                      name="type"
-                      defaultValue=""
-                      className="w-full rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-orange-400"
-                    >
-                      <option value="" disabled>
-                        Select type
-                      </option>
-                      <option value="rentals">Rentals</option>
-                      <option value="sales">Sales</option>
-                      <option value="commercial">Commercial</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label htmlFor="category" className="mb-2 block text-sm font-medium text-slate-100">
-                      Category
-                    </label>
-                    <select
-                      id="category"
-                      name="category"
-                      defaultValue=""
-                      className="w-full rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-orange-400"
-                    >
-                      <option value="" disabled>
-                        Property style
-                      </option>
-                      <option value="apartments">Apartments</option>
-                      <option value="duplexes">Duplexes</option>
-                      <option value="condos">Condos</option>
-                      <option value="houses">Houses</option>
-                      <option value="townhomes">Townhomes</option>
-                    </select>
-                  </div>
-                </div>
-
-                <button className="w-full rounded-2xl bg-orange-600 px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-orange-700">
-                  Explore Properties
-                </button>
+                <input
+                  type="text"
+                  name="q"
+                  placeholder="Enter city or locality"
+                  value={formState.q}
+                  onChange={handleChange}
+                  className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-blue-600"
+                />
               </div>
-            </Motion.div>
-          </div>
+
+              {/* Type */}
+              <div>
+                <label className="block mb-2 font-medium text-gray-700">
+                  Property Type
+                </label>
+
+                <select
+                  name="type"
+                  value={formState.type}
+                  onChange={handleChange}
+                  className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-blue-600"
+                >
+                  <option value="">Select Type</option>
+                  <option value="rentals">Rent</option>
+                  <option value="sales">Buy</option>
+                  <option value="commercial">Commercial</option>
+                </select>
+              </div>
+
+              {/* Category */}
+              <div>
+                <label className="block mb-2 font-medium text-gray-700">
+                  Category
+                </label>
+
+                <select
+                  name="category"
+                  value={formState.category}
+                  onChange={handleChange}
+                  className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-blue-600"
+                >
+                  <option value="">Select Category</option>
+                  <option value="apartments">Apartment</option>
+                  <option value="houses">House</option>
+                  <option value="condos">Condo</option>
+                  <option value="duplexes">Duplex</option>
+                  <option value="townhomes">Townhome</option>
+                </select>
+              </div>
+
+              {/* Button */}
+              <button
+                type="submit"
+                className="w-full bg-blue-600 hover:bg-blue-700 transition duration-300 text-white rounded-lg py-4 font-semibold flex items-center justify-center gap-3"
+              >
+                <FaSearch />
+                Search Properties
+              </button>
+            </form>
+          </Motion.div>
+
         </div>
       </div>
     </section>

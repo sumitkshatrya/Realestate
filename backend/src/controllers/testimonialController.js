@@ -91,11 +91,102 @@ export const getTestimonialById = async (req, res) => {
   }
 };
 
-// GET - All testimonials (Admin)
+// GET - All testimonials (Admin) with pagination, search, filter, sort
 export const getAllTestimonials = async (req, res) => {
   try {
-    const testimonials = await Testimonial.find().sort({ createdAt: -1 });
-    res.json(testimonials);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const { search, status, sortField, sortOrder } = req.query;
+
+    // Build filter
+    const filter = {};
+    if (status) {
+      filter.status = status;
+    }
+    if (search) {
+      filter.$or = [
+        { fullName: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
+        { title: { $regex: search, $options: "i" } },
+        { feedback: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    // Build sort
+    const sort = {};
+    if (sortField) {
+      sort[sortField] = sortOrder === "asc" ? 1 : -1;
+    } else {
+      sort.createdAt = -1;
+    }
+
+    const totalCount = await Testimonial.countDocuments(filter);
+    const testimonials = await Testimonial.find(filter)
+      .sort(sort)
+      .skip(skip)
+      .limit(limit);
+
+    res.json({ data: testimonials, totalCount });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// POST - Bulk update status (Admin)
+export const bulkUpdateStatus = async (req, res) => {
+  try {
+    const { ids, status, filters } = req.body;
+
+    let query = {};
+    if (ids && ids.length > 0) {
+      query._id = { $in: ids };
+    } else if (filters) {
+      if (filters.status) query.status = filters.status;
+      if (filters.search) {
+        query.$or = [
+          { fullName: { $regex: filters.search, $options: "i" } },
+          { email: { $regex: filters.search, $options: "i" } },
+          { title: { $regex: filters.search, $options: "i" } },
+          { feedback: { $regex: filters.search, $options: "i" } },
+        ];
+      }
+    } else {
+      return res.status(400).json({ error: "No ids or filters provided" });
+    }
+
+    const result = await Testimonial.updateMany(query, { status });
+    res.json({ message: `${result.modifiedCount} testimonials updated`, modifiedCount: result.modifiedCount });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// POST - Bulk delete (Admin)
+export const bulkDelete = async (req, res) => {
+  try {
+    const { ids, filters } = req.body;
+
+    let query = {};
+    if (ids && ids.length > 0) {
+      query._id = { $in: ids };
+    } else if (filters) {
+      if (filters.status) query.status = filters.status;
+      if (filters.search) {
+        query.$or = [
+          { fullName: { $regex: filters.search, $options: "i" } },
+          { email: { $regex: filters.search, $options: "i" } },
+          { title: { $regex: filters.search, $options: "i" } },
+          { feedback: { $regex: filters.search, $options: "i" } },
+        ];
+      }
+    } else {
+      return res.status(400).json({ error: "No ids or filters provided" });
+    }
+
+    const result = await Testimonial.deleteMany(query);
+    res.json({ message: `${result.deletedCount} testimonials deleted`, deletedCount: result.deletedCount });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

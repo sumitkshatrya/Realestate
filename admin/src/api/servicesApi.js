@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://localhost:8080/api";
+import API from "./axiosInstance"; // Import the global Axios instance
 
 const normalizeServicesList = (payload) => {
   if (Array.isArray(payload)) {
@@ -14,53 +14,22 @@ const normalizeServicesList = (payload) => {
 
 export const servicesAPI = {
   getServices: async () => {
-    const response = await fetch(`${API_BASE_URL}/services?includeInactive=true`);
-
-    if (!response.ok) {
-      throw new Error("Failed to fetch services");
-    }
-
-    const payload = await response.json();
-    return normalizeServicesList(payload);
+    const response = await API.get("/services", { params: { includeInactive: true } });
+    return normalizeServicesList(response.data);
   },
 
   createService: async (serviceData) => {
-    const response = await fetch(`${API_BASE_URL}/services`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(serviceData),
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to create service");
-    }
-
-    return response.json();
+    const response = await API.post("/services", serviceData);
+    return response.data;
   },
 
   updateService: async (id, serviceData) => {
-    const response = await fetch(`${API_BASE_URL}/services/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(serviceData),
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to update service");
-    }
-
-    return response.json();
+    const response = await API.put(`/services/${id}`, serviceData);
+    return response.data;
   },
 
   deleteService: async (id) => {
-    const response = await fetch(`${API_BASE_URL}/services/${id}`, {
-      method: "DELETE",
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to delete service");
-    }
-
-    return response.json();
+    const response = await API.delete(`/services/${id}`);
+    return response.data;
   },
 };

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import TestimonialCard from "../components/TestimonialCard";
-import { fetchApprovedTestimonials } from "../api/testimonialApi"; // updated API service
+import { testimonialAPI } from "../api/testimonialApi.js";
 
 export default function TestimonialsList() {
   const [testimonials, setTestimonials] = useState([]);
@@ -11,8 +11,8 @@ export default function TestimonialsList() {
     const loadTestimonials = async () => {
       try {
         setLoading(true);
-        const response = await fetchApprovedTestimonials();
-        setTestimonials(Array.isArray(response.data) ? response.data : []);
+        const response = await testimonialAPI.getApprovedTestimonials();
+        setTestimonials(Array.isArray(response.testimonials) ? response.testimonials : []);
       } catch (err) {
         setError(err.message || "Error fetching testimonials");
       } finally {

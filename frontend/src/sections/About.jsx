@@ -1,85 +1,92 @@
 import aboutimg from '../assets/images/about.jpg';
 import { motion as Motion } from "framer-motion";
-import { useDarkMode } from "../components/useDarkMode";
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { FaChevronRight } from "react-icons/fa";
+import { contentAPI } from '../api/contentApi';
+import { Link } from 'react-router-dom';
 
 const About = () => {
-  const { darkMode } = useDarkMode(); 
+  const [content, setContent] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchContent = async () => {
+      try {
+        setLoading(true);
+        const response = await contentAPI.getAboutContent();
+        setContent(response.data);
+      } catch (err) {
+        setError("Failed to load content.");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchContent();
+  }, []);
 
   return (
     <section
       id="about"
-      className={`py-24 ${
-        darkMode ? "bg-slate-950 text-white" : "bg-transparent text-slate-900"
-      }`}
+      className="bg-[var(--background-color)] py-24"
     >
-      <div className="section-shell grid items-center gap-12 lg:grid-cols-[0.95fr_1.05fr]">
+      <div className="container mx-auto grid items-center gap-12 lg:grid-cols-2 px-4">
         <Motion.div
-          initial={{ opacity: 0, x: -22 }}
+          initial={{ opacity: 0, x: -20 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true, amount: 0.3 }}
-          transition={{ duration: 0.45 }}
+          transition={{ duration: 0.6, ease: "easeInOut" }}
           className="relative"
         >
-          <div className="absolute -left-5 -top-5 h-24 w-24 rounded-3xl bg-orange-500/20 blur-2xl" />
+          <div className="absolute -left-6 -top-6 h-32 w-32 rounded-full bg-[var(--primary-color)]/20 blur-3xl" />
           <img
             src={aboutimg}
-            alt="About our company"
-            className="relative z-10 h-[520px] w-full rounded-[2rem] object-cover shadow-2xl"
+            alt="A modern, minimalist building exterior"
+            className="relative z-10 h-auto max-h-[560px] w-full rounded-2xl object-cover shadow-2xl"
           />
         </Motion.div>
 
         <Motion.div
-          initial={{ opacity: 0, x: 22 }}
-          whileInView={{ opacity: 1, x: 0 }}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.3 }}
-          transition={{ duration: 0.45 }}
-          className={`rounded-[2rem] border p-8 lg:p-10 ${
-            darkMode
-              ? "border-white/10 bg-white/5"
-              : "border-orange-100 bg-white/80 shadow-xl shadow-orange-100/50"
-          }`}
+          transition={{ duration: 0.6, ease: "easeInOut" }}
         >
-          <p className={`text-xs font-semibold uppercase tracking-[0.35em] ${
-            darkMode ? "text-orange-200/70" : "text-orange-600/70"
-          }`}>
-            About us
-          </p>
-          <h2 className={`mt-4 text-4xl font-semibold leading-tight lg:text-5xl ${
-            darkMode ? "text-white" : "text-slate-900"
-          }`}>
-            Development expertise with the calm of a private advisor.
-          </h2>
-          <p className={`mt-6 text-lg leading-8 ${
-            darkMode ? "text-slate-300" : "text-slate-600"
-          }`}>
-            For more than two decades, we have shaped residential experiences
-            that balance architecture, neighborhood character, and long-term
-            value. Every recommendation is filtered through how people actually
-            want to live, invest, and grow.
-          </p>
+          {loading && <p>Loading content...</p>}
+          {error && <p className="text-red-500">{error}</p>}
+          {content && (
+            <>
+              <span className="text-sm font-semibold uppercase tracking-wider text-[var(--primary-color)]">
+                {content.subtitle}
+              </span>
+              <h2 className="mt-4 text-4xl font-bold leading-tight text-[var(--text-primary)] lg:text-5xl">
+                {content.title}
+              </h2>
+              <p className="mt-6 text-lg leading-8 text-[var(--text-secondary)]">
+                {content.paragraph}
+              </p>
 
-          <div className="mt-8 grid gap-4 sm:grid-cols-2">
-            {[
-              "Design-forward developments",
-              "Transparent acquisition guidance",
-              "End-to-end transaction support",
-              "Long-term value strategy",
-            ].map((item) => (
-              <div
-                key={item}
-                className={`rounded-2xl px-4 py-4 text-sm font-medium ${
-                  darkMode ? "bg-white/5 text-slate-200" : "bg-orange-50 text-slate-700"
-                }`}
-              >
-                {item}
+              <div className="mt-8 grid gap-4 sm:grid-cols-2">
+                {content.features.map((item) => (
+                  <div
+                    key={item}
+                    className="flex items-center gap-3 rounded-lg bg-[var(--neutral-100)] p-4"
+                  >
+                    <FaChevronRight className="h-4 w-4 flex-shrink-0 text-[var(--primary-color)]" />
+                    <span className="text-sm font-medium text-[var(--text-secondary)]">{item}</span>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </>
+          )}
 
-          <button className="mt-8 rounded-full bg-orange-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-orange-700">
-            Discover Our Story
-          </button>
+          <Link to="/about-us">
+            <button className="btn btn-primary mt-10 inline-flex items-center gap-2">
+              Discover Our Story
+              <FaChevronRight />
+            </button>
+          </Link>
         </Motion.div>
       </div>
     </section>

@@ -9,6 +9,10 @@ import {
   changePassword,
   deleteAccount,
   verifyOtp,
+  requestPasswordReset,
+  resetPassword,
+  toggleFavorite,
+  getFavoriteProperties,
 } from "../controllers/UserController.js";
 import { verifyToken } from "../middleware/auth.js";
 
@@ -21,11 +25,18 @@ router.route("/").get((req, res) => {
 router.route("/create").post(register);
 router.route("/login").post(loginUser);
 router.route("/verify").post(verifyToken, verifyUser);
+router.route("/verify-user").get(verifyToken, verifyUser);
 router.route("/logout").post(verifyToken, logoutUser);
 router.route("/refresh-token").post(refreshAccessToken);
 router.post("/verify-otp", verifyOtp);
+router.post("/request-password-reset", requestPasswordReset);
+router.post("/reset-password", resetPassword);
 router.put("/update-username/", verifyToken, updateUsername);
 router.put("/change-password", verifyToken, changePassword);
 router.delete("/delete-account", verifyToken, deleteAccount);
+
+// Favorites
+router.post("/favorites/:propertyId", verifyToken, toggleFavorite);
+router.get("/favorites", verifyToken, getFavoriteProperties);
 
 export default router;

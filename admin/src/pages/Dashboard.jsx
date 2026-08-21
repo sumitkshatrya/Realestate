@@ -1,36 +1,38 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import { motion as Motion } from "framer-motion";
-import { FaCheckCircle, FaClipboardList, FaLayerGroup } from "react-icons/fa";
+import {
+  FaBuilding,
+  FaCheckCircle,
+  FaClipboardList,
+  FaEnvelope,
+  FaHandshake,
+  FaLayerGroup,
+  FaMapMarkerAlt,
+  FaUsers,
+} from "react-icons/fa";
 import { servicesAPI } from "../api/servicesApi";
 import { adminFetchAll } from "../api/testimonialApi";
+import { contactAPI } from "../api/contactApi";
+import { tourAPI } from "../api/tourApi";
+import { popularAreaAPI } from "../api/popularAreaApi";
+import { propertyAPI } from "../api/propertyApi";
+import { userAPI } from "../api/userApi";
+import { useFetchData } from "../api/useFetchData";
 
 const Dashboard = () => {
-  const [testimonials, setTestimonials] = useState([]);
-  const [services, setServices] = useState([]);
-
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const [testimonialResponse, servicesResponse] = await Promise.all([
-          adminFetchAll(),
-          servicesAPI.getServices(),
-        ]);
-
-        setTestimonials(testimonialResponse?.data || []);
-        setServices(servicesResponse || []);
-      } catch (error) {
-        console.error("Failed to load dashboard metrics:", error);
-      }
-    };
-
-    load();
-  }, []);
+  const { data: testimonials, totalCount: totalTestimonials } = useFetchData(adminFetchAll);
+  const { data: services } = useFetchData(servicesAPI.getServices);
+  const { data: contacts } = useFetchData(contactAPI.getContacts);
+  const { data: tours } = useFetchData(tourAPI.getTours);
+  const { data: areas } = useFetchData(popularAreaAPI.getAreas);
+  const { data: properties } = useFetchData(propertyAPI.getProperties);
+  const { data: users } = useFetchData(userAPI.getUsers);
 
   const metrics = useMemo(
     () => [
       {
         label: "Total Testimonials",
-        value: testimonials.length,
+        value: totalTestimonials,
         icon: FaClipboardList,
       },
       {
@@ -43,8 +45,42 @@ const Dashboard = () => {
         value: services.length,
         icon: FaLayerGroup,
       },
+      {
+        label: "Properties",
+        value: properties.length,
+        icon: FaBuilding,
+      },
+      {
+        label: "Popular Areas",
+        value: areas.length,
+        icon: FaMapMarkerAlt,
+      },
+      {
+        label: "Tour Requests",
+        value: tours.length,
+        icon: FaHandshake,
+      },
+      {
+        label: "Contact Messages",
+        value: contacts.length,
+        icon: FaEnvelope,
+      },
+      {
+        label: "Registered Users",
+        value: users.length,
+        icon: FaUsers,
+      },
     ],
-    [services.length, testimonials]
+    [
+      services.length,
+      testimonials,
+      totalTestimonials,
+      properties.length,
+      areas.length,
+      tours.length,
+      contacts.length,
+      users.length,
+    ]
   );
 
   return (
@@ -67,7 +103,7 @@ const Dashboard = () => {
         </p>
       </Motion.section>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {metrics.map((metric, index) => {
           const MetricIcon = metric.icon;
 

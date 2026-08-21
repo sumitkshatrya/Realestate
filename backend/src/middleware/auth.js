@@ -1,63 +1,8 @@
-// import jwt from "jsonwebtoken";
-// import catchAsyncError from "../middleware/catchAsyncError.js";
-// import User from "../models/User.js";
-
-// export const verifyToken = catchAsyncError(async (req, res, next) => {
-//   try {
-//     const { authorization } =
-//       req.cookies.accessToken || req.headers.authorization?.split(" ")[1];
-//     if (!authorization || !authorization.startsWith("Bearer")) {
-//       throw new Error("unauthorized access - no token provided");
-//       const decoded = jwt.verify(
-//         authorization,
-//         process.env.ACCESS_TOKEN_SECRET
-//       );
-//       const user = await User.findById(decoded?.id).select(" -refresh_token");
-//       if (!user) {
-//         throw new Error("unauthorized access - user not found");
-//         req.user = user;
-//         next();
-//       }
-//     }
-//   } catch (error) {
-//     return res
-//       .status(401)
-//       .json({ message: "unauthorized access - invalid token" });
-//   }
-// });
 import jwt from "jsonwebtoken";
 import catchAsyncError from "../middleware/catchAsyncError.js";
+import ErrorHandler from "../middleware/error.js";
 import User from "../models/User.js";
 
-// export const verifyToken = catchAsyncError(async (req, res, next) => {
-//   try {
-//     // ✅ Extract token from header OR cookies
-//     const token =
-//       req.cookies.accessToken || req.headers.authorization?.split(" ")[1];
-
-//     // ✅ Check if token exists
-//     if (!token) {
-//       throw new Error("unauthorized access - no token provided");
-//     }
-
-//     // ✅ Verify the token
-//     const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
-
-//     // ✅ Find user
-//     const user = await User.findById(decoded?.id).select("-refresh_token");
-//     if (!user) {
-//       throw new Error("unauthorized access - user not found");
-//     }
-
-//     // ✅ Attach user to request and continue
-//     req.user = user;
-//     next();
-//   } catch (error) {
-//     return res
-//       .status(401)
-//       .json({ message: "unauthorized access - invalid token" });
-//   }
-// });
 export const verifyToken = catchAsyncError(async (req, res, next) => {
   try {
     let token;
@@ -73,14 +18,14 @@ export const verifyToken = catchAsyncError(async (req, res, next) => {
     }
 
     if (!token) {
-      return res
-        .status(401)
-        .json({ message: "unauthorized access - no token provided" });
+      // Use return next() for consistency with error handling middleware
+      return next(new ErrorHandler("Unauthorized access - no token provided", 401));
     }
 
     // 3️⃣ Verify token
     const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
-    const user = await User.findById(decoded?.id).select("-refresh_token");
+    // It's better practice to not select out the refresh token here, but in the controller if needed.
+    const user = await User.findById(decoded?.id);
 
     if (!user) {
       return res
@@ -91,8 +36,11 @@ export const verifyToken = catchAsyncError(async (req, res, next) => {
     req.user = user;
     next();
   } catch (error) {
-    return res
-      .status(401)
-      .json({ message: "unauthorized access - invalid token" });
+    // Catch JWT errors (like expiration) and provide a clear message.
+    if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
+        return next(new ErrorHandler("Unauthorized access - invalid or expired token", 401));
+    }
+    // Pass other errors to the central error handler
+    next(error);
   }
 });

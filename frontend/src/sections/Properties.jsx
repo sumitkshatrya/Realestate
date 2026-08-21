@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { motion as Motion } from "framer-motion";
 import {
   FaArrowRight,
@@ -9,191 +9,205 @@ import {
 } from "react-icons/fa";
 import { MdSpaceDashboard } from "react-icons/md";
 import { Link as ScrollLink } from "react-scroll";
-import { property } from "../components/export";
-import { useDarkMode } from "../components/useDarkMode";
-import { useState } from "react";
+import { Link as RouterLink } from "react-router-dom";
+import { useAuth } from "../context/useAuth";
+import { propertyAPI } from "../api/propertyApi";
+import { userAPI } from "../api/userApi.js";
+import { useDebounce } from "../hooks/useDebounce";
+import toast from "react-hot-toast";
 
-const Properties = () => {
-  const { darkMode } = useDarkMode();
-  const [selectedProperty, setSelectedProperty] = useState(property[0]);
-  const mapUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${selectedProperty.longitude - 0.08}%2C${selectedProperty.latitude - 0.05}%2C${selectedProperty.longitude + 0.08}%2C${selectedProperty.latitude + 0.05}&layer=mapnik&marker=${selectedProperty.latitude}%2C${selectedProperty.longitude}`;
+const PropertyCard = React.memo(({ item, onToggleFavorite, onSelectProperty, isFavorite, isAuthenticated }) => {
+  return (
+    <Motion.article
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.2 }}
+      transition={{ duration: 0.5 }}
+      className="group overflow-hidden rounded-2xl border border-[var(--neutral-200)] bg-[var(--background-color)] shadow-lg transition-shadow hover:shadow-2xl"
+    >
+      <div
+        className="relative h-64 bg-cover bg-center"
+        // Use the first image for the card, with a fallback.
+        style={{ backgroundImage: `url(${Array.isArray(item.images) && item.images.length > 0 ? item.images[0] : 'placeholder.jpg'})` }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+        <div className="absolute top-4 right-4">
+          <button
+            onClick={() => onToggleFavorite(item._id)}
+            disabled={!isAuthenticated}
+            className={`flex h-10 w-10 items-center justify-center rounded-full backdrop-blur-sm transition disabled:cursor-not-allowed ${
+              isFavorite ? "bg-red-500/80 text-white" : "bg-white/20 text-white hover:bg-white/30"
+            }`}
+            aria-label={`Save ${item.name}`}>
+            <FaHeart className="transition-transform group-hover:scale-110" />
+          </button>
+        </div>
+        <div className="absolute bottom-0 left-0 p-5 text-white">
+          <h3 className="text-2xl font-bold">{item.name}</h3>
+          <div className="mt-1 inline-flex items-center gap-2 text-sm">
+            <FaMapMarkerAlt />
+            <span>{item.address}</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="p-6">
+        <div className="flex justify-between items-center mb-4">
+            <p className="text-2xl font-extrabold text-[var(--primary-color)]">{item.price}</p>
+            <span className="rounded-full bg-[var(--primary-color)]/10 px-3 py-1 text-xs font-semibold text-[var(--primary-color)]">For Sale</span>
+        </div>
+
+        <div className="grid grid-cols-3 gap-4 text-center border-y border-[var(--neutral-200)] py-4 mb-5">
+          <div key="beds"><div className="mx-auto mb-1 text-2xl text-[var(--primary-color)]"><FaBed /></div><p className="text-sm font-bold text-[var(--text-primary)]">{item.bed}</p><p className="text-xs text-[var(--text-secondary)]">Beds</p></div>
+          <div key="baths"><div className="mx-auto mb-1 text-2xl text-[var(--primary-color)]"><FaBath /></div><p className="text-sm font-bold text-[var(--text-primary)]">{item.bath}</p><p className="text-xs text-[var(--text-secondary)]">Baths</p></div>
+          <div key="area"><div className="mx-auto mb-1 text-2xl text-[var(--primary-color)]"><MdSpaceDashboard /></div><p className="text-sm font-bold text-[var(--text-primary)]">{item.area}</p><p className="text-xs text-[var(--text-secondary)]">Area</p></div>
+        </div>
+
+        <div className="flex items-center justify-between gap-3">
+          <button type="button" onClick={() => onSelectProperty(item)} className="btn btn-secondary w-full text-center">Map</button>
+          <RouterLink to={`/properties/${item._id}`} className="btn btn-primary w-full inline-flex items-center justify-center gap-2">Details <FaArrowRight className="text-xs" /></RouterLink>
+        </div>
+      </div>
+    </Motion.article>
+  );
+});
+
+const Properties = ({ searchCriteria, setSearchCriteria }) => {
+  const [properties, setProperties] = useState([]);
+  const [selectedProperty, setSelectedProperty] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const debouncedSearchCriteria = useDebounce(searchCriteria, 500);
+  const { user, isAuthenticated, updateUser, loading: authLoading } = useAuth();
+
+  useEffect(() => {
+    const fetchProperties = async () => {
+      try {
+        setLoading(true);
+        const data = await propertyAPI.searchProperties(debouncedSearchCriteria);
+        const fetchedProperties = data?.data || [];
+        setProperties(fetchedProperties);
+
+        // Update selected property based on search results
+        if (fetchedProperties.length > 0 && !fetchedProperties.find(p => p._id === selectedProperty?._id)) {
+          setSelectedProperty(fetchedProperties[0]);
+        } else if (fetchedProperties.length === 0) {
+          setSelectedProperty(null);
+        }
+      } catch (err) {
+        setError("Failed to load properties. Please try again later.");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProperties();
+  }, [debouncedSearchCriteria, selectedProperty?._id]);
+
+  const mapUrl = selectedProperty ? `https://www.openstreetmap.org/export/embed.html?bbox=${selectedProperty.longitude - 0.08}%2C${selectedProperty.latitude - 0.05}%2C${selectedProperty.longitude + 0.08}%2C${selectedProperty.latitude + 0.05}&layer=mapnik&marker=${selectedProperty.latitude}%2C${selectedProperty.longitude}` : "";
+
+  const handleToggleFavorite = useCallback(async (propertyId) => {
+    if (!isAuthenticated) {
+      toast.error("Please log in to save favorites.");
+      return;
+    }
+    if (authLoading) {
+      toast.error("Please wait until your session is verified.");
+      return;
+    }
+    const isCurrentlyFavorite = user?.favorites?.includes(propertyId);
+    try {
+      const response = await userAPI.toggleFavorite(propertyId);
+      updateUser({ favorites: response.data.favorites });
+      if (isCurrentlyFavorite) {
+        toast.success("Removed from favorites!");
+      } else {
+        toast.success("Added to favorites!");
+      }
+    } catch (err) {
+      console.error("Failed to update favorites:", err);
+      toast.error("Failed to update favorites.");
+    }
+  }, [isAuthenticated, updateUser, user, authLoading]);
 
   return (
-    <section
-      id="properties"
-      className={`section-shell ${darkMode ? "text-white" : "text-slate-900"}`}
-    >
-      <Motion.div
-        initial={{ opacity: 0, y: 28 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.2 }}
-        transition={{ duration: 0.6 }}
-        className="mb-10 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between"
-      >
-        <div className="space-y-4">
-          <span
-            className={`inline-flex rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-[0.32em] ${
-              darkMode
-                ? "border-white/10 bg-white/5 text-amber-200"
-                : "border-amber-200 bg-white/80 text-amber-700"
-            }`}
-          >
+    <section id="properties" className="bg-[var(--neutral-100)] py-24">
+      <div className="container mx-auto px-4">
+        <Motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.6, ease: "easeInOut" }}
+          className="mb-12 text-center"
+        >
+          <span className="text-sm font-semibold uppercase tracking-wider text-[var(--primary-color)]">
             Featured Collection
           </span>
-          <h2 className="max-w-2xl font-serif text-4xl leading-tight sm:text-5xl">
-            Homes selected for design quality, light, and livability.
+          <h2 className="mt-4 text-4xl font-bold text-[var(--text-primary)] lg:text-5xl">
+            Curated for Quality & Comfort
           </h2>
-          <p
-            className={`max-w-2xl text-base leading-7 sm:text-lg ${
-              darkMode ? "text-slate-300" : "text-slate-600"
-            }`}
-          >
-            Browse standout listings curated to give you a sharper starting
-            point, whether you are buying your first home or upgrading into a
-            more ambitious neighborhood.
+          <p className="mt-4 max-w-3xl mx-auto text-lg leading-8 text-[var(--text-secondary)]">
+            Browse standout listings curated for design, quality, and long-term value, giving you a sharper starting point on your journey.
           </p>
+        </Motion.div>
+
+        <div className="mb-10">
+          <input
+            type="text"
+            placeholder="Search by property name or address..."
+            value={searchCriteria.q}
+            onChange={(e) => setSearchCriteria({ ...searchCriteria, q: e.target.value })}
+            className="w-full max-w-2xl mx-auto block rounded-full border-2 border-[var(--neutral-200)] bg-[var(--background-color)] px-6 py-4 text-center text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)] transition"
+          />
         </div>
 
-        <ScrollLink
-          to="contact"
-          smooth
-          offset={-90}
-          className={`inline-flex cursor-pointer items-center gap-3 rounded-full px-6 py-3 text-sm font-semibold transition duration-300 ${
-            darkMode
-              ? "bg-white text-slate-900 hover:bg-amber-100"
-              : "bg-slate-900 text-white hover:bg-slate-800"
-          }`}
-        >
-          Book a private consultation
-          <FaArrowRight />
-        </ScrollLink>
-      </Motion.div>
+        {loading && <p className="text-center text-lg text-[var(--text-secondary)]">Loading properties...</p>}
+        {error && <p className="text-center text-lg text-red-600">{error}</p>}
 
-      <div className="grid gap-7 md:grid-cols-2 xl:grid-cols-3">
-        {property.map((item, index) => (
-          <Motion.article
-            key={`${item.name}-${index}`}
-            initial={{ opacity: 0, y: 34 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.2 }}
-            transition={{ duration: 0.55, delay: index * 0.06 }}
-            className={`group overflow-hidden rounded-[30px] border ${
-              darkMode
-                ? "border-white/10 bg-slate-950/70"
-                : "border-white/70 bg-white/90 shadow-[0_24px_60px_rgba(15,23,42,0.1)]"
-            }`}
-          >
-            <div
-              className="relative h-72 bg-cover bg-center"
-              style={{ backgroundImage: `url(${item.images})` }}
-            >
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/25 to-transparent" />
-              <div className="absolute left-5 right-5 top-5 flex items-center justify-between">
-                <span className="rounded-full bg-white/15 px-3 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-white backdrop-blur-md">
-                  Signature Home
-                </span>
-                <button
-                  className="flex h-11 w-11 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-md transition duration-300 hover:scale-105"
-                  aria-label={`Save ${item.name}`}
-                >
-                  <FaHeart />
-                </button>
-              </div>
-              <div className="absolute inset-x-0 bottom-0 p-6 text-white">
-                <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-black/25 px-3 py-2 text-xs backdrop-blur-sm">
-                  <FaMapMarkerAlt />
-                  {item.address}
-                </div>
-                <div className="flex items-end justify-between gap-4">
+        {!loading && !error && properties.length === 0 && (
+          <div className="text-center py-12">
+            <h3 className="text-2xl font-semibold text-[var(--text-primary)]">No Properties Found</h3>
+            <p className="text-[var(--text-secondary)] mt-2">
+              {searchCriteria.q || searchCriteria.type || searchCriteria.category
+                ? "No properties match your search. Try a different term."
+                : "There are currently no properties to display. Please check back later."}
+            </p>
+          </div>
+        )}
+
+        {!loading && !error && properties.length > 0 && (
+          <>
+            <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-3">
+              {properties.map((item) => (
+                <PropertyCard
+                  key={item._id}
+                  item={item}
+                  onToggleFavorite={handleToggleFavorite}
+                  onSelectProperty={setSelectedProperty}
+                  isFavorite={user?.favorites?.includes(item._id)}
+                  isAuthenticated={isAuthenticated}
+                />
+              ))}
+            </div>
+            
+            {selectedProperty && (
+              <Motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="mt-12 overflow-hidden rounded-2xl border border-[var(--neutral-200)] bg-[var(--background-color)] shadow-xl">
+                <div className="flex flex-col gap-3 p-6 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <h3 className="font-serif text-2xl">{item.name}</h3>
-                    <p className="mt-2 text-sm leading-6 text-white/75">
-                      {item.about}
-                    </p>
+                    <span className="text-sm font-semibold uppercase tracking-wider text-[var(--primary-color)]">Property Map</span>
+                    <h3 className="mt-1 text-2xl font-bold text-[var(--text-primary)]">{selectedProperty.name}</h3>
+                    <p className="text-sm text-[var(--text-secondary)]">{selectedProperty.address}</p>
                   </div>
-                  <p className="whitespace-nowrap text-2xl font-semibold">
-                    {item.price}
-                  </p>
+                  <a href={`https://www.openstreetmap.org/?mlat=${selectedProperty.latitude}&mlon=${selectedProperty.longitude}#map=14/${selectedProperty.latitude}/${selectedProperty.longitude}`} target="_blank" rel="noreferrer" className="btn btn-secondary">
+                    Open Full Map
+                  </a>
                 </div>
-              </div>
-            </div>
-
-            <div className="space-y-6 p-6">
-              <div className="grid grid-cols-3 gap-3">
-                {[
-                  { icon: <FaBed />, value: item.bed, label: "Beds" },
-                  { icon: <FaBath />, value: item.bath, label: "Baths" },
-                  {
-                    icon: <MdSpaceDashboard />,
-                    value: item.area,
-                    label: "Area",
-                  },
-                ].map((detail) => (
-                  <div
-                    key={detail.label}
-                    className={`rounded-2xl border px-4 py-4 text-center ${
-                      darkMode
-                        ? "border-white/10 bg-white/5"
-                        : "border-slate-100 bg-slate-50"
-                    }`}
-                  >
-                    <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-rose-500/10 text-rose-500">
-                      {detail.icon}
-                    </div>
-                    <p className="text-sm font-semibold">{detail.value}</p>
-                    <p
-                      className={`text-xs uppercase tracking-[0.22em] ${
-                        darkMode ? "text-slate-400" : "text-slate-500"
-                      }`}
-                    >
-                      {detail.label}
-                    </p>
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <p
-                    className={`text-xs uppercase tracking-[0.24em] ${
-                      darkMode ? "text-slate-400" : "text-slate-500"
-                    }`}
-                  >
-                    Listed with
-                  </p>
-                  <p className="mt-1 text-base font-semibold">{item.owner}</p>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <button type="button" onClick={() => setSelectedProperty(item)} className={`rounded-full border px-4 py-3 text-sm font-semibold transition hover:border-rose-500 hover:text-rose-600 ${darkMode ? "border-white/20 text-white" : "border-slate-200 text-slate-700"}`}>
-                    View location
-                  </button>
-                  <ScrollLink
-                    to="contact"
-                    smooth
-                    offset={-90}
-                    className={`inline-flex cursor-pointer items-center gap-2 rounded-full px-4 py-3 text-sm font-semibold transition duration-300 ${
-                      darkMode
-                        ? "bg-white text-slate-900 hover:bg-amber-100"
-                        : "bg-rose-600 text-white hover:bg-rose-700"
-                    }`}
-                  >
-                    Schedule tour
-                    <FaArrowRight className="text-xs" />
-                  </ScrollLink>
-                </div>
-              </div>
-            </div>
-          </Motion.article>
-        ))}
+                <iframe title={`Map showing ${selectedProperty.name}`} src={mapUrl} className="h-96 w-full border-0" loading="lazy" />
+              </Motion.div>
+            )}
+          </>
+        )}
       </div>
-      <Motion.div initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="mt-10 overflow-hidden rounded-[30px] border border-white/70 bg-white/90 shadow-[0_24px_60px_rgba(15,23,42,0.1)]">
-        <div className="flex flex-col gap-3 p-6 sm:flex-row sm:items-center sm:justify-between">
-          <div><p className="text-xs font-semibold uppercase tracking-[0.24em] text-rose-600">Property map</p><h3 className="mt-2 font-serif text-2xl text-slate-900">{selectedProperty.name}</h3><p className="mt-1 text-sm text-slate-600">{selectedProperty.address}</p></div>
-          <a href={`https://www.openstreetmap.org/?mlat=${selectedProperty.latitude}&mlon=${selectedProperty.longitude}#map=14/${selectedProperty.latitude}/${selectedProperty.longitude}`} target="_blank" rel="noreferrer" className="text-sm font-semibold text-rose-600 hover:underline">Open full map</a>
-        </div>
-        <iframe title={`Map showing ${selectedProperty.name}`} src={mapUrl} className="h-80 w-full border-0" loading="lazy" />
-      </Motion.div>
     </section>
   );
 };

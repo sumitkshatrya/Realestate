@@ -172,12 +172,12 @@ const logoutUser = async (req, res, next) => {
 };
 
 // ================= REFRESH TOKEN =================
-const refreshAccessToken = async (req, res) => {
+const refreshAccessToken = async (req, res, next) => {
   try {
     const refreshToken =
       req.cookies.refreshToken || req.headers.authorization?.split(" ")[1];
     if (!refreshToken) {
-      throw new ApiError("Refresh token is required", 401);
+      return next(new ErrorHandler("Refresh token is required", 401));
     }
 
     const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
@@ -185,11 +185,19 @@ const refreshAccessToken = async (req, res) => {
       "-password -refresh_token"
     );
     if (!user) {
-      throw new ApiError("User not found", 404);
+      return next(new ErrorHandler("User not found", 404));
     }
 
-    const { accessToken, refreshToken: newRefreshToken } = await generatetoken(
-      user
+    const accessToken = jwt.sign(
+      { id: user._id },
+      process.env.ACCESS_TOKEN_SECRET,
+      { expiresIn: "1h" }
+    );
+
+    const newRefreshToken = jwt.sign(
+      { id: user._id },
+      process.env.REFRESH_TOKEN_SECRET,
+      { expiresIn: "7d" }
     );
 
     const options = {
@@ -216,8 +224,8 @@ const refreshAccessToken = async (req, res) => {
 const verifyUser = async (req, res) => {
   try {
     const user = req.user;
-    if (!user || !user._id) {
-      throw new ApiError("Access token not verified", 401);
+    if (!user) { // This check is redundant if verifyToken middleware is used correctly but good for safety.
+      return res.status(401).json(new ApiResponse(null, "Access token not verified", 401));
     }
 
     res.status(200).json(new ApiResponse(user, "Success", 200));
@@ -293,18 +301,18 @@ const updateUsername = async (req, res) => {
 };
 
 // ================= CHANGE PASSWORD =================
-const changePassword = async (req, res) => {
+const changePassword = async (req, res, next) => {
   try {
     const user = req.user;
     const { oldPassword, newPassword } = req.body;
 
     if (!oldPassword || !newPassword) {
-      throw new ApiError("Old and new passwords are required", 400);
+      return next(new ErrorHandler("Old and new passwords are required", 400));
     }
 
-    const isMatch = await user.isPasswordValid(oldPassword);
+    const isMatch = await user.comparePassword(oldPassword);
     if (!isMatch) {
-      throw new ApiError("Old password is incorrect", 401);
+      return next(new ErrorHandler("Old password is incorrect", 401));
     }
 
     user.password = newPassword;
@@ -314,9 +322,7 @@ const changePassword = async (req, res) => {
       .status(200)
       .json(new ApiResponse(null, "✅ Password changed successfully", 200));
   } catch (error) {
-    res
-      .status(error.statusCode || 500)
-      .json({ message: error.message || "❌ Failed to change password" });
+    next(error);
   }
 };
 
@@ -366,7 +372,7 @@ async function sendVerificationCode(
     }
   } catch (err) {
     console.error("sendVerificationCode error:", err);
-    throw new ErrorHandler("Failed to send verification code", 500);
+    throw new ErrorHandler(err.message || "Failed to send verification code", 500);
   }
 }
 
@@ -437,6 +443,43 @@ const verifyOtp = catchAsyncError(async (req, res, next) => {
   });
 });
 
+// ================= TOGGLE FAVORITE =================
+const toggleFavorite = catchAsyncError(async (req, res, next) => {
+  const { propertyId } = req.params;
+  const user = await User.findById(req.user._id);
+
+  if (!user) {
+    return next(new ErrorHandler("User not found", 404));
+  }
+
+  const index = user.favorites.indexOf(propertyId);
+  let message;
+
+  if (index === -1) {
+    // Add to favorites
+    user.favorites.push(propertyId);
+    message = "Property added to favorites";
+  } else {
+    // Remove from favorites
+    user.favorites.splice(index, 1);
+    message = "Property removed from favorites";
+  }
+
+  await user.save();
+  res.status(200).json(new ApiResponse({ favorites: user.favorites }, message, 200));
+});
+
+// ================= GET FAVORITE PROPERTIES =================
+const getFavoriteProperties = catchAsyncError(async (req, res, next) => {
+  const user = await User.findById(req.user._id).populate('favorites');
+
+  if (!user) {
+    return next(new ErrorHandler("User not found", 404));
+  }
+
+  res.status(200).json(new ApiResponse(user.favorites, "Favorite properties fetched successfully", 200));
+});
+
 // ================= EXPORT =================
 export {
   register,
@@ -448,4 +491,8 @@ export {
   changePassword,
   updateUsername,
   verifyOtp,
+  requestPasswordReset,
+  resetPassword,
+  toggleFavorite,
+  getFavoriteProperties,
 };

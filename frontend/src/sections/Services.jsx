@@ -16,8 +16,7 @@ import {
   FaSyncAlt,
   FaTools,
 } from "react-icons/fa";
-import { useDarkMode } from "../components/useDarkMode";
-import { servicesAPI } from "../api/servicesApi";
+import { servicesAPI } from "../api/servicesApi.js";
 
 const iconMap = {
   FaHome,
@@ -36,15 +35,14 @@ const Services = () => {
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { darkMode } = useDarkMode();
 
   const fetchServices = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const servicesData = await servicesAPI.getServices();
-      const validatedServices = servicesData
+      const response = await servicesAPI.getServices();
+      const validatedServices = (response.data || [])
         .filter((service) => service?.isActive !== false)
         .sort((a, b) => (a.order || 0) - (b.order || 0))
         .map((service) => ({
@@ -69,40 +67,13 @@ const Services = () => {
 
   if (loading) {
     return (
-      <section className="section-shell">
-        <div
-          className={`rounded-[36px] border p-8 sm:p-10 ${
-            darkMode
-              ? "border-white/10 bg-slate-950/70 text-white"
-              : "border-white/80 bg-white/90 text-slate-900 shadow-[0_24px_60px_rgba(15,23,42,0.1)]"
-          }`}
-        >
-          <div className="mb-10 flex items-center gap-4">
-            <div className="h-14 w-14 animate-spin rounded-full border-4 border-rose-500 border-t-transparent" />
-            <div>
-              <p className="text-lg font-semibold">Loading our services</p>
-              <p className={darkMode ? "text-slate-300" : "text-slate-600"}>
-                Preparing the latest offerings for you.
-              </p>
+      <section className="py-24 bg-[var(--background-color)]">
+        <div className="container mx-auto px-4">
+            <div className="text-center">
+                <div className="h-12 w-12 mx-auto animate-spin rounded-full border-4 border-[var(--primary-color)] border-t-transparent" />
+                <h3 className="mt-4 text-2xl font-semibold text-[var(--text-primary)]">Loading Services</h3>
+                <p className="text-[var(--text-secondary)]">Preparing the latest offerings for you.</p>
             </div>
-          </div>
-          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {Array.from({ length: 3 }).map((_, index) => (
-              <div
-                key={index}
-                className={`animate-pulse rounded-[28px] border p-6 ${
-                  darkMode
-                    ? "border-white/10 bg-white/5"
-                    : "border-slate-100 bg-slate-50"
-                }`}
-              >
-                <div className="mb-5 h-14 w-14 rounded-2xl bg-rose-200/60" />
-                <div className="mb-3 h-5 w-32 rounded-full bg-slate-200/70" />
-                <div className="mb-2 h-4 w-full rounded-full bg-slate-200/60" />
-                <div className="h-4 w-4/5 rounded-full bg-slate-200/60" />
-              </div>
-            ))}
-          </div>
         </div>
       </section>
     );
@@ -110,179 +81,95 @@ const Services = () => {
 
   if (error) {
     return (
-      <section className="section-shell">
-        <div
-          className={`mx-auto max-w-2xl rounded-[36px] border p-10 text-center ${
-            darkMode
-              ? "border-white/10 bg-slate-950/70 text-white"
-              : "border-white/80 bg-white/90 text-slate-900 shadow-[0_24px_60px_rgba(15,23,42,0.1)]"
-          }`}
-        >
-          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-rose-500/10 text-rose-500">
-            <FaSyncAlt className="text-xl" />
-          </div>
-          <h3 className="font-serif text-3xl">Services unavailable</h3>
-          <p
-            className={`mx-auto mt-3 max-w-lg text-base leading-7 ${
-              darkMode ? "text-slate-300" : "text-slate-600"
-            }`}
-          >
-            {error}
-          </p>
-          <button
-            onClick={fetchServices}
-            className="mt-8 inline-flex items-center gap-3 rounded-full bg-rose-600 px-6 py-3 font-semibold text-white transition duration-300 hover:bg-rose-700"
-          >
-            Reload services
-            <FaArrowRight className="text-xs" />
-          </button>
+      <section className="py-24 bg-[var(--neutral-100)]">
+        <div className="container mx-auto px-4 text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[var(--primary-color)]/10 text-[var(--primary-color)]">
+                <FaSyncAlt className="text-2xl" />
+            </div>
+            <h3 className="text-3xl font-bold text-[var(--text-primary)]">Services Unavailable</h3>
+            <p className="mx-auto mt-3 max-w-lg text-lg leading-7 text-[var(--text-secondary)]">{error}</p>
+            <button onClick={fetchServices} className="btn btn-primary mt-8">
+                Reload Services
+            </button>
         </div>
       </section>
     );
   }
 
   return (
-    <section
-      id="services"
-      className={`section-shell ${darkMode ? "text-white" : "text-slate-900"}`}
-    >
-      <motion.div
-        initial={{ opacity: 0, y: 28 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.2 }}
-        transition={{ duration: 0.6 }}
-        className="mb-10 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between"
-      >
-        <div className="space-y-4">
-          <span
-            className={`inline-flex rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-[0.32em] ${
-              darkMode
-                ? "border-white/10 bg-white/5 text-emerald-200"
-                : "border-emerald-200 bg-white/80 text-emerald-700"
-            }`}
-          >
-            Concierge Services
-          </span>
-          <h2 className="max-w-2xl font-serif text-4xl leading-tight sm:text-5xl">
-            Practical support across search, purchase, selling, and aftercare.
-          </h2>
-          <p
-            className={`max-w-2xl text-base leading-7 sm:text-lg ${
-              darkMode ? "text-slate-300" : "text-slate-600"
-            }`}
-          >
-            From valuation and strategy to legal coordination and relocation
-            planning, our team keeps the process calm, clear, and efficient.
-          </p>
-        </div>
-
-        <ScrollLink
-          to="contact"
-          smooth
-          offset={-90}
-          className={`inline-flex cursor-pointer items-center gap-3 rounded-full px-6 py-3 text-sm font-semibold transition duration-300 ${
-            darkMode
-              ? "bg-white text-slate-900 hover:bg-emerald-100"
-              : "bg-slate-900 text-white hover:bg-slate-800"
-          }`}
+    <section id="services" className="py-24 bg-[var(--background-color)]">
+      <div className="container mx-auto px-4">
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.6, ease: "easeInOut" }}
+            className="mb-12 text-center"
         >
-          Talk with an advisor
-          <FaArrowRight />
-        </ScrollLink>
-      </motion.div>
+            <span className="text-sm font-semibold uppercase tracking-wider text-[var(--primary-color)]">
+                Our Services
+            </span>
+            <h2 className="mt-4 text-4xl font-bold text-[var(--text-primary)] lg:text-5xl">
+                Support Across Your Journey
+            </h2>
+            <p className="mt-4 max-w-3xl mx-auto text-lg leading-8 text-[var(--text-secondary)]">
+                From valuation and strategy to legal coordination and relocation planning, our team keeps the process calm, clear, and efficient.
+            </p>
+        </motion.div>
 
-      <div className="grid gap-7 md:grid-cols-2 xl:grid-cols-3">
-        {services.length > 0 ? (
-          services.map((service, index) => {
-            const IconComponent = iconMap[service.icon] || FaBuilding;
+        <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-3">
+            {services.length > 0 ? (
+            services.map((service, index) => {
+                const IconComponent = iconMap[service.icon] || FaBuilding;
 
-            return (
-              <motion.article
-                key={service._id || index}
-                initial={{ opacity: 0, y: 34 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.2 }}
-                transition={{ duration: 0.55, delay: index * 0.06 }}
-                className={`group overflow-hidden rounded-[30px] border p-7 ${
-                  darkMode
-                    ? "border-white/10 bg-slate-950/70"
-                    : "border-white/80 bg-white/90 shadow-[0_24px_60px_rgba(15,23,42,0.1)]"
-                }`}
-              >
-                <div className="mb-8 flex items-start justify-between gap-4">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-[22px] bg-gradient-to-br from-rose-500 to-amber-500 text-2xl text-white shadow-lg">
-                    <IconComponent />
-                  </div>
-                  <span
-                    className={`rounded-full px-3 py-2 text-xs font-semibold uppercase tracking-[0.24em] ${
-                      darkMode
-                        ? "bg-white/5 text-slate-300"
-                        : "bg-slate-100 text-slate-500"
-                    }`}
-                  >
-                    {String(index + 1).padStart(2, "0")}
-                  </span>
-                </div>
-
-                <h3 className="font-serif text-2xl">{service.title}</h3>
-                <p
-                  className={`mt-4 min-h-24 text-base leading-7 ${
-                    darkMode ? "text-slate-300" : "text-slate-600"
-                  }`}
+                return (
+                <motion.article
+                    key={service._id || index}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, amount: 0.2 }}
+                    transition={{ duration: 0.5, delay: index * 0.05 }}
+                    className="group overflow-hidden rounded-2xl border border-[var(--neutral-200)] bg-[var(--background-color)] p-8 text-center shadow-lg transition-all hover:shadow-2xl hover:-translate-y-2"
                 >
-                  {service.description}
-                </p>
+                    <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[var(--primary-color)] to-[var(--accent-color)] text-3xl text-white shadow-lg">
+                        <IconComponent />
+                    </div>
 
-                <div className="mt-8 flex items-center justify-between gap-4">
-                  <RouterLink
-                    to={`/services/${service.slug || service._id}`}
-                    className="inline-flex items-center gap-2 text-sm font-semibold text-rose-500 transition duration-300 hover:text-rose-600"
-                  >
-                    Explore service
-                    <FaArrowRight className="text-xs transition duration-300 group-hover:translate-x-1" />
-                  </RouterLink>
-                  <div
-                    className={`h-px flex-1 ${
-                      darkMode ? "bg-white/10" : "bg-slate-200"
-                    }`}
-                  />
+                    <h3 className="text-xl font-bold text-[var(--text-primary)]">{service.title}</h3>
+                    <p className="mt-2 min-h-24 text-base leading-7 text-[var(--text-secondary)]">
+                        {service.description}
+                    </p>
+
+                    <RouterLink
+                        to={`/services/${service.slug || service._id}`}
+                        className="mt-6 inline-flex items-center gap-2 font-semibold text-[var(--primary-color)] transition group-hover:text-[var(--accent-color)]"
+                    >
+                        Explore Service
+                        <FaArrowRight className="text-xs transition-transform duration-300 group-hover:translate-x-1" />
+                    </RouterLink>
+                </motion.article>
+                );
+            })
+            ) : (
+            <div className="col-span-full text-center p-10 rounded-2xl bg-[var(--neutral-100)]">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[var(--primary-color)]/10 text-[var(--primary-color)]">
+                    <FaTools className="text-2xl" />
                 </div>
-              </motion.article>
-            );
-          })
-        ) : (
-          <div className="col-span-full">
-            <div
-              className={`rounded-[32px] border p-10 text-center ${
-                darkMode
-                  ? "border-white/10 bg-slate-950/70"
-                  : "border-white/80 bg-white/90 shadow-[0_24px_60px_rgba(15,23,42,0.1)]"
-              }`}
-            >
-              <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-rose-500/10 text-rose-500">
-                <FaTools className="text-xl" />
-              </div>
-              <h3 className="font-serif text-3xl">New services are on the way</h3>
-              <p
-                className={`mx-auto mt-3 max-w-xl text-base leading-7 ${
-                  darkMode ? "text-slate-300" : "text-slate-600"
-                }`}
-              >
-                We are refreshing this section with new advisory and property
-                support options. Check back shortly or contact us directly.
-              </p>
-              <ScrollLink
-                to="contact"
-                smooth
-                offset={-90}
-                className="mt-8 inline-flex cursor-pointer items-center gap-3 rounded-full bg-rose-600 px-6 py-3 font-semibold text-white transition duration-300 hover:bg-rose-700"
-              >
-                Contact our team
-                <FaArrowRight className="text-xs" />
-              </ScrollLink>
+                <h3 className="text-3xl font-bold text-[var(--text-primary)]">New Services Coming Soon</h3>
+                <p className="mx-auto mt-3 max-w-xl text-lg leading-7 text-[var(--text-secondary)]">
+                    We're refreshing this section with new advisory and support options. Check back shortly or contact us directly.
+                </p>
+                <ScrollLink
+                    to="contact"
+                    smooth
+                    offset={-90}
+                    className="btn btn-primary mt-8"
+                >
+                    Contact Our Team
+                </ScrollLink>
             </div>
-          </div>
-        )}
+            )}
+        </div>
       </div>
     </section>
   );

@@ -1,111 +1,118 @@
-import { useDarkMode } from "./useDarkMode";
-import { FaFacebookF, FaInstagram, FaTwitter, FaYoutube, FaBuilding, FaMobile, FaFax, FaArrowUp, FaMoon, FaSun } from 'react-icons/fa';
+import { FaFacebookF, FaInstagram, FaTwitter, FaYoutube, FaBuilding, FaMobile, FaFax, FaArrowUp } from 'react-icons/fa';
 import { Link } from "react-scroll";
 import { IoMdMail } from 'react-icons/io';
+import { useLocation, useNavigate } from 'react-router-dom';
 import prop7 from '../assets/images/prop7.jpg';
 import prop8 from '../assets/images/prop8.jpg';
 import React from "react";
-const Footer = () => {
-    const { darkMode, toggleDarkMode } = useDarkMode();
+import logo from "../assets/images/logo.png";
 
+const Footer = () => {
+    const navigate = useNavigate();
+    const location = useLocation();
+
+    const handleScrollToHomeTop = () => {
+        if (location.pathname === '/') {
+            // If on homepage, just scroll to top
+            window.scrollTo({
+                top: 0,
+                behavior: "smooth"
+            });
+        } else {
+            // If on another page, navigate to homepage and then scroll
+            navigate('/');
+            setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 0);
+        }
+    };
     return (
         <>
-            <footer className={`w-full justify-center items-start m-auto lg:px-20 px-10 py-20 grid lg:grid-cols-3 grid-cols-1 lg:gap-20 gap-10 ${
-                darkMode ? "bg-gray-900 text-white" : "bg-white text-black"
-            }`}>
-                
-                {/* About Us Section */}
-                <div className='flex flex-col justify-center items-start gap-5'>
-                    <h1 className={`text-2xl font-semibold ${darkMode ? "text-white" : "text-black"}`}>About Us</h1>
-                    <p className={`text-justify ${darkMode ? "text-slate-200" : "text-gray-600"}`}>
-                        Lorem ipsum dolor sit amet, consectetur adipisicing elit. Sunt voluptate magni ipsum fugiat laborum possimus ex voluptatem sint? Consequuntur, corporis?
-                    </p>
-                    <div id="social-icons" className='flex justify-start items-center gap-4 mt-4'>
-                        <div className={`p-3 rounded-xl transition-all duration-300 cursor-pointer hover:scale-110 ${
-                            darkMode ? "bg-gray-700 hover:bg-red-600 text-white" : "bg-gray-200 hover:bg-red-600 hover:text-white text-gray-700"
-                        }`}>
-                            <FaFacebookF size={18} />
+            <footer className="bg-[var(--footer-background)] text-[var(--footer-text)] py-20">
+                <div className="container mx-auto px-4 grid lg:grid-cols-4 md:grid-cols-2 grid-cols-1 gap-12">
+                    
+                    {/* About Us Section */}
+                    <div className='flex flex-col gap-5 col-span-1 md:col-span-2 lg:col-span-1'>
+                        <div className="flex items-center gap-3">
+                            <img src={logo} alt="company logo" className="h-10 w-10 rounded-lg bg-white p-1" />
+                            <span className="text-xl font-bold">Realestate</span>
                         </div>
-                        <div className={`p-3 rounded-xl transition-all duration-300 cursor-pointer hover:scale-110 ${
-                            darkMode ? "bg-gray-700 hover:bg-red-600 text-white" : "bg-gray-200 hover:bg-red-600 hover:text-white text-gray-700"
-                        }`}>
-                            <FaInstagram size={18} />
-                        </div>
-                        <div className={`p-3 rounded-xl transition-all duration-300 cursor-pointer hover:scale-110 ${
-                            darkMode ? "bg-gray-700 hover:bg-red-600 text-white" : "bg-gray-200 hover:bg-red-600 hover:text-white text-gray-700"
-                        }`}>
-                            <FaTwitter size={18} />
-                        </div>
-                        <div className={`p-3 rounded-xl transition-all duration-300 cursor-pointer hover:scale-110 ${
-                            darkMode ? "bg-gray-700 hover:bg-red-600 text-white" : "bg-gray-200 hover:bg-red-600 hover:text-white text-gray-700"
-                        }`}>
-                            <FaYoutube size={18} />
+                        <p className="text-sm text-[var(--text-secondary)]">
+                            Our mission is to help you find a home that you'll love. We are dedicated to providing the best service and expertise in the market.
+                        </p>
+                        <div id="social-icons" className='flex gap-3 mt-2'>
+                            <a href="#" className="p-3 rounded-full bg-white/10 hover:bg-white/20 transition-colors">
+                                <FaFacebookF size={16} />
+                            </a>
+                            <a href="#" className="p-3 rounded-full bg-white/10 hover:bg-white/20 transition-colors">
+                                <FaInstagram size={16} />
+                            </a>
+                            <a href="#" className="p-3 rounded-full bg-white/10 hover:bg-white/20 transition-colors">
+                                <FaTwitter size={16} />
+                            </a>
+                            <a href="#" className="p-3 rounded-full bg-white/10 hover:bg-white/20 transition-colors">
+                                <FaYoutube size={16} />
+                            </a>
                         </div>
                     </div>
-                    <h1 className={`mt-8 ${darkMode ? "text-slate-200" : "text-gray-600"}`}>Copyright Real Estate, All Rights Reserved</h1>
-                </div>
 
-                {/* Contact Us Section */}
-                <div className='flex flex-col justify-center items-start gap-5'>
-                    <h1 className={`text-2xl font-semibold ${darkMode ? "text-white" : "text-black"}`}>Contact Us</h1>
-                    <div className='flex justify-start items-center gap-3'>
-                        <FaBuilding className={`size-5 ${darkMode ? "text-red-500" : "text-red-600"}`}/>
-                        <p className={`${darkMode ? "text-slate-200" : "text-gray-600"}`}>108 Griffith Peak Dr, Las Vegas, NV 89135</p>
+                    {/* Quick Links Section */}
+                    <div className='flex flex-col gap-5'>
+                        <h3 className="text-lg font-semibold">Quick Links</h3>
+                        <ul className="space-y-3">
+                            <li><Link to="home" smooth={true} offset={-100} className="text-sm text-[var(--text-secondary)] hover:text-white cursor-pointer">Home</Link></li>
+                            <li><Link to="about" smooth={true} offset={-100} className="text-sm text-[var(--text-secondary)] hover:text-white cursor-pointer">About</Link></li>
+                            <li><Link to="properties" smooth={true} offset={-100} className="text-sm text-[var(--text-secondary)] hover:text-white cursor-pointer">Properties</Link></li>
+                            <li><Link to="services" smooth={true} offset={-100} className="text-sm text-[var(--text-secondary)] hover:text-white cursor-pointer">Services</Link></li>
+                            <li><Link to="contact" smooth={true} offset={-100} className="text-sm text-[var(--text-secondary)] hover:text-white cursor-pointer">Contact</Link></li>
+                        </ul>
                     </div>
-                    <div className='flex justify-start items-center gap-3'>
-                        <FaMobile className={`size-5 ${darkMode ? "text-red-500" : "text-red-600"}`}/>
-                        <p className={`${darkMode ? "text-slate-200" : "text-gray-600"}`}>+956 3620 5692</p>
+
+                    {/* Contact Us Section */}
+                    <div className='flex flex-col gap-5'>
+                        <h3 className="text-lg font-semibold">Contact Us</h3>
+                        <div className='flex items-start gap-3'>
+                            <FaBuilding className="size-4 mt-1 text-[var(--primary-color)]"/>
+                            <p className="text-sm text-[var(--text-secondary)]">108 Griffith Peak Dr, Las Vegas, NV 89135</p>
+                        </div>
+                        <div className='flex items-start gap-3'>
+                            <FaMobile className="size-4 mt-1 text-[var(--primary-color)]"/>
+                            <p className="text-sm text-[var(--text-secondary)]">+1 (555) 123-4567</p>
+                        </div>
+                        <div className='flex items-start gap-3'>
+                            <IoMdMail className="size-4 mt-1 text-[var(--primary-color)]"/>
+                            <p className="text-sm text-[var(--text-secondary)]">hello@realestate.com</p>
+                        </div>
                     </div>
-                    <div className='flex justify-start items-center gap-3'>
-                        <FaFax className={`size-5 ${darkMode ? "text-red-500" : "text-red-600"}`}/>
-                        <p className={`${darkMode ? "text-slate-200" : "text-gray-600"}`}>95288 65099</p>
-                    </div>
-                    <div className='flex justify-start items-center gap-3'>
-                        <IoMdMail className={`size-5 ${darkMode ? "text-red-500" : "text-red-600"}`}/>
-                        <p className={`${darkMode ? "text-slate-200" : "text-gray-600"}`}>roboyz952o@gmail.com</p>
+
+                    {/* Latest Properties Section */}
+                    <div className='flex flex-col gap-5'>
+                        <h3 className="text-lg font-semibold">Latest Properties</h3>
+                        <div className='flex items-center gap-4'>
+                            <img src={prop7} alt='Villa with amazing view' className='w-24 h-16 object-cover rounded-md' />
+                            <div>
+                                <h4 className="text-sm font-semibold hover:text-white transition-colors">Villa with amazing view</h4>
+                                <p className="text-sm text-[var(--primary-color)] font-bold">$287,000</p>
+                            </div>
+                        </div>
+                        <div className='flex items-center gap-4'>
+                            <img src={prop8} alt='Smart view from beach' className='w-24 h-16 object-cover rounded-md' />
+                            <div>
+                                <h4 className="text-sm font-semibold hover:text-white transition-colors">Smart view from beach</h4>
+                                <p className="text-sm text-[var(--primary-color)] font-bold">$587,000</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
-
-                {/* Latest Properties Section */}
-                <div className='flex flex-col justify-center items-start gap-5'>
-                    <h1 className={`text-2xl font-semibold ${darkMode ? "text-white" : "text-black"}`}>Latest Properties</h1>
-                    <div className='flex justify-start items-center gap-4'>
-                        <img src={prop7} alt='Villa with amazing view' className='w-[120px] h-[80px] object-cover rounded-lg transform hover:scale-110 cursor-pointer transition-transform duration-300' />
-                        <div>
-                            <h1 className={`text-lg ${darkMode ? "text-white" : "text-gray-900"}`}>Villa with amazing view</h1>
-                            <p className={`${darkMode ? "text-slate-400" : "text-gray-600"}`}>$ 287.98</p>
-                        </div>
-                    </div>
-                    <div className='flex justify-start items-center gap-4'>
-                        <img src={prop8} alt='Smart view from beach' className='w-[120px] h-[80px] object-cover rounded-lg transform hover:scale-110 cursor-pointer transition-transform duration-300' />
-                        <div>
-                            <h1 className={`text-lg ${darkMode ? "text-white" : "text-gray-900"}`}>Smart view from beach</h1>
-                            <p className={`${darkMode ? "text-slate-400" : "text-gray-600"}`}>$ 587.98</p>
-                        </div>
-                    </div>
+                <div className="mt-16 border-t border-white/10 pt-8 text-center text-sm text-[var(--text-secondary)]">
+                    <p>&copy; {new Date().getFullYear()} Realestate. All Rights Reserved.</p>
                 </div>
             </footer>
 
             {/* Scroll-to-top button */}
-            <div className='bg-red-600 p-3 rounded-full hover:bg-black cursor-pointer transition-colors duration-300 fixed lg:bottom-12 bottom-6 right-6 z-50'>
-                <Link to="hero" spy={true} offset={-100} smooth={true} className='flex items-center justify-center'>
-                    <FaArrowUp className='text-white size-5' />
-                </Link>
+            <div className='fixed lg:bottom-8 bottom-6 right-6 z-50'>
+                <button onClick={handleScrollToHomeTop} className='flex items-center justify-center bg-[var(--primary-color)] p-3 rounded-full text-white hover:bg-opacity-90 cursor-pointer transition-all duration-300 shadow-lg'>
+                    <FaArrowUp className='size-5' />
+                </button>
             </div>
-
-            {/* Dark mode toggle button - FIXED */}
-            <button 
-                onClick={toggleDarkMode} 
-                className={`flex items-center justify-center p-3 rounded-full transition-all duration-300 fixed lg:top-6 right-6 top-4 z-50 ${
-                    darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-orange-500 hover:bg-orange-600'
-                }`}
-            >
-                {darkMode ? (
-                    <FaMoon size={20} className='text-white' />
-                ) : (
-                    <FaSun size={20} className='text-white' />
-                )}
-            </button>
         </>
     );
 }

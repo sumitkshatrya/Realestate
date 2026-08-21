@@ -14,13 +14,14 @@ const UserSchema = new mongoose.Schema({
   accountVerified: { type: Boolean, default: false },
   verificationMethod: {
     type: String,
-    enum: ["email", "phone", "call"],
+    enum: ["email", "sms", "call"],
     required: true,
   },
   verificationCode: Number,
   verificationCodeExpire: Date,
   resetPassword: String,
   resetPasswordExpire: Date,
+  favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Property' }],
   createdAt: { type: Date, default: Date.now },
 });
 

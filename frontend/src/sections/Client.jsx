@@ -1,123 +1,9 @@
-// import React, { useEffect, useState } from "react";
-// import TestimonialCard from "../components/TestimonialCard";
-// import { fetchApprovedTestimonials } from "../api/testimonialApi"; // updated API service
-
-// export default function Home() {
-//   const [testimonials, setTestimonials] = useState([]);
-//   const [loading, setLoading] = useState(true);
-//   const [error, setError] = useState(null);
-
-//   useEffect(() => {
-//     const loadTestimonials = async () => {
-//       try {
-//         setLoading(true);
-//         const response = await fetchApprovedTestimonials();
-//         setTestimonials(Array.isArray(response.data) ? response.data : []);
-//       } catch (err) {
-//         setError(err.message || "Error fetching testimonials");
-//       } finally {
-//         setLoading(false);
-//       }
-//     };
-
-//     loadTestimonials();
-//   }, []);
-
-//   if (loading)
-//     return (
-//       <p className="p-4 text-center text-gray-500 text-lg">
-//         Loading testimonials...
-//       </p>
-//     );
-
-//   if (error)
-//     return (
-//       <p className="p-4 text-center text-red-500 text-lg">{error}</p>
-//     );
-
-//   return (
-//     <div className="p-4 max-w-5xl mx-auto">
-//       <h1 className="text-3xl font-bold mb-6 text-center">Testimonials</h1>
-
-//       {testimonials.length === 0 ? (
-//         <p className="text-center text-gray-600">No testimonials yet.</p>
-//       ) : (
-//         <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-//           {testimonials.map((t) => (
-//             <TestimonialCard key={t._id} testimonial={t} />
-//           ))}
-//         </div>
-//       )}
-//     </div>
-//   );
-// }
-// import React from "react";
-// import { Link } from "react-router-dom";
-
-// export default function Home() {
-//   return (
-//     <div className="bg-gray-50 min-h-screen flex flex-col items-center justify-center text-center px-6">
-//       {/* Hero Section */}
-//       <h1 className="text-4xl font-bold text-blue-600 mb-4">
-//         Welcome to TestimonialApp 🎉
-//       </h1>
-//       <p className="text-gray-600 max-w-xl mb-8">
-//         Share your experiences and read what others have to say.  
-//         Submit your feedback, explore testimonials, and build trust together.
-//       </p>
-
-//       {/* CTA Buttons */}
-//       <div className="flex gap-4">
-//         <Link
-//           to="/testimonials"
-//           className="bg-blue-600 text-white px-5 py-2 rounded-md hover:bg-blue-700 transition"
-//         >
-//           View Testimonials
-//         </Link>
-//         <Link
-//           to="/submit"
-//           className="bg-gray-200 text-gray-700 px-5 py-2 rounded-md hover:bg-gray-300 transition"
-//         >
-//           Submit Your Feedback
-//         </Link>
-//       </div>
-
-//       {/* Quick Preview of Latest Testimonials */}
-//       <div className="mt-12 w-full max-w-4xl">
-//         <h2 className="text-2xl font-semibold mb-6">Latest Testimonials</h2>
-//         <div className="grid md:grid-cols-2 gap-6">
-//           {/* You can map real testimonials here */}
-//           <div className="p-4 bg-white rounded-lg shadow hover:shadow-md transition">
-//             <p className="text-gray-700 italic">
-//               "This platform helped me showcase client feedback easily!"
-//             </p>
-//             <p className="mt-2 text-sm text-gray-500">— John Doe, Designer ⭐⭐⭐⭐⭐</p>
-//           </div>
-//           <div className="p-4 bg-white rounded-lg shadow hover:shadow-md transition">
-//             <p className="text-gray-700 italic">
-//               "I love how simple it is to add and approve testimonials."
-//             </p>
-//             <p className="mt-2 text-sm text-gray-500">— Sarah Smith, Developer ⭐⭐⭐⭐</p>
-//           </div>
-//         </div>
-//         <div className="mt-6">
-//           <Link
-//             to="/testimonials"
-//             className="text-blue-600 font-medium hover:underline"
-//           >
-//             See all testimonials →
-//           </Link>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
-//////////////////////////////////
 import React, { useEffect, useState } from "react";
 import { motion as Motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import TestimonialCard from "../components/TestimonialCard";
+import { testimonialAPI } from "../api/testimonialApi";
 
 export default function Client() {
   const [testimonials, setTestimonials] = useState([]);
@@ -129,15 +15,11 @@ export default function Client() {
 
   const limit = 3;
 
-  // Fetch paginated testimonials
   useEffect(() => {
     const loadTestimonials = async () => {
       try {
         setLoading(true);
-        const res = await fetch(
-          `http://localhost:8080/api/testimonials/approved?page=${page}&limit=${limit}`
-        );
-        const data = await res.json();
+        const data = await testimonialAPI.getApprovedTestimonials(page, limit);
         setTestimonials(data?.testimonials || []);
         setTotalPages(data?.totalPages || 1);
       } catch (err) {
@@ -149,14 +31,10 @@ export default function Client() {
     loadTestimonials();
   }, [page]);
 
-  // Fetch rating summary
   useEffect(() => {
     const loadSummary = async () => {
       try {
-        const res = await fetch(
-          "http://localhost:8080/api/testimonials/summary"
-        );
-        const data = await res.json();
+        const data = await testimonialAPI.getSummary();
         setSummary(data || { avgRating: 0, total: 0 });
       } catch (err) {
         console.error("Error fetching summary", err);
@@ -166,75 +44,102 @@ export default function Client() {
     loadSummary();
   }, []);
 
-  if (loading)
-    return (
-      <p className="text-center mt-8 text-gray-500 text-lg">Loading...</p>
-    );
-  if (error)
-    return (
-      <p className="text-center mt-8 text-red-500 text-lg">{error}</p>
-    );
+  if (loading) {
+    return <p className="text-center py-24 text-lg text-[var(--text-secondary)]">Loading Testimonials...</p>;
+  }
+  if (error) {
+    return <p className="text-center py-24 text-lg text-red-500">{error}</p>;
+  }
 
   return (
-    <div id="testimonials" className="p-6 max-w-6xl mx-auto">
-      <h1 className="text-4xl font-bold mb-6 text-center text-red-600">
-        Customer Testimonials
-      </h1>
-      <Link to="/testimonials"></Link>
-      {/* Rating Summary */}
-      <div className="bg-yellow-100 p-6 rounded-2xl text-center shadow-lg mb-8 transform hover:scale-105 transition">
-        <h3 className="text-2xl font-bold">Customer Satisfaction</h3>
-        <p className="mt-2 text-xl">
-          ⭐ {summary?.avgRating?.toFixed(1) || 0} / 5 ({summary?.total || 0}{" "}
-          reviews)
-        </p>
-      </div>
+    <section id="testimonials" className="py-24 bg-[var(--neutral-100)]">
+      <div className="container mx-auto px-4">
+        <Motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-12"
+        >
+          <span className="text-sm font-semibold uppercase tracking-wider text-[var(--primary-color)]">
+            Testimonials
+          </span>
+          <h2 className="mt-4 text-4xl font-bold text-[var(--text-primary)] lg:text-5xl">
+            What Our Clients Say
+          </h2>
+          <p className="mt-4 max-w-2xl mx-auto text-lg leading-8 text-[var(--text-secondary)]">
+            Real stories from homeowners, investors, and partners who have trusted us with their vision.
+          </p>
+        </Motion.div>
 
-      {/* Testimonials Grid */}
-      <div className="grid gap-8 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-        {testimonials.map((t) => (
+        {summary.total > 0 && (
           <Motion.div
-            key={t._id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5 }}
+            className="mb-12 bg-[var(--background-color)] p-6 rounded-2xl text-center shadow-lg max-w-sm mx-auto"
           >
-            <TestimonialCard testimonial={t} />
+            <h3 className="text-xl font-bold text-[var(--text-primary)]">Overall Satisfaction</h3>
+            <p className="mt-2 text-3xl font-extrabold text-[var(--primary-color)]">
+              ⭐ {summary.avgRating?.toFixed(1) || "N/A"} / 5
+            </p>
+            <p className="text-sm text-[var(--text-secondary)]">Based on {summary.total} reviews</p>
           </Motion.div>
-        ))}
-      </div>
+        )}
 
-      {/* Pagination */}
-      <div className="flex justify-center mt-10 gap-2 flex-wrap">
-        {Array.from({ length: totalPages }, (_, i) => i + 1).map((num) => (
-          <button
-            key={num}
-            onClick={() => setPage(num)}
-            className={`px-4 py-2 rounded-lg font-medium transition 
-              ${
-                num === page
-                  ? "bg-red-500 text-white shadow-lg scale-105"
-                  : "bg-gray-200 hover:bg-gray-300"
-              }`}
-          >
-            {num}
-          </button>
-        ))}
-      </div>
+        {testimonials.length > 0 ? (
+          <>
+            <div className="grid gap-8 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+              {testimonials.map((t) => (
+                <Motion.div
+                  key={t._id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <TestimonialCard testimonial={t} />
+                </Motion.div>
+              ))}
+            </div>
 
-      {/* Add Review Button */}
-      <div className="mt-10 flex justify-center">
-        <Link to="/SubmitTestimonial">
-          <Motion.button
-            whileHover={{ scale: 1.05, x: 5 }}
-            whileTap={{ scale: 0.95 }}
-            className="flex items-center gap-2 bg-red-500 text-white font-semibold px-6 py-3 rounded-full shadow-lg hover:bg-red-600 transition"
-          >
-            Add Your Review
-            <ArrowRight className="w-5 h-5" />
-          </Motion.button>
-        </Link>
+            {totalPages > 1 && (
+              <div className="flex justify-center mt-12 gap-2 flex-wrap">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((num) => (
+                  <button
+                    key={num}
+                    onClick={() => setPage(num)}
+                    className={`px-4 py-2 rounded-md font-medium transition ${
+                      num === page
+                        ? "bg-[var(--primary-color)] text-white shadow-lg scale-105"
+                        : "bg-[var(--neutral-200)] text-[var(--text-primary)] hover:bg-[var(--neutral-300)]"
+                    }`}
+                  >
+                    {num}
+                  </button>
+                ))}
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="text-center py-12">
+            <h3 className="text-2xl font-semibold text-[var(--text-primary)]">No Testimonials Yet</h3>
+            <p className="text-[var(--text-secondary)] mt-2">Be the first to share your experience!</p>
+          </div>
+        )}
+
+        <div className="mt-12 flex justify-center">
+          <Link to="/submit-testimonial">
+            <Motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="btn btn-primary inline-flex items-center gap-2"
+            >
+              Add Your Review
+              <ArrowRight className="w-5 h-5" />
+            </Motion.button>
+          </Link>
+        </div>
       </div>
-    </div>
+    </section>
   );
 }

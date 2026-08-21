@@ -7,6 +7,8 @@ import {
   getAllTestimonials,
   updateStatus,
   deleteTestimonial,
+  bulkUpdateStatus,
+  bulkDelete,
 } from "../controllers/testimonialController.js";
 import { protectAdmin } from "../middleware/Auth.Middleware.js";
 import upload from "../middleware/multer.js";
@@ -41,6 +43,8 @@ router.get("/:id", getTestimonialById);
 // Admin Routes (Protected)
 // ==================
 router.get("/all/list", protectAdmin, getAllTestimonials);
+router.post("/bulk-status", protectAdmin, bulkUpdateStatus);
+router.post("/bulk-delete", protectAdmin, bulkDelete);
 router.put("/:id/status", protectAdmin, updateStatus);
 router.delete("/:id", protectAdmin, deleteTestimonial);
 

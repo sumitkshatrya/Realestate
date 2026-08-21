@@ -4,7 +4,7 @@ import ApiResponse from "../utils/ApiResponse.js";
 import { sendEmail } from "../utils/sendEmail.js";
 
 // Email template for admin notification
-function generateAdminNotificationTemplate(fullname, email, phone, message, userId) {
+function generateAdminNotificationTemplate(fullname, email, phone, subject, message, userId) {
   return `
   <!DOCTYPE html>
   <html>
@@ -16,6 +16,7 @@ function generateAdminNotificationTemplate(fullname, email, phone, message, user
         <div style="background:#f8f9fa;padding:15px;border-radius:8px;margin:15px 0;">
           <h3 style="color:#444;margin-top:0;">Message Details:</h3>
           <p><strong>Name:</strong> ${fullname}</p>
+          <p><strong>Subject:</strong> ${subject}</p>
           <p><strong>Email:</strong> ${email}</p>
           <p><strong>Phone:</strong> ${phone || 'Not provided'}</p>
           <p><strong>User ID:</strong> ${userId}</p>
@@ -38,12 +39,12 @@ function generateAdminNotificationTemplate(fullname, email, phone, message, user
 // POST: Create a new contact message
 export const createContact = async (req, res) => {
   try {
-    const { fullname, email, phone, message } = req.body;
+    const { fullname, email, phone, subject, message } = req.body;
      
-    if (!fullname || !message) {
+    if (!fullname || !subject || !message) {
       return res
         .status(400)
-        .json(new ApiResponse(null, "Fullname and message are required", 400));
+        .json(new ApiResponse(null, "Fullname, subject, and message are required", 400));
     }
 
     // Only logged-in user can contact
@@ -57,6 +58,7 @@ export const createContact = async (req, res) => {
     const contact = await Contact.create({
       fullname,
       email,
+      subject,
       phone,
       message,
       user: req.user._id,
@@ -70,15 +72,12 @@ export const createContact = async (req, res) => {
         fullname, 
         email, 
         phone, 
+        subject,
         message, 
         req.user._id
       );
 
-      await sendEmail({
-        to: adminEmail,
-        subject: emailSubject,
-        html: emailHtml
-      });
+      await sendEmail(adminEmail, emailSubject, emailHtml);
 
       console.log(`Admin notification sent for contact message from ${fullname}`);
     } catch (emailError) {

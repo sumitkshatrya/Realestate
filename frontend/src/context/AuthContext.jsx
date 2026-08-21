@@ -1,11 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { AuthContext } from "./authContextValue";
+import { authAPI } from "../api/authApi";
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const handleStoredUser = useCallback(() => {
     try {
       const savedUser = localStorage.getItem("user");
       if (savedUser) {
@@ -21,25 +22,57 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  const login = (userData) => {
+  useEffect(() => {
+    const verifyUser = async () => {
+      try {
+        const response = await authAPI.verify();
+        const userData = response?.data || response?.user || null;
+        if (userData) {
+          setUser(userData);
+          localStorage.setItem("user", JSON.stringify(userData));
+          return;
+        }
+      } catch {
+        console.log("No active session or token is invalid.");
+      }
+      handleStoredUser();
+    };
+    verifyUser();
+  }, [handleStoredUser]);
+
+  const login = useCallback(async (credentials) => {
+    const response = await authAPI.login(credentials);
+    const userData = response?.data || response?.user || null;
+    if (userData) {
+      setUser(userData);
+      localStorage.setItem("user", JSON.stringify(userData));
+    }
+    return response;
+  }, []);
+
+  const signup = useCallback((userData) => {
     if (!userData) return;
     setUser(userData);
     localStorage.setItem("user", JSON.stringify(userData));
-  };
+  }, []);
 
-  const signup = (userData) => {
-    if (!userData) return;
-    setUser(userData);
-    localStorage.setItem("user", JSON.stringify(userData));
-  };
+  const logout = useCallback(async () => {
+    try {
+      await authAPI.logout();
+    } catch (error) {
+      console.error("Logout failed", error);
+    } finally {
+      setUser(null);
+      localStorage.removeItem("user");
+      localStorage.removeItem("userToken");
+    }
+  }, []);
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem("user");
-  };
+  const isAuthenticated = !!user;
 
   const value = {
     user,
+    isAuthenticated,
     login,
     signup,
     logout,
@@ -48,3 +81,4 @@ export const AuthProvider = ({ children }) => {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
+

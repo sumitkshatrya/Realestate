@@ -1,26 +1,27 @@
-import axios from "axios";
+import API from "./axiosInstance"; // Import the global Axios instance
 
-const API = axios.create({
-  baseURL: "http://localhost:8080/api/testimonials",
-});
-
-const authHeaders = () => ({
-  headers: {
-    Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
-  },
-});
-
-export const adminFetchAll = async () => {
-  const response = await API.get("/all/list", authHeaders());
+export const adminFetchAll = async (params = {}) => {
+  // The base URL is now handled by the global instance, just append the specific path
+  const response = await API.get("/testimonials/all/list", { params });
   return response.data;
 };
 
 export const updateTestimonialStatus = async (id, status) => {
-  const response = await API.put(`/${id}/status`, { status }, authHeaders());
+  const response = await API.put(`/testimonials/${id}/status`, { status });
   return response.data;
 };
 
 export const deleteTestimonial = async (id) => {
-  const response = await API.delete(`/${id}`, authHeaders());
+  const response = await API.delete(`/testimonials/${id}`);
+  return response.data;
+};
+
+export const bulkUpdateStatus = async (payload) => {
+  const response = await API.post("/testimonials/bulk-status", payload);
+  return response.data;
+};
+
+export const bulkDelete = async (payload) => {
+  const response = await API.post("/testimonials/bulk-delete", payload);
   return response.data;
 };

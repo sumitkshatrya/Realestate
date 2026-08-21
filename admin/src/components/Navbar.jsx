@@ -2,12 +2,19 @@ import React from "react";
 import { motion as Motion } from "framer-motion";
 import { useLocation, useNavigate } from "react-router-dom";
 import logo from "../assets/logo.png";
+import { clearFetchCache } from "../api/useFetchData";
 
 const pageTitle = {
   "/dashboard": "Dashboard Overview",
   "/testimonials": "Testimonial Control",
   "/services": "Service Management",
+  "/properties": "Property Management",
   "/property-map": "Property Map",
+  "/popular-areas": "Popular Areas",
+  "/tours": "Tour Requests",
+  "/contacts": "Contact Messages",
+  "/users": "User Management",
+  "/about-content": "About Content",
 };
 
 const Navbar = () => {
@@ -16,6 +23,7 @@ const Navbar = () => {
 
   const handleLogout = () => {
     localStorage.removeItem("adminToken");
+    clearFetchCache();
     navigate("/login");
   };
 

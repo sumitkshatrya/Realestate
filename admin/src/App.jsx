@@ -4,10 +4,18 @@ import Login from "./components/Login";
 import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Sidebar from "./components/Sidebar";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
 import ServicesManager from "./pages/ServicesManager";
 import TestimonialsManager from "./pages/TestimonialsManager";
 import PropertyMap from "./pages/PropertyMap";
+import ContactsManager from "./pages/ContactsManager";
+import ToursManager from "./pages/ToursManager";
+import PopularAreasManager from "./pages/PopularAreasManager";
+import AboutContentManager from "./pages/AboutContentManager";
+import PropertiesManager from "./pages/PropertiesManager";
+import UsersManager from "./pages/UsersManager";
 
 const AdminLayout = () => {
   return (
@@ -23,6 +31,12 @@ const AdminLayout = () => {
               <Route path="testimonials" element={<TestimonialsManager />} />
               <Route path="services" element={<ServicesManager />} />
               <Route path="property-map" element={<PropertyMap />} />
+              <Route path="contacts" element={<ContactsManager />} />
+              <Route path="tours" element={<ToursManager />} />
+              <Route path="popular-areas" element={<PopularAreasManager />} />
+              <Route path="about-content" element={<AboutContentManager />} />
+              <Route path="properties" element={<PropertiesManager />} />
+              <Route path="users" element={<UsersManager />} />
             </Routes>
           </main>
         </div>
@@ -32,10 +46,12 @@ const AdminLayout = () => {
 };
 
 const App = () => {
-  return (
+return (
     <Routes>
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password/:token" element={<ResetPassword />} />
       <Route
         path="/*"
         element={

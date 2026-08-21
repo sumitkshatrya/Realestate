@@ -18,6 +18,9 @@ import {
   FaTimes,
 } from "react-icons/fa";
 import { servicesAPI } from "../api/servicesApi";
+import { useFetchData } from "../api/useFetchData";
+import { useConfirmationModal } from "./ModalContext";
+import { useForm } from "react-hook-form";
 
 const iconOptions = [
   { value: "FaHome", label: "Home", icon: FaHome },
@@ -42,79 +45,58 @@ const defaultForm = {
 };
 
 const ServicesManager = () => {
-  const [services, setServices] = useState([]);
   const [editingService, setEditingService] = useState(null);
-  const [formData, setFormData] = useState(defaultForm);
-  const [loading, setLoading] = useState(false);
+  const confirm = useConfirmationModal();
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm({ defaultValues: defaultForm });
 
-  const fetchServices = async () => {
-    try {
-      setLoading(true);
-      const response = await servicesAPI.getServices();
-      setServices(response || []);
-    } catch (error) {
-      console.error("Error fetching services:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchServices();
-  }, []);
+  const { data: services, loading: isLoadingServices, refetch: fetchServices } = useFetchData(servicesAPI.getServices);
 
   const resetForm = () => {
-    setFormData(defaultForm);
+    reset(defaultForm);
     setEditingService(null);
   };
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-
-    if (!formData.title.trim() || !formData.description.trim()) {
-      return;
-    }
-
-    setLoading(true);
-
+  const onSubmit = async (data) => {
     try {
       if (editingService) {
-        await servicesAPI.updateService(editingService._id, formData);
+        await servicesAPI.updateService(editingService._id, data);
       } else {
-        await servicesAPI.createService(formData);
+        await servicesAPI.createService(data);
       }
-
       resetForm();
       await fetchServices();
-    } catch (error) {
-      console.error("Error saving service:", error);
-    } finally {
-      setLoading(false);
-    }
+    } catch (error) { /* Errors are handled by the global axios interceptor */ }
   };
 
   const handleEdit = (service) => {
     setEditingService(service);
-    setFormData({
+    reset({
       title: service.title || "",
       description: service.description || "",
       icon: service.icon || "FaHome",
       order: service.order || 0,
       isActive: service.isActive !== false,
     });
+    // Scroll to the form for better UX on smaller screens
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleDelete = async (id) => {
-    setLoading(true);
-
-    try {
-      await servicesAPI.deleteService(id);
-      await fetchServices();
-    } catch (error) {
-      console.error("Error deleting service:", error);
-    } finally {
-      setLoading(false);
-    }
+    confirm({
+      title: "Delete Service?",
+      message: "Are you sure you want to delete this service? This action cannot be undone.",
+      onConfirm: async () => {
+        try {
+          await servicesAPI.deleteService(id);
+          await fetchServices();
+        } catch (error) { /* Errors are handled by the global axios interceptor */ }
+      },
+    });
   };
 
   const toggleServiceStatus = async (service) => {
@@ -124,10 +106,9 @@ const ServicesManager = () => {
         isActive: service.isActive === false,
       });
       await fetchServices();
-    } catch (error) {
-      console.error("Error updating service status:", error);
-    }
+    } catch (error) { /* Errors are handled by the global axios interceptor */ }
   };
+
 
   return (
     <div className="space-y-6">
@@ -144,11 +125,17 @@ const ServicesManager = () => {
         </p>
       </Motion.section>
 
-      <Motion.form
+      {isLoadingServices ? (
+        <div className="rounded-[2rem] border border-white/10 bg-slate-900/70 p-8 text-sm text-slate-300">
+          Loading services...
+        </div>
+      ) : (
+        <>
+        <Motion.form
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.05, duration: 0.3 }}
-        onSubmit={handleSubmit}
+        onSubmit={handleSubmit(onSubmit)}
         className="rounded-[2rem] border border-white/10 bg-slate-900/75 p-6"
       >
         <div className="mb-6 flex items-center justify-between">
@@ -174,64 +161,54 @@ const ServicesManager = () => {
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
-          <input
-            type="text"
-            value={formData.title}
-            onChange={(event) =>
-              setFormData({ ...formData, title: event.target.value })
-            }
-            placeholder="Service title"
-            className="rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-white outline-none focus:border-red-400"
-            required
-          />
-          <select
-            value={formData.icon}
-            onChange={(event) =>
-              setFormData({ ...formData, icon: event.target.value })
-            }
-            className="rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-white outline-none focus:border-red-400"
-          >
-            {iconOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+          <div>
+            <input
+              type="text"
+              {...register("title", { required: "Service title is required." })}
+              placeholder="Service title"
+              className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-white outline-none focus:border-red-400"
+            />
+            {errors.title && <p className="mt-1 text-xs text-red-400">{errors.title.message}</p>}
+          </div>
+          <div>
+            <select
+              {...register("icon")}
+              className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-white outline-none focus:border-red-400"
+            >
+              {iconOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
-        <textarea
-          value={formData.description}
-          onChange={(event) =>
-            setFormData({ ...formData, description: event.target.value })
-          }
-          placeholder="Describe the service"
-          className="mt-4 min-h-32 w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-white outline-none focus:border-red-400"
-          required
-        />
+        <div className="mt-4">
+          <textarea
+            {...register("description", { required: "Description is required." })}
+            placeholder="Describe the service"
+            className="min-h-32 w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-white outline-none focus:border-red-400"
+          />
+          {errors.description && <p className="mt-1 text-xs text-red-400">{errors.description.message}</p>}
+        </div>
 
         <div className="mt-4 grid gap-4 md:grid-cols-2">
-          <input
-            type="number"
-            min="0"
-            value={formData.order}
-            onChange={(event) =>
-              setFormData({
-                ...formData,
-                order: Number.parseInt(event.target.value, 10) || 0,
-              })
-            }
-            placeholder="Display order"
-            className="rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-white outline-none focus:border-red-400"
-          />
+          <div>
+            <input
+              type="number"
+              min="0"
+              {...register("order", { valueAsNumber: true })}
+              placeholder="Display order"
+              className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-white outline-none focus:border-red-400"
+            />
+          </div>
 
           <label className="flex items-center justify-between rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-slate-200">
             Active
             <input
               type="checkbox"
-              checked={formData.isActive}
-              onChange={(event) =>
-                setFormData({ ...formData, isActive: event.target.checked })
-              }
+              {...register("isActive")}
               className="h-4 w-4"
             />
           </label>
@@ -241,13 +218,14 @@ const ServicesManager = () => {
           whileHover={{ scale: 1.01 }}
           whileTap={{ scale: 0.99 }}
           type="submit"
-          disabled={loading}
+          disabled={isSubmitting}
           className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-red-600 px-5 py-3 font-semibold text-white hover:bg-red-500 disabled:opacity-70"
         >
           <FaPlus />
           {editingService ? "Update Service" : "Create Service"}
         </Motion.button>
       </Motion.form>
+
 
       <div className="space-y-4">
         {services.map((service, index) => {
@@ -317,6 +295,8 @@ const ServicesManager = () => {
           );
         })}
       </div>
+      </>
+      )}
     </div>
   );
 };

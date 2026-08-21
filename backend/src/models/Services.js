@@ -36,9 +36,6 @@ const serviceSchema = new mongoose.Schema(
     order: {
       type: Number,
       default: 0,
-    },
-    isActive : {type : Boolean
-      
     }
   },
   {
@@ -46,7 +43,7 @@ const serviceSchema = new mongoose.Schema(
   }
 );
 
-// Create text index for search functionality
+
 serviceSchema.index({ title: "text", description: "text" });
 
 const Service = mongoose.model("Service", serviceSchema);
