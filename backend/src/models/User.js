@@ -14,7 +14,7 @@ const UserSchema = new mongoose.Schema({
   accountVerified: { type: Boolean, default: false },
   verificationMethod: {
     type: String,
-    enum: ["email", "phone", "call"],
+    enum: ["email", "sms", "call"],
     required: true,
   },
   verificationCode: Number,
