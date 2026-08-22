@@ -175,15 +175,19 @@ const logoutUser = async (req, res, next) => {
 const refreshAccessToken = async (req, res, next) => {
   try {
     const refreshToken =
-      req.cookies.refreshToken || req.headers.authorization?.split(" ")[1];
+      req.cookies?.refreshToken || req.headers.authorization?.split(" ")[1];
     if (!refreshToken) {
       return next(new ErrorHandler("Refresh token is required", 401));
     }
 
-    const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
-    const user = await User.findById(decoded.id).select(
-      "-password -refresh_token"
-    );
+    let decoded;
+    try {
+      decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+    } catch (err) {
+      return res.status(401).json({ message: "Invalid refresh token" });
+    }
+
+    const user = await User.findById(decoded.id).select("-password");
     if (!user) {
       return next(new ErrorHandler("User not found", 404));
     }
@@ -224,7 +228,7 @@ const refreshAccessToken = async (req, res, next) => {
 const verifyUser = async (req, res) => {
   try {
     const user = req.user;
-    if (!user) { // This check is redundant if verifyToken middleware is used correctly but good for safety.
+    if (!user || !user._id) {
       return res.status(401).json(new ApiResponse(null, "Access token not verified", 401));
     }
 
