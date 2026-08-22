@@ -175,22 +175,30 @@ const logoutUser = async (req, res, next) => {
 const refreshAccessToken = async (req, res) => {
   try {
     const refreshToken =
-      req.cookies.refreshToken || req.headers.authorization?.split(" ")[1];
+      req.cookies?.refreshToken || req.headers.authorization?.split(" ")[1];
     if (!refreshToken) {
-      throw new ApiError("Refresh token is required", 401);
+      return res.status(401).json({ message: "Refresh token is required" });
     }
 
-    const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
-    const user = await User.findById(decoded.id).select(
-      "-password -refresh_token"
-    );
+    let decoded;
+    try {
+      decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+    } catch (err) {
+      return res.status(401).json({ message: "Invalid refresh token" });
+    }
+
+    const user = await User.findById(decoded.id).select("-password");
     if (!user) {
-      throw new ApiError("User not found", 404);
+      return res.status(404).json({ message: "User not found" });
     }
 
-    const { accessToken, refreshToken: newRefreshToken } = await generatetoken(
-      user
-    );
+    // Generate new tokens directly
+    const accessToken = jwt.sign({ id: user._id }, process.env.ACCESS_TOKEN_SECRET, {
+      expiresIn: "1h",
+    });
+    const newRefreshToken = jwt.sign({ id: user._id }, process.env.REFRESH_TOKEN_SECRET, {
+      expiresIn: "7d",
+    });
 
     const options = {
       httpOnly: true,
@@ -217,7 +225,7 @@ const verifyUser = async (req, res) => {
   try {
     const user = req.user;
     if (!user || !user._id) {
-      throw new ApiError("Access token not verified", 401);
+      return res.status(401).json({ message: "Access token not verified" });
     }
 
     res.status(200).json(new ApiResponse(user, "Success", 200));
@@ -299,12 +307,13 @@ const changePassword = async (req, res) => {
     const { oldPassword, newPassword } = req.body;
 
     if (!oldPassword || !newPassword) {
-      throw new ApiError("Old and new passwords are required", 400);
+      return res.status(400).json({ message: "Old and new passwords are required" });
     }
 
-    const isMatch = await user.isPasswordValid(oldPassword);
+    // existing model method is comparePassword
+    const isMatch = await user.comparePassword(oldPassword);
     if (!isMatch) {
-      throw new ApiError("Old password is incorrect", 401);
+      return res.status(401).json({ message: "Old password is incorrect" });
     }
 
     user.password = newPassword;
