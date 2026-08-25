@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { motion as Motion, AnimatePresence } from "framer-motion";
 import { 
   FaUser, 
@@ -8,7 +8,10 @@ import {
   FaEye, 
   FaEyeSlash, 
   FaArrowRight,
-} from "react-icons/fa";
+  FaXmark,
+  FaBuildingCircleCheck,
+  FaShieldHalved,
+} from "react-icons/fa6";
 import { useAuth } from "../context/useAuth";
 
 const LoginForm = ({ onClose, switchToSignup }) => {
@@ -22,21 +25,32 @@ const LoginForm = ({ onClose, switchToSignup }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [bgIndex, setBgIndex] = useState(0);
   const navigate = useNavigate();
 
-  // Background image URL
-  const bgImageUrl = "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1920";
+  const luxuryBackgrounds = [
+    "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1920&q=80",
+    "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1920&q=80",
+    "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1920&q=80"
+  ];
 
   useEffect(() => {
     const handleMouseMove = (e) => {
       setMousePosition({
-        x: (e.clientX / window.innerWidth - 0.5) * 20,
-        y: (e.clientY / window.innerHeight - 0.5) * 20,
+        x: (e.clientX / window.innerWidth - 0.5) * 30,
+        y: (e.clientY / window.innerHeight - 0.5) * 30,
       });
     };
     window.addEventListener("mousemove", handleMouseMove);
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setBgIndex((prev) => (prev + 1) % luxuryBackgrounds.length);
+    }, 9000);
+    return () => clearInterval(interval);
+  }, [luxuryBackgrounds.length]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -49,347 +63,236 @@ const LoginForm = ({ onClose, switchToSignup }) => {
     setIsLoading(true);
 
     if (!formData.username || !formData.password) {
-      setError("Please fill in all fields");
+      setError("Please enter both username and password.");
       setIsLoading(false);
       return;
     }
 
     try {
       const data = await login(formData);
-      setSuccess(data.message || "Login successful!");
-      setTimeout(() => navigate("/"), 1500);
+      setSuccess(data.message || "Welcome back! Redirecting...");
+      setTimeout(() => navigate("/"), 1200);
     } catch (err) {
-      setError(err.message || "Something went wrong");
+      setError(err.message || "Invalid credentials. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50 p-4 overflow-hidden">
-      {/* Animated Background with Gradient */}
-      <Motion.div
-        className="absolute inset-0"
-        style={{
-          backgroundImage: `url(${bgImageUrl})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
-        }}
-      />
-
-      {/* Animated Gradient Overlay */}
-      <Motion.div
-        className="absolute inset-0"
-        animate={{
-          background: [
-            "rgba(59,130,246,0.3) 0%, rgba(139,92,246,0.3) 50%, rgba(236,72,153,0.3) 100%",
-            "rgba(139,92,246,0.3) 0%, rgba(236,72,153,0.3) 50%, rgba(59,130,246,0.3) 100%",
-            "rgba(236,72,153,0.3) 0%, rgba(59,130,246,0.3) 50%, rgba(139,92,246,0.3) 100%",
-          ],
-        }}
-        transition={{
-          duration: 10,
-          repeat: Infinity,
-          ease: "linear",
-        }}
-      />
-
-      {/* Mouse-following glow */}
-      <Motion.div
-        className="absolute w-[600px] h-[600px] rounded-full bg-gradient-to-r from-yellow-400/20 via-pink-400/20 to-purple-400/20 blur-3xl pointer-events-none"
-        animate={{
-          x: mousePosition.x * 2,
-          y: mousePosition.y * 2,
-        }}
-        transition={{
-          type: "spring",
-          damping: 20,
-          stiffness: 50,
-        }}
-      />
-
-      {/* Main Card */}
-      <Motion.div
-        initial={{ opacity: 0, y: 50, scale: 0.8, rotateX: 10 }}
-        animate={{ opacity: 1, y: 0, scale: 1, rotateX: 0 }}
-        transition={{
-          type: "spring",
-          damping: 20,
-          stiffness: 200,
-          duration: 0.8,
-        }}
-        className="relative w-full max-w-md"
-      >
+    <div className="fixed inset-0 flex items-center justify-center z-50 p-4 sm:p-6 overflow-hidden bg-slate-950">
+      
+      {/* Animated Villa Background Carousel */}
+      <AnimatePresence mode="wait">
         <Motion.div
-          whileHover={{ scale: 1.02, rotateY: 5 }}
-          transition={{ type: "spring", damping: 15, stiffness: 200 }}
-          className="bg-white/90 backdrop-blur-2xl rounded-3xl shadow-2xl p-8 border-4 border-white/50"
-        >
-          {/* Animated Border Glow */}
-          <Motion.div
-            animate={{
-              boxShadow: [
-                "0 0 20px rgba(59,130,246,0.3), 0 0 40px rgba(139,92,246,0.2)",
-                "0 0 30px rgba(139,92,246,0.3), 0 0 60px rgba(236,72,153,0.2)",
-                "0 0 20px rgba(236,72,153,0.3), 0 0 40px rgba(59,130,246,0.2)",
-              ],
-            }}
-            transition={{
-              duration: 3,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-            className="absolute -inset-1 rounded-3xl -z-10"
-          />
+          key={bgIndex}
+          initial={{ scale: 1.15, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 1.1, opacity: 0 }}
+          transition={{ duration: 2.5, ease: "easeInOut" }}
+          className="absolute inset-0"
+          style={{
+            backgroundImage: `url(${luxuryBackgrounds[bgIndex]})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundRepeat: "no-repeat",
+          }}
+        />
+      </AnimatePresence>
 
-          {/* Close Button */}
+      {/* Dark Luxury Gradient Overlay */}
+      <Motion.div
+        className="absolute inset-0 bg-gradient-to-tr from-slate-950/90 via-slate-900/80 to-blue-950/70 backdrop-blur-md"
+        animate={{
+          opacity: [0.85, 0.95, 0.85],
+        }}
+        transition={{
+          duration: 8,
+          repeat: Infinity,
+          ease: "easeInOut",
+        }}
+      />
+
+      {/* Mouse Parallax Floating Orbs */}
+      <Motion.div
+        className="absolute w-[500px] h-[500px] rounded-full bg-gradient-to-r from-amber-500/20 via-blue-600/20 to-indigo-600/20 blur-3xl pointer-events-none"
+        animate={{
+          x: mousePosition.x * 2.5,
+          y: mousePosition.y * 2.5,
+        }}
+        transition={{
+          type: "spring",
+          damping: 25,
+          stiffness: 60,
+        }}
+      />
+
+      {/* Main Glass Card */}
+      <Motion.div
+        initial={{ opacity: 0, y: 30, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: -30, scale: 0.95 }}
+        transition={{
+          type: "spring",
+          damping: 22,
+          stiffness: 220,
+        }}
+        className="relative w-full max-w-md z-10"
+      >
+        <div className="bg-slate-900/85 backdrop-blur-2xl rounded-3xl shadow-2xl p-8 border border-white/15 relative overflow-hidden">
+          
+          {/* Subtle Ambient Light Edge */}
+          <div className="absolute -top-24 -left-24 w-48 h-48 rounded-full bg-amber-500/20 blur-2xl pointer-events-none" />
+          <div className="absolute -bottom-24 -right-24 w-48 h-48 rounded-full bg-blue-600/20 blur-2xl pointer-events-none" />
+
+          {/* Close / Return Button */}
           <Motion.button
-            whileHover={{ 
-              scale: 1.2,
-              rotate: 90,
-              backgroundColor: "#ef4444",
-              color: "white",
-            }}
+            whileHover={{ scale: 1.1, rotate: 90 }}
             whileTap={{ scale: 0.9 }}
             onClick={onClose || (() => navigate("/"))}
-            className="absolute top-4 right-4 p-2 rounded-full z-10 transition-all duration-300 bg-gray-100 hover:bg-red-500 text-gray-700 hover:text-white w-10 h-10 flex items-center justify-center text-xl font-bold"
+            className="absolute top-5 right-5 w-9 h-9 rounded-full bg-white/10 hover:bg-red-500/80 text-white/80 hover:text-white flex items-center justify-center transition border border-white/10 cursor-pointer"
+            aria-label="Close"
           >
-            ×
+            <FaXmark className="text-base" />
           </Motion.button>
 
-          {/* Header */}
-          <Motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="text-center mb-8"
-          >
+          {/* Brand Header */}
+          <div className="text-center mb-8">
             <Motion.div
-              animate={{
-                scale: [1, 1.1, 1],
-                rotate: [0, 5, -5, 0],
-              }}
-              transition={{
-                duration: 3,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-              className="inline-block p-4 rounded-full bg-gradient-to-r from-blue-400/20 via-purple-400/20 to-pink-400/20 mb-4"
+              initial={{ scale: 0.8 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
+              className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-600 text-slate-950 shadow-lg shadow-amber-500/30 mb-4 border border-amber-300/30 font-bold text-2xl"
             >
-              <FaUser className="text-4xl text-blue-500" />
+              <FaBuildingCircleCheck />
             </Motion.div>
-            <Motion.h2
-              animate={{
-                y: [0, -5, 0],
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-              className="text-4xl font-extrabold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent"
-            >
-              Welcome Back!
-            </Motion.h2>
-            <p className="text-gray-500 mt-2 text-sm">Please sign in to continue</p>
-          </Motion.div>
 
-          {/* Error/Success Messages */}
-          <AnimatePresence>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+              Welcome Back
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-400 mt-1.5 font-medium">
+              Access your luxury estate portfolio
+            </p>
+          </div>
+
+          {/* Error & Success Feedback Banners */}
+          <AnimatePresence mode="wait">
             {error && (
               <Motion.div
-                initial={{ opacity: 0, y: -10, scale: 0.9 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -10, scale: 0.9 }}
-                className="mb-4 p-3 rounded-lg bg-red-100 border-2 border-red-300 text-red-700 text-sm flex items-center gap-2"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="mb-6 p-3.5 rounded-xl bg-red-500/15 border border-red-500/40 text-red-300 text-xs font-semibold flex items-center gap-2"
               >
-                {error}
+                <FaShieldHalved className="text-red-400 shrink-0 text-sm" />
+                <span>{error}</span>
               </Motion.div>
             )}
             {success && (
               <Motion.div
-                initial={{ opacity: 0, y: -10, scale: 0.9 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -10, scale: 0.9 }}
-                className="mb-4 p-3 rounded-lg bg-green-100 border-2 border-green-300 text-green-700 text-sm flex items-center gap-2"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="mb-6 p-3.5 rounded-xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 text-xs font-semibold flex items-center gap-2"
               >
-                {success}
+                <FaShieldHalved className="text-emerald-400 shrink-0 text-sm" />
+                <span>{success}</span>
               </Motion.div>
             )}
           </AnimatePresence>
 
-          {/* Form */}
+          {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Username Field */}
-            <Motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.1 }}
-              className="group"
-            >
-              <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
-                <FaUser className="text-blue-500" /> Username
+            {/* Username Input */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300">
+                Username
               </label>
               <div className="relative">
-                <Motion.div
-                  animate={{
-                    scale: [1, 1.2, 1],
-                  }}
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  }}
-                  className="absolute left-3 top-1/2 -translate-y-1/2"
-                >
-                  <FaUser className="text-gray-400 group-focus-within:text-blue-500 transition-colors" />
-                </Motion.div>
-                <Motion.input
-                  whileFocus={{ scale: 1.02 }}
+                <FaUser className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm" />
+                <input
                   type="text"
                   name="username"
                   value={formData.username}
                   onChange={handleChange}
                   placeholder="Enter your username"
-                  className="w-full px-12 py-3 rounded-xl border-2 border-gray-200 focus:border-blue-500 bg-white/80 backdrop-blur-sm transition-all duration-300 focus:shadow-lg focus:shadow-blue-500/20 outline-none"
+                  className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-slate-800/80 border border-slate-700 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition font-medium"
+                  required
                 />
               </div>
-            </Motion.div>
+            </div>
 
-            {/* Password Field */}
-            <Motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
-              className="group"
-            >
-              <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
-                <FaLock className="text-purple-500" /> Password
-              </label>
-              <div className="relative">
-                <Motion.div
-                  animate={{
-                    scale: [1, 1.2, 1],
-                  }}
-                  transition={{
-                    duration: 2.5,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                    delay: 0.5,
-                  }}
-                  className="absolute left-3 top-1/2 -translate-y-1/2"
+            {/* Password Input */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300">
+                  Password
+                </label>
+                <button
+                  type="button"
+                  onClick={() => navigate("/forgot-password")}
+                  className="text-xs font-semibold text-amber-400 hover:text-amber-300 transition cursor-pointer"
                 >
-                  <FaLock className="text-gray-400 group-focus-within:text-purple-500 transition-colors" />
-                </Motion.div>
-                <Motion.input
-                  whileFocus={{ scale: 1.02 }}
+                  Forgot Password?
+                </button>
+              </div>
+              <div className="relative">
+                <FaLock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm" />
+                <input
                   type={showPassword ? "text" : "password"}
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  placeholder="Enter your password" // Fixed here
-                  className="w-full px-12 py-3 rounded-xl border-2 border-gray-200 focus:border-purple-500 bg-white/80 backdrop-blur-sm transition-all duration-300 focus:shadow-lg focus:shadow-purple-500/20 outline-none"
+                  placeholder="••••••••"
+                  className="w-full pl-11 pr-11 py-3.5 rounded-xl bg-slate-800/80 border border-slate-700 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition font-medium"
+                  required
                 />
-                <Motion.button
-                  whileHover={{ scale: 1.2, rotate: 15 }}
-                  whileTap={{ scale: 0.9 }}
+                <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-purple-500 transition-colors"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition cursor-pointer"
                 >
                   {showPassword ? <FaEyeSlash /> : <FaEye />}
-                </Motion.button>
+                </button>
               </div>
-            </Motion.div>
+            </div>
 
-            {/* Submit Button */}
-            <Motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
+            {/* Submit Action Button */}
+            <Motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              type="submit"
+              disabled={isLoading}
+              className="w-full py-4 rounded-xl bg-gradient-to-r from-amber-500 via-amber-600 to-amber-500 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-extrabold text-sm shadow-xl shadow-amber-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer mt-2 disabled:opacity-50"
             >
-              <Motion.button
-                whileHover={{ 
-                  scale: 1.05,
-                  boxShadow: "0 20px 40px -10px rgba(59,130,246,0.4)",
-                }}
-                whileTap={{ scale: 0.95 }}
-                type="submit"
-                disabled={isLoading}
-                className="relative w-full overflow-hidden bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white py-3.5 rounded-xl font-bold text-lg shadow-lg shadow-blue-500/30 transition-all duration-300 disabled:opacity-50"
-              >
-                {/* Shimmer Effect */}
-                <Motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
-                  animate={{
-                    x: ["-100%", "200%"],
-                  }}
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    ease: "linear",
-                    repeatDelay: 1,
-                  }}
-                  style={{ width: "50%" }}
-                />
-                <span className="relative z-10 flex items-center justify-center gap-2">
-                  {isLoading ? (
-                    <Motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                      className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
-                    />
-                  ) : (
-                    <>
-                      Sign In <FaArrowRight />
-                    </>
-                  )}
-                </span>
-              </Motion.button>
-            </Motion.div>
+              {isLoading ? (
+                <div className="w-5 h-5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <>
+                  Sign In <FaArrowRight className="text-xs" />
+                </>
+              )}
+            </Motion.button>
           </form>
 
-          {/* Forgot Password */}
-          <Motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className="mt-4 text-right"
-          >
-            <Motion.button
-              whileHover={{ scale: 1.05, x: -5 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => navigate("/forgot-password")}
-              className="text-sm text-purple-500 hover:text-purple-600 font-semibold transition-colors duration-200"
-            >
-              Forgot Password?
-            </Motion.button>
-          </Motion.div>
-
-          {/* Footer Links */}
-          <Motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="mt-6 text-center space-y-2"
-          >
-            <p className="text-sm text-gray-600">
+          {/* Switch to Signup CTA */}
+          <div className="mt-8 pt-6 border-t border-slate-800 text-center">
+            <p className="text-xs text-slate-400 font-medium">
               Don't have an account?{" "}
-              <Motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+              <button
+                type="button"
                 onClick={switchToSignup || (() => navigate("/signup"))}
-                className="text-blue-500 hover:text-blue-600 font-bold transition-colors duration-200"
+                className="font-bold text-amber-400 hover:text-amber-300 transition hover:underline cursor-pointer ml-1"
               >
-                Create account here
-              </Motion.button>
+                Create an account
+              </button>
             </p>
-          </Motion.div>
-        </Motion.div>
+          </div>
+
+        </div>
       </Motion.div>
     </div>
   );
 };
 
-export default LoginForm;
+export default LoginForm;

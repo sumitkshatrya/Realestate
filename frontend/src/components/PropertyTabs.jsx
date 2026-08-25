@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaInfoCircle, FaListUl, FaMapMarkedAlt, FaCalculator } from "react-icons/fa";
 import { Link } from "react-router-dom";
-import MortgageCalculator from "../components/MortgageCalculator";
+import MortgageCalculator from "./MortgageCalculator";
 
 const PropertyTabs = ({ property }) => {
   const [activeTab, setActiveTab] = useState("description");

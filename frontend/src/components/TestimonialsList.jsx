@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import TestimonialCard from "../components/TestimonialCard";
+import TestimonialCard from "./TestimonialCard";
 import { testimonialAPI } from "../api/testimonialApi.js";
 
 export default function TestimonialsList() {

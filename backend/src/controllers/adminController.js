@@ -66,7 +66,8 @@ export const forgotPassword = async (req, res) => {
     admin.resetPasswordExpire = Date.now() + 10 * 60 * 1000; // 10 minutes
     await admin.save();
 
-    const resetUrl = `${process.env.ADMIN_URI}/reset-password/${resetToken}`;
+    const adminBase = (process.env.ADMIN_URI || "http://localhost:5174").replace(/\/+$/, "");
+    const resetUrl = `${adminBase}/reset-password/${resetToken}`;
 
     try {
       await sendEmail(
@@ -91,7 +92,9 @@ export const forgotPassword = async (req, res) => {
 // Reset password - verify token and set new password
 export const resetPassword = async (req, res) => {
   try {
-    const { token, password } = req.body;
+    const body = req.body || {};
+    const token = body.token || req.query.token;
+    const password = body.password || body.newPassword;
     if (!token || !password) {
       return res.status(400).json({ error: "Token and new password are required" });
     }

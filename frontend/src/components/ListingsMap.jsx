@@ -14,14 +14,13 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
 });
 
-const MapEvents = ({ allProperties, onVisibleChange }) => {
+// Component to handle map movement and report visible properties
+const MapBoundsListener = ({ allProperties, onVisibleChange }) => {
   const map = useMap();
-
   const updateVisibleProperties = () => {
-    if (!map) return;
     const bounds = map.getBounds();
-    const visible = allProperties.filter(p => 
-      p.latitude && p.longitude && bounds.contains([p.latitude, p.longitude])
+    const visible = allProperties.filter(
+      p => p.latitude && p.longitude && bounds.contains([p.latitude, p.longitude])
     );
     onVisibleChange(visible);
   };
@@ -31,7 +30,7 @@ const MapEvents = ({ allProperties, onVisibleChange }) => {
     zoomend: updateVisibleProperties,
   });
 
-  useEffect(updateVisibleProperties, [map, allProperties]);
+  useEffect(updateVisibleProperties, [map, allProperties, onVisibleChange]);
   return null;
 };
 const MapBounds = ({ properties }) => {

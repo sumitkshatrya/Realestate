@@ -1,9 +1,13 @@
 import dotenv from "dotenv";
+dotenv.config();
+
 import DBconnect from "./lib/db.js";
 import app from "./app.js";
-dotenv.config();
+
 DBconnect();
 
-app.listen(process.env.PORT, async () => {
-  console.log("server is running on 8080");
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
+

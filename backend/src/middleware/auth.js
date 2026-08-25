@@ -23,7 +23,8 @@ export const verifyToken = catchAsyncError(async (req, res, next) => {
     }
 
     // 3️⃣ Verify token
-    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+    const secret = process.env.ACCESS_TOKEN_SECRET || process.env.JWT_SECRET || "default_jwt_secret";
+    const decoded = jwt.verify(token, secret);
     // It's better practice to not select out the refresh token here, but in the controller if needed.
     const user = await User.findById(decoded?.id);
 

@@ -55,9 +55,10 @@ export const createContact = async (req, res) => {
     }
 
     // Create contact message
+    const userEmail = email || req.user.email;
     const contact = await Contact.create({
       fullname,
-      email,
+      email: userEmail,
       subject,
       phone,
       message,
@@ -66,20 +67,22 @@ export const createContact = async (req, res) => {
 
     // Send email notification to admin
     try {
-      const adminEmail = process.env.ADMIN_EMAIL 
-      const emailSubject = `New Contact Message from ${fullname}`;
-      const emailHtml = generateAdminNotificationTemplate(
-        fullname, 
-        email, 
-        phone, 
-        subject,
-        message, 
-        req.user._id
-      );
+      const adminEmail = process.env.ADMIN_EMAIL || process.env.SMTP_MAIL || process.env.SMTP_USER;
+      if (adminEmail) {
+        const emailSubject = `New Contact Message from ${fullname}`;
+        const emailHtml = generateAdminNotificationTemplate(
+          fullname, 
+          userEmail, 
+          phone, 
+          subject,
+          message, 
+          req.user._id
+        );
 
-      await sendEmail(adminEmail, emailSubject, emailHtml);
+        await sendEmail(adminEmail, emailSubject, emailHtml);
 
-      console.log(`Admin notification sent for contact message from ${fullname}`);
+        console.log(`Admin notification sent for contact message from ${fullname}`);
+      }
     } catch (emailError) {
       // Log email error but don't fail the request
       console.error('Failed to send admin notification email:', emailError);

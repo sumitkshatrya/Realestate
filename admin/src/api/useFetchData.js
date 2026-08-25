@@ -35,10 +35,9 @@ function fetchReducer(state, action) {
  */
 export const useFetchData = (apiFunc, initialParams = {}) => {
   const [params, setParams] = useState(initialParams);
-  const apiFuncRef = useRef(apiFunc); // Use a ref to get a stable reference to the apiFunc
 
   // Generate a cache key from the function's identity and its parameters
-  const cacheKey = `${apiFuncRef.current.name}-${JSON.stringify(params)}`;
+  const cacheKey = `${apiFunc.name || 'apiFunc'}-${JSON.stringify(params)}`;
 
   const [state, dispatch] = useReducer(fetchReducer, cache.get(cacheKey) || initialState);
 
@@ -61,10 +60,12 @@ export const useFetchData = (apiFunc, initialParams = {}) => {
     }
   }, [apiFunc, params, cacheKey]);
 
-  // Use a ref to prevent infinite loops if setParams is called in useEffect
-  const initialParamsRef = useRef(initialParams);
-  // Update params if initialParams change, but only if they are different
-  useEffect(() => { if (JSON.stringify(initialParamsRef.current) !== JSON.stringify(initialParams)) { setParams(initialParams); initialParamsRef.current = initialParams; } }, [initialParams]);
+  // Adjust params state during render when initialParams change
+  const [prevInitialParams, setPrevInitialParams] = useState(initialParams);
+  if (JSON.stringify(prevInitialParams) !== JSON.stringify(initialParams)) {
+    setPrevInitialParams(initialParams);
+    setParams(initialParams);
+  }
 
   useEffect(() => {
     // On mount or when params change, fetch data.

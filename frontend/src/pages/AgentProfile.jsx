@@ -340,7 +340,7 @@ const AgentProfile = () => {
               768: { slidesPerView: 2 },
               1024: { slidesPerView: 3 },
             }}
-            className="pb-12" // Add padding for pagination
+            className="pb-12" 
           >
             {testimonials.map((testimonial) => (
               <SwiperSlide key={testimonial._id}>

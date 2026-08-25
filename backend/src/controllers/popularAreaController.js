@@ -3,11 +3,13 @@ import ApiResponse from "../utils/ApiResponse.js";
 import catchAsyncError from "../middleware/catchAsyncError.js";
 import ErrorHandler from "../middleware/error.js";
 
-// @desc    Get all active popular areas
+// @desc    Get all active popular areas (or all for admin if includeInactive=true)
 // @route   GET /api/popular-areas
 // @access  Public
 export const getPopularAreas = catchAsyncError(async (req, res, next) => {
-  const areas = await PopularArea.find({ isActive: true }).sort({ name: 1 });
+  const { includeInactive } = req.query;
+  const filter = includeInactive === "true" ? {} : { isActive: true };
+  const areas = await PopularArea.find(filter).sort({ name: 1 });
   res.status(200).json(new ApiResponse(areas, "Popular areas fetched successfully."));
 });
 

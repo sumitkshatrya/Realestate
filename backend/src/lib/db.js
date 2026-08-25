@@ -1,51 +1,21 @@
 import mongoose from "mongoose";
-import { MongoMemoryServer } from "mongodb-memory-server";
+import dns from "dns";
+
+// Configure DNS fallback servers to resolve MongoDB Atlas SRV records on Windows/local networks
+try {
+  dns.setDefaultResultOrder("ipv4first");
+  dns.setServers(["8.8.8.8", "8.8.4.4", "1.1.1.1"]);
+} catch (dnsErr) {
+  console.warn("Could not set custom DNS servers:", dnsErr.message);
+}
 
 const connectDB = async () => {
-  const mongoUri = process.env.MONGODB_URI;
-
   try {
-    if (!mongoUri) {
-      throw new Error("MONGODB_URI is not configured");
-    }
-
-    await mongoose.connect(mongoUri);
-    console.log("MongoDB connected...");
-    return true;
+    await mongoose.connect(process.env.MONGODB_URI);
+    console.log("MongoDB connected successfully");
   } catch (error) {
-    const shouldFallbackToMemory =
-      process.env.NODE_ENV !== "production" &&
-      (!mongoUri ||
-        error?.code === "ENOTFOUND" ||
-        error?.name === "MongooseServerSelectionError");
-
-    if (shouldFallbackToMemory) {
-      try {
-        const memoryServer = await MongoMemoryServer.create({
-          binary: {
-            version: "7.0.14",
-          },
-          instance: {
-            dbName: "realestate",
-          },
-        });
-        await mongoose.connect(memoryServer.getUri());
-        console.log("MongoDB connected using fallback in-memory server...");
-        return true;
-      } catch (memoryError) {
-        console.warn(
-          "MongoDB memory fallback failed. Starting server without a database connection.",
-          memoryError.message || memoryError
-        );
-        return false;
-      }
-    }
-
-    console.warn(
-      "MongoDB connection failed. Starting server without a database connection.",
-      error.message || error
-    );
-    return false;
+    console.error("MongoDB connection failed:", error.message);
+    throw error;
   }
 };
 

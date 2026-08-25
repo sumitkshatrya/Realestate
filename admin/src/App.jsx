@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import Login from "./components/Login";
 import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Sidebar from "./components/Sidebar";
+import CommandPalette from "./components/CommandPalette";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
@@ -16,15 +17,25 @@ import PopularAreasManager from "./pages/PopularAreasManager";
 import AboutContentManager from "./pages/AboutContentManager";
 import PropertiesManager from "./pages/PropertiesManager";
 import UsersManager from "./pages/UsersManager";
+import Settings from "./pages/Settings";
 
 const AdminLayout = () => {
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
+    <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-red-500 selection:text-white">
       <div className="flex min-h-screen">
-        <Sidebar />
-        <div className="flex min-h-screen flex-1 flex-col">
-          <Navbar />
-          <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
+        <Sidebar
+          mobileOpen={isMobileSidebarOpen}
+          onMobileClose={() => setIsMobileSidebarOpen(false)}
+        />
+        <div className="flex min-h-screen flex-1 flex-col min-w-0">
+          <Navbar
+            onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
+            onOpenMobileSidebar={() => setIsMobileSidebarOpen(true)}
+          />
+          <main className="flex-1 px-3 sm:px-6 lg:px-8 py-4 sm:py-6 overflow-y-auto">
             <Routes>
               <Route index element={<Navigate to="dashboard" replace />} />
               <Route path="dashboard" element={<Dashboard />} />
@@ -37,21 +48,29 @@ const AdminLayout = () => {
               <Route path="about-content" element={<AboutContentManager />} />
               <Route path="properties" element={<PropertiesManager />} />
               <Route path="users" element={<UsersManager />} />
+              <Route path="settings" element={<Settings />} />
+              <Route path="*" element={<Navigate to="dashboard" replace />} />
             </Routes>
           </main>
         </div>
       </div>
+
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+      />
     </div>
   );
 };
 
 const App = () => {
-return (
+  return (
     <Routes>
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
       <Route path="/login" element={<Login />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password/:token" element={<ResetPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route
         path="/*"
         element={

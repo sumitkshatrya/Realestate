@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { motion as Motion } from "framer-motion";
+import React, { useState } from "react";
+import { motion as Motion, AnimatePresence } from "framer-motion";
 import {
   FaBuilding,
   FaChartLine,
@@ -16,11 +16,26 @@ import {
   FaTools,
   FaTrash,
   FaTimes,
+  FaCheck,
 } from "react-icons/fa";
 import { servicesAPI } from "../api/servicesApi";
 import { useFetchData } from "../api/useFetchData";
 import { useConfirmationModal } from "./ModalContext";
 import { useForm } from "react-hook-form";
+
+const iconMap = {
+  FaHome,
+  FaKey,
+  FaMapMarkerAlt,
+  FaChartLine,
+  FaBuilding,
+  FaTools,
+  FaHandshake,
+  FaCity,
+  FaSearchDollar,
+  FaClipboardList,
+  FaLayerGroup,
+};
 
 const iconOptions = [
   { value: "FaHome", label: "Home", icon: FaHome },
@@ -46,7 +61,9 @@ const defaultForm = {
 
 const ServicesManager = () => {
   const [editingService, setEditingService] = useState(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const confirm = useConfirmationModal();
+
   const {
     register,
     handleSubmit,
@@ -56,21 +73,10 @@ const ServicesManager = () => {
 
   const { data: services, loading: isLoadingServices, refetch: fetchServices } = useFetchData(servicesAPI.getServices);
 
-  const resetForm = () => {
-    reset(defaultForm);
+  const openAddDrawer = () => {
     setEditingService(null);
-  };
-
-  const onSubmit = async (data) => {
-    try {
-      if (editingService) {
-        await servicesAPI.updateService(editingService._id, data);
-      } else {
-        await servicesAPI.createService(data);
-      }
-      resetForm();
-      await fetchServices();
-    } catch (error) { /* Errors are handled by the global axios interceptor */ }
+    reset(defaultForm);
+    setIsDrawerOpen(true);
   };
 
   const handleEdit = (service) => {
@@ -82,8 +88,27 @@ const ServicesManager = () => {
       order: service.order || 0,
       isActive: service.isActive !== false,
     });
-    // Scroll to the form for better UX on smaller screens
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    setIsDrawerOpen(true);
+  };
+
+  const closeDrawer = () => {
+    setIsDrawerOpen(false);
+    setEditingService(null);
+    reset(defaultForm);
+  };
+
+  const onSubmit = async (data) => {
+    try {
+      if (editingService) {
+        await servicesAPI.updateService(editingService._id, data);
+      } else {
+        await servicesAPI.createService(data);
+      }
+      closeDrawer();
+      await fetchServices();
+    } catch (error) {
+      /* Handled by global interceptor */
+    }
   };
 
   const handleDelete = async (id) => {
@@ -94,7 +119,9 @@ const ServicesManager = () => {
         try {
           await servicesAPI.deleteService(id);
           await fetchServices();
-        } catch (error) { /* Errors are handled by the global axios interceptor */ }
+        } catch (error) {
+          /* Handled by global interceptor */
+        }
       },
     });
   };
@@ -106,197 +133,191 @@ const ServicesManager = () => {
         isActive: service.isActive === false,
       });
       await fetchServices();
-    } catch (error) { /* Errors are handled by the global axios interceptor */ }
+    } catch (error) {
+      /* Handled by global interceptor */
+    }
   };
 
-
   return (
-    <div className="space-y-6">
-      <Motion.section
+    <div className="space-y-6 max-w-7xl mx-auto">
+      {/* HEADER BANNER */}
+      <Motion.div
         initial={{ opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35 }}
-        className="rounded-[2rem] border border-white/10 bg-white/5 p-6"
+        className="rounded-[2.5rem] border border-white/10 bg-slate-900/80 p-6 sm:p-8 backdrop-blur-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
       >
-        <h2 className="text-2xl font-semibold text-white">Services</h2>
-        <p className="mt-2 text-sm text-slate-300">
-          Create, edit, deactivate, and remove the service cards shown on the
-          public site.
-        </p>
-      </Motion.section>
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="flex h-2 w-2 rounded-full bg-rose-400" />
+            <span className="text-xs font-bold uppercase tracking-wider text-rose-400">Offerings & Solutions</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-white mt-2">Platform Services</h1>
+          <p className="text-xs sm:text-sm text-slate-400 mt-1">
+            Manage real estate services, consulting offerings, and platform features.
+          </p>
+        </div>
 
+        <button onClick={openAddDrawer} className="btn btn-primary shrink-0">
+          <FaPlus className="text-xs" />
+          <span>Add New Service</span>
+        </button>
+      </Motion.div>
+
+      {/* SERVICES GRID */}
       {isLoadingServices ? (
-        <div className="rounded-[2rem] border border-white/10 bg-slate-900/70 p-8 text-sm text-slate-300">
-          Loading services...
+        <div className="rounded-3xl border border-white/10 bg-slate-900/60 p-12 text-center text-slate-400 text-sm">
+          Loading platform services...
+        </div>
+      ) : (services || []).length === 0 ? (
+        <div className="rounded-3xl border border-white/10 bg-slate-900/60 p-16 text-center">
+          <FaLayerGroup className="text-3xl text-slate-600 mx-auto mb-3" />
+          <p className="text-base font-bold text-white">No Services Found</p>
+          <p className="text-xs text-slate-400 mt-1">Add client offerings and services to display on the public application.</p>
         </div>
       ) : (
-        <>
-        <Motion.form
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.05, duration: 0.3 }}
-        onSubmit={handleSubmit(onSubmit)}
-        className="rounded-[2rem] border border-white/10 bg-slate-900/75 p-6"
-      >
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h3 className="text-xl font-semibold text-white">
-              {editingService ? "Edit Service" : "Add Service"}
-            </h3>
-            <p className="mt-1 text-sm text-slate-400">
-              Keep the public services section synced from this admin app.
-            </p>
-          </div>
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {services.map((service, idx) => {
+            const IconComp = iconMap[service.icon] || FaLayerGroup;
 
-          {editingService && (
-            <button
-              type="button"
-              onClick={resetForm}
-              className="inline-flex items-center gap-2 rounded-2xl border border-white/10 px-4 py-2 text-sm text-slate-200 hover:bg-white/5"
-            >
-              <FaTimes />
-              Cancel
-            </button>
-          )}
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2">
-          <div>
-            <input
-              type="text"
-              {...register("title", { required: "Service title is required." })}
-              placeholder="Service title"
-              className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-white outline-none focus:border-red-400"
-            />
-            {errors.title && <p className="mt-1 text-xs text-red-400">{errors.title.message}</p>}
-          </div>
-          <div>
-            <select
-              {...register("icon")}
-              className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-white outline-none focus:border-red-400"
-            >
-              {iconOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        <div className="mt-4">
-          <textarea
-            {...register("description", { required: "Description is required." })}
-            placeholder="Describe the service"
-            className="min-h-32 w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-white outline-none focus:border-red-400"
-          />
-          {errors.description && <p className="mt-1 text-xs text-red-400">{errors.description.message}</p>}
-        </div>
-
-        <div className="mt-4 grid gap-4 md:grid-cols-2">
-          <div>
-            <input
-              type="number"
-              min="0"
-              {...register("order", { valueAsNumber: true })}
-              placeholder="Display order"
-              className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-white outline-none focus:border-red-400"
-            />
-          </div>
-
-          <label className="flex items-center justify-between rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-slate-200">
-            Active
-            <input
-              type="checkbox"
-              {...register("isActive")}
-              className="h-4 w-4"
-            />
-          </label>
-        </div>
-
-        <Motion.button
-          whileHover={{ scale: 1.01 }}
-          whileTap={{ scale: 0.99 }}
-          type="submit"
-          disabled={isSubmitting}
-          className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-red-600 px-5 py-3 font-semibold text-white hover:bg-red-500 disabled:opacity-70"
-        >
-          <FaPlus />
-          {editingService ? "Update Service" : "Create Service"}
-        </Motion.button>
-      </Motion.form>
-
-
-      <div className="space-y-4">
-        {services.map((service, index) => {
-          const IconComponent =
-            iconOptions.find((option) => option.value === service.icon)?.icon ||
-            FaBuilding;
-
-          return (
-            <Motion.article
-              key={service._id}
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.04, duration: 0.24 }}
-              className="flex flex-col gap-4 rounded-[1.75rem] border border-white/10 bg-slate-900/75 p-5 lg:flex-row lg:items-center lg:justify-between"
-            >
-              <div className="flex items-start gap-4">
-                <div className="rounded-2xl bg-red-500/15 p-4 text-red-300">
-                  <IconComponent className="text-lg" />
-                </div>
-                <div>
-                  <div className="flex flex-wrap items-center gap-3">
-                    <h3 className="text-lg font-semibold text-white">
-                      {service.title}
-                    </h3>
+            return (
+              <Motion.article
+                key={service._id}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.04 }}
+                className="group rounded-3xl border border-white/10 bg-slate-900/80 p-6 backdrop-blur-xl shadow-xl hover:border-rose-500/30 transition flex flex-col justify-between space-y-4"
+              >
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-500/15 text-rose-400 border border-rose-500/20">
+                      <IconComp className="text-xl" />
+                    </div>
                     <span
-                      className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                        service.isActive === false
-                          ? "bg-slate-700 text-slate-300"
-                          : "bg-emerald-500/15 text-emerald-300"
+                      className={`rounded-full border px-2.5 py-0.5 text-[10px] font-bold ${
+                        service.isActive !== false
+                          ? "border-emerald-500/30 bg-emerald-500/20 text-emerald-300"
+                          : "border-slate-500/30 bg-slate-800 text-slate-400"
                       }`}
                     >
-                      {service.isActive === false ? "Inactive" : "Active"}
+                      {service.isActive !== false ? "Active" : "Inactive"}
                     </span>
                   </div>
-                  <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
+
+                  <h3 className="text-lg font-bold text-white group-hover:text-rose-400 transition">
+                    {service.title}
+                  </h3>
+                  <p className="text-xs text-slate-400 leading-relaxed line-clamp-3">
                     {service.description}
                   </p>
-                  <p className="mt-2 text-xs uppercase tracking-[0.22em] text-slate-500">
-                    {service.icon} | Order {service.order || 0}
-                  </p>
                 </div>
+
+                <div className="flex items-center gap-2 pt-3 border-t border-white/10">
+                  <button
+                    onClick={() => toggleServiceStatus(service)}
+                    className={`flex-1 rounded-xl border py-2 text-xs font-bold transition ${
+                      service.isActive !== false
+                        ? "border-amber-500/20 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20"
+                        : "border-emerald-500/20 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20"
+                    }`}
+                  >
+                    {service.isActive !== false ? "Deactivate" : "Activate"}
+                  </button>
+                  <button
+                    onClick={() => handleEdit(service)}
+                    className="p-2.5 rounded-xl border border-white/10 bg-white/5 text-slate-300 hover:text-white transition"
+                    title="Edit Service"
+                  >
+                    <FaEdit className="text-xs" />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(service._id)}
+                    className="p-2.5 rounded-xl border border-rose-500/20 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20 transition"
+                    title="Delete Service"
+                  >
+                    <FaTrash className="text-xs" />
+                  </button>
+                </div>
+              </Motion.article>
+            );
+          })}
+        </div>
+      )}
+
+      {/* DRAWER MODAL */}
+      <AnimatePresence>
+        {isDrawerOpen && (
+          <div className="fixed inset-0 z-50 flex justify-end">
+            <Motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={closeDrawer}
+              className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm"
+            />
+            <Motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 250 }}
+              className="relative w-full max-w-md bg-slate-900 border-l border-white/10 h-full overflow-y-auto p-6 sm:p-8 shadow-2xl z-10 space-y-6"
+            >
+              <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                <h2 className="text-xl font-bold text-white">
+                  {editingService ? "Edit Platform Service" : "New Platform Service"}
+                </h2>
+                <button onClick={closeDrawer} className="p-2 rounded-xl border border-white/10 text-slate-400 hover:text-white">
+                  <FaTimes />
+                </button>
               </div>
 
-              <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={() => toggleServiceStatus(service)}
-                  className="rounded-2xl bg-amber-500/15 px-4 py-2 text-sm font-semibold text-amber-300 hover:bg-amber-500/25"
-                >
-                  {service.isActive === false ? "Activate" : "Deactivate"}
-                </button>
-                <button
-                  onClick={() => handleEdit(service)}
-                  className="inline-flex items-center gap-2 rounded-2xl bg-blue-500/15 px-4 py-2 text-sm font-semibold text-blue-300 hover:bg-blue-500/25"
-                >
-                  <FaEdit />
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDelete(service._id)}
-                  className="inline-flex items-center gap-2 rounded-2xl bg-rose-500/15 px-4 py-2 text-sm font-semibold text-rose-300 hover:bg-rose-500/25"
-                >
-                  <FaTrash />
-                  Delete
-                </button>
-              </div>
-            </Motion.article>
-          );
-        })}
-      </div>
-      </>
-      )}
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">Service Title *</label>
+                  <input
+                    type="text"
+                    {...register("title", { required: "Title is required." })}
+                    placeholder="e.g. Property Valuation & Advisory"
+                    className="input-field"
+                  />
+                  {errors.title && <p className="mt-1 text-xs text-red-400">{errors.title.message}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">Icon Style</label>
+                  <select {...register("icon")} className="input-field">
+                    {iconOptions.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">Service Description *</label>
+                  <textarea
+                    rows={4}
+                    {...register("description", { required: "Description is required." })}
+                    placeholder="Describe key benefits and features offered..."
+                    className="input-field text-xs"
+                  />
+                  {errors.description && <p className="mt-1 text-xs text-red-400">{errors.description.message}</p>}
+                </div>
+
+                <div className="flex justify-end gap-3 pt-4 border-t border-white/10">
+                  <button type="button" onClick={closeDrawer} className="btn btn-secondary">
+                    Cancel
+                  </button>
+                  <button type="submit" disabled={isSubmitting} className="btn btn-primary">
+                    <FaCheck className="text-xs" />
+                    {editingService ? "Save Changes" : "Create Service"}
+                  </button>
+                </div>
+              </form>
+            </Motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

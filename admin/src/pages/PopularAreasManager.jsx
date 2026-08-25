@@ -1,11 +1,14 @@
 import React, { useState } from "react";
-import { motion as Motion } from "framer-motion";
+import { motion as Motion, AnimatePresence } from "framer-motion";
 import {
   FaEdit,
   FaMapMarkerAlt,
   FaPlus,
   FaTimes,
   FaTrash,
+  FaCheck,
+  FaBuilding,
+  FaImage,
 } from "react-icons/fa";
 import { popularAreaAPI } from "../api/popularAreaApi";
 import { useFetchData } from "../api/useFetchData";
@@ -21,7 +24,9 @@ const defaultForm = {
 
 const PopularAreasManager = () => {
   const [editingArea, setEditingArea] = useState(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const confirm = useConfirmationModal();
+
   const {
     register,
     handleSubmit,
@@ -31,23 +36,10 @@ const PopularAreasManager = () => {
 
   const { data: areas, loading: isLoadingAreas, refetch: fetchAreas } = useFetchData(popularAreaAPI.getAreas);
 
-  const resetForm = () => {
-    reset(defaultForm);
+  const openAddDrawer = () => {
     setEditingArea(null);
-  };
-
-  const onSubmit = async (data) => {
-    try {
-      if (editingArea) {
-        await popularAreaAPI.updateArea(editingArea._id, data);
-      } else {
-        await popularAreaAPI.createArea(data);
-      }
-      resetForm();
-      await fetchAreas();
-    } catch (error) {
-      /* Errors are handled by the global axios interceptor */
-    }
+    reset(defaultForm);
+    setIsDrawerOpen(true);
   };
 
   const handleEdit = (area) => {
@@ -58,19 +50,39 @@ const PopularAreasManager = () => {
       imageUrl: area.imageUrl || "",
       isActive: area.isActive !== false,
     });
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    setIsDrawerOpen(true);
+  };
+
+  const closeDrawer = () => {
+    setIsDrawerOpen(false);
+    setEditingArea(null);
+    reset(defaultForm);
+  };
+
+  const onSubmit = async (data) => {
+    try {
+      if (editingArea) {
+        await popularAreaAPI.updateArea(editingArea._id, data);
+      } else {
+        await popularAreaAPI.createArea(data);
+      }
+      closeDrawer();
+      await fetchAreas();
+    } catch (error) {
+      /* Handled by global interceptor */
+    }
   };
 
   const handleDelete = async (id) => {
     confirm({
-      title: "Delete Area?",
+      title: "Delete Popular Area?",
       message: "Are you sure you want to delete this popular area? This action cannot be undone.",
       onConfirm: async () => {
         try {
           await popularAreaAPI.deleteArea(id);
           await fetchAreas();
         } catch (error) {
-          /* Errors are handled by the global axios interceptor */
+          /* Handled by global interceptor */
         }
       },
     });
@@ -84,176 +96,198 @@ const PopularAreasManager = () => {
       });
       await fetchAreas();
     } catch (error) {
-      /* Errors are handled by the global axios interceptor */
+      /* Handled by global interceptor */
     }
   };
 
   return (
-    <div className="space-y-6">
-      <Motion.section
+    <div className="space-y-6 max-w-7xl mx-auto">
+      {/* HEADER BANNER */}
+      <Motion.div
         initial={{ opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35 }}
-        className="rounded-[2rem] border border-white/10 bg-white/5 p-6"
+        className="rounded-[2.5rem] border border-white/10 bg-slate-900/80 p-6 sm:p-8 backdrop-blur-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
       >
-        <h2 className="text-2xl font-semibold text-white">Popular Areas</h2>
-        <p className="mt-2 text-sm text-slate-300">
-          Create, edit, deactivate, and remove the neighborhood cards shown on
-          the public site.
-        </p>
-      </Motion.section>
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="flex h-2 w-2 rounded-full bg-cyan-400" />
+            <span className="text-xs font-bold uppercase tracking-wider text-cyan-400">Locations & Hubs</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-white mt-2">Popular Areas & Regions</h1>
+          <p className="text-xs sm:text-sm text-slate-400 mt-1">
+            Manage highlighted neighborhoods, location cards, and property counters shown on the site.
+          </p>
+        </div>
 
+        <button onClick={openAddDrawer} className="btn btn-primary shrink-0">
+          <FaPlus className="text-xs" />
+          <span>Add Neighborhood</span>
+        </button>
+      </Motion.div>
+
+      {/* AREA CARDS GRID */}
       {isLoadingAreas ? (
-        <div className="rounded-[2rem] border border-white/10 bg-slate-900/70 p-8 text-sm text-slate-300">
-          Loading popular areas...
+        <div className="rounded-3xl border border-white/10 bg-slate-900/60 p-12 text-center text-slate-400 text-sm">
+          Loading popular locations...
+        </div>
+      ) : (areas || []).length === 0 ? (
+        <div className="rounded-3xl border border-white/10 bg-slate-900/60 p-16 text-center">
+          <FaMapMarkerAlt className="text-3xl text-slate-600 mx-auto mb-3" />
+          <p className="text-base font-bold text-white">No Popular Areas Configured</p>
+          <p className="text-xs text-slate-400 mt-1">Add featured neighborhoods to highlight top real estate regions.</p>
         </div>
       ) : (
-        <>
-          <Motion.form
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.05, duration: 0.3 }}
-            onSubmit={handleSubmit(onSubmit)}
-            className="rounded-[2rem] border border-white/10 bg-slate-900/75 p-6"
-          >
-            <div className="mb-6 flex items-center justify-between">
-              <div>
-                <h3 className="text-xl font-semibold text-white">
-                  {editingArea ? "Edit Area" : "Add Area"}
-                </h3>
-                <p className="mt-1 text-sm text-slate-400">
-                  Keep the popular areas section synced from this admin app.
-                </p>
-              </div>
-              {editingArea && (
-                <button
-                  type="button"
-                  onClick={resetForm}
-                  className="inline-flex items-center gap-2 rounded-2xl border border-white/10 px-4 py-2 text-sm text-slate-200 hover:bg-white/5"
-                >
-                  <FaTimes />
-                  Cancel
-                </button>
-              )}
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <input
-                  type="text"
-                  {...register("name", { required: "Area name is required." })}
-                  placeholder="Area name"
-                  className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-white outline-none focus:border-red-400"
-                />
-                {errors.name && <p className="mt-1 text-xs text-red-400">{errors.name.message}</p>}
-              </div>
-              <div>
-                <input
-                  type="text"
-                  {...register("propertyCount", { required: "Property count is required." })}
-                  placeholder="Property count (e.g. 320)"
-                  className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-white outline-none focus:border-red-400"
-                />
-                {errors.propertyCount && <p className="mt-1 text-xs text-red-400">{errors.propertyCount.message}</p>}
-              </div>
-            </div>
-
-            <div className="mt-4">
-              <input
-                type="text"
-                {...register("imageUrl", { required: "Image URL is required." })}
-                placeholder="Image URL"
-                className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-white outline-none focus:border-red-400"
-              />
-              {errors.imageUrl && <p className="mt-1 text-xs text-red-400">{errors.imageUrl.message}</p>}
-            </div>
-
-            <label className="mt-4 flex items-center justify-between rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-slate-200">
-              Active
-              <input
-                type="checkbox"
-                {...register("isActive")}
-                className="h-4 w-4"
-              />
-            </label>
-
-            <Motion.button
-              whileHover={{ scale: 1.01 }}
-              whileTap={{ scale: 0.99 }}
-              type="submit"
-              disabled={isSubmitting}
-              className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-red-600 px-5 py-3 font-semibold text-white hover:bg-red-500 disabled:opacity-70"
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {areas.map((area, idx) => (
+            <Motion.article
+              key={area._id}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.04 }}
+              className="group overflow-hidden rounded-3xl border border-white/10 bg-slate-900/80 backdrop-blur-xl shadow-xl hover:border-cyan-500/30 transition flex flex-col justify-between"
             >
-              <FaPlus />
-              {editingArea ? "Update Area" : "Create Area"}
-            </Motion.button>
-          </Motion.form>
+              {/* Image Preview */}
+              <div className="relative h-40 w-full overflow-hidden bg-slate-950">
+                {area.imageUrl ? (
+                  <img
+                    src={area.imageUrl}
+                    alt={area.name}
+                    className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-slate-600 text-xs">
+                    <FaImage className="text-2xl mr-2" /> No preview image
+                  </div>
+                )}
+                <span className="absolute bottom-3 left-3 rounded-xl bg-slate-950/80 backdrop-blur-md px-3 py-1 text-xs font-bold text-cyan-300 border border-white/10 flex items-center gap-1.5">
+                  <FaBuilding className="text-[10px]" />
+                  {area.propertyCount || "0 Properties"}
+                </span>
+                <span
+                  className={`absolute top-3 right-3 rounded-full border px-2.5 py-0.5 text-[10px] font-bold ${
+                    area.isActive !== false
+                      ? "border-emerald-500/30 bg-emerald-500/20 text-emerald-300"
+                      : "border-slate-500/30 bg-slate-800 text-slate-400"
+                  }`}
+                >
+                  {area.isActive !== false ? "Active" : "Inactive"}
+                </span>
+              </div>
 
-          <div className="space-y-4">
-            {areas.map((area, index) => (
-              <Motion.article
-                key={area._id}
-                initial={{ opacity: 0, y: 14 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.04, duration: 0.24 }}
-                className="flex flex-col gap-4 rounded-[1.75rem] border border-white/10 bg-slate-900/75 p-5 lg:flex-row lg:items-center lg:justify-between"
-              >
-                <div className="flex items-start gap-4">
-                  <div className="h-20 w-20 overflow-hidden rounded-2xl bg-slate-950/70">
-                    {area.imageUrl ? (
-                      <img src={area.imageUrl} alt={area.name} className="h-full w-full object-cover" />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center text-slate-600">
-                        <FaMapMarkerAlt />
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <div className="flex flex-wrap items-center gap-3">
-                      <h3 className="text-lg font-semibold text-white">{area.name}</h3>
-                      <span
-                        className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                          area.isActive === false
-                            ? "bg-slate-700 text-slate-300"
-                            : "bg-emerald-500/15 text-emerald-300"
-                        }`}
-                      >
-                        {area.isActive === false ? "Inactive" : "Active"}
-                      </span>
-                    </div>
-                    <p className="mt-2 text-sm text-slate-400">
-                      {area.propertyCount} properties
-                    </p>
-                  </div>
+              {/* Body */}
+              <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+                <div>
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    <FaMapMarkerAlt className="text-cyan-400 text-xs" />
+                    {area.name}
+                  </h3>
                 </div>
 
-                <div className="flex flex-wrap gap-2">
+                <div className="flex items-center gap-2 pt-2 border-t border-white/10">
                   <button
                     onClick={() => toggleAreaStatus(area)}
-                    className="rounded-2xl bg-amber-500/15 px-4 py-2 text-sm font-semibold text-amber-300 hover:bg-amber-500/25"
+                    className={`flex-1 rounded-xl border py-2 text-xs font-bold transition ${
+                      area.isActive !== false
+                        ? "border-amber-500/20 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20"
+                        : "border-emerald-500/20 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20"
+                    }`}
                   >
-                    {area.isActive === false ? "Activate" : "Deactivate"}
+                    {area.isActive !== false ? "Deactivate" : "Activate"}
                   </button>
                   <button
                     onClick={() => handleEdit(area)}
-                    className="inline-flex items-center gap-2 rounded-2xl bg-blue-500/15 px-4 py-2 text-sm font-semibold text-blue-300 hover:bg-blue-500/25"
+                    className="p-2.5 rounded-xl border border-white/10 bg-white/5 text-slate-300 hover:text-white transition"
+                    title="Edit Area"
                   >
-                    <FaEdit />
-                    Edit
+                    <FaEdit className="text-xs" />
                   </button>
                   <button
                     onClick={() => handleDelete(area._id)}
-                    className="inline-flex items-center gap-2 rounded-2xl bg-rose-500/15 px-4 py-2 text-sm font-semibold text-rose-300 hover:bg-rose-500/25"
+                    className="p-2.5 rounded-xl border border-rose-500/20 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20 transition"
+                    title="Delete Area"
                   >
-                    <FaTrash />
-                    Delete
+                    <FaTrash className="text-xs" />
                   </button>
                 </div>
-              </Motion.article>
-            ))}
-          </div>
-        </>
+              </div>
+            </Motion.article>
+          ))}
+        </div>
       )}
+
+      {/* DRAWER MODAL */}
+      <AnimatePresence>
+        {isDrawerOpen && (
+          <div className="fixed inset-0 z-50 flex justify-end">
+            <Motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={closeDrawer}
+              className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm"
+            />
+            <Motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 250 }}
+              className="relative w-full max-w-md bg-slate-900 border-l border-white/10 h-full overflow-y-auto p-6 sm:p-8 shadow-2xl z-10 space-y-6"
+            >
+              <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                <h2 className="text-xl font-bold text-white">
+                  {editingArea ? "Edit Neighborhood" : "New Neighborhood"}
+                </h2>
+                <button onClick={closeDrawer} className="p-2 rounded-xl border border-white/10 text-slate-400 hover:text-white">
+                  <FaTimes />
+                </button>
+              </div>
+
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">Neighborhood Name *</label>
+                  <input
+                    type="text"
+                    {...register("name", { required: "Area name is required." })}
+                    placeholder="e.g. Bandra West, Mumbai"
+                    className="input-field"
+                  />
+                  {errors.name && <p className="mt-1 text-xs text-red-400">{errors.name.message}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">Property Count Tag</label>
+                  <input
+                    type="text"
+                    {...register("propertyCount")}
+                    placeholder="e.g. 45+ Luxury Properties"
+                    className="input-field"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">Cover Image URL</label>
+                  <input
+                    type="text"
+                    {...register("imageUrl")}
+                    placeholder="https://images.unsplash.com/photo-..."
+                    className="input-field"
+                  />
+                </div>
+
+                <div className="flex justify-end gap-3 pt-4 border-t border-white/10">
+                  <button type="button" onClick={closeDrawer} className="btn btn-secondary">
+                    Cancel
+                  </button>
+                  <button type="submit" disabled={isSubmitting} className="btn btn-primary">
+                    <FaCheck className="text-xs" />
+                    {editingArea ? "Save Changes" : "Create Location"}
+                  </button>
+                </div>
+              </form>
+            </Motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

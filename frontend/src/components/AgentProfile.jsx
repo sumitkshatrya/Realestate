@@ -5,7 +5,7 @@ import { agentAPI } from "../api/agentApi";
 import { userAPI } from "../api/userApi";
 import { useAuth } from "../context/useAuth";
 import toast from "react-hot-toast";
-import PropertyCard from "../components/PropertyCard";
+import PropertyCard from "./PropertyCard";
 import { FaEnvelope, FaPhone, FaUserCircle, FaArrowLeft } from "react-icons/fa";
 
 const AgentProfile = () => {

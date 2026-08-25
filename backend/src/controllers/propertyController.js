@@ -59,13 +59,14 @@ export const deleteProperty = catchAsyncError(async (req, res, next) => {
 // @access  Public
 export const searchProperties = catchAsyncError(async (req, res, next) => {
   const { q } = req.query;
+  const escaped = q ? q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") : "";
   const query = q
     ? {
         isActive: true,
         $or: [
-          { name: { $regex: q, $options: "i" } },
-          { address: { $regex: q, $options: "i" } },
-          { description: { $regex: q, $options: "i" } },
+          { name: { $regex: escaped, $options: "i" } },
+          { address: { $regex: escaped, $options: "i" } },
+          { description: { $regex: escaped, $options: "i" } },
         ],
       }
     : { isActive: true };
