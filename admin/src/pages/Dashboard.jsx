@@ -10,12 +10,9 @@ import {
   FaMapMarkerAlt,
   FaUsers,
   FaArrowUp,
-  FaArrowDown,
   FaPlusCircle,
   FaChartLine,
   FaRegCompass,
-  FaCog,
-  FaShieldAlt,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { servicesAPI } from "../api/servicesApi";
@@ -30,13 +27,23 @@ import { useFetchData } from "../api/useFetchData";
 const Dashboard = () => {
   const navigate = useNavigate();
 
-  const { data: testimonials, totalCount: totalTestimonials } = useFetchData(adminFetchAll);
-  const { data: services } = useFetchData(servicesAPI.getServices);
-  const { data: contacts } = useFetchData(contactAPI.getContacts);
-  const { data: tours } = useFetchData(tourAPI.getTours);
-  const { data: areas } = useFetchData(popularAreaAPI.getAreas);
-  const { data: properties } = useFetchData(propertyAPI.getProperties);
-  const { data: users } = useFetchData(userAPI.getUsers);
+  // Safely fallback to empty arrays and default numbers
+  const { data: rawTestimonials, totalCount: totalTestimonials = 0 } = useFetchData(adminFetchAll);
+  const { data: rawServices } = useFetchData(servicesAPI.getServices);
+  const { data: rawContacts } = useFetchData(contactAPI.getContacts);
+  const { data: rawTours } = useFetchData(tourAPI.getTours);
+  const { data: rawAreas } = useFetchData(popularAreaAPI.getAreas);
+  const { data: rawProperties } = useFetchData(propertyAPI.getProperties);
+  const { data: rawUsers } = useFetchData(userAPI.getUsers);
+
+  // Guarantee array shapes
+  const testimonials = useMemo(() => (Array.isArray(rawTestimonials) ? rawTestimonials : []), [rawTestimonials]);
+  const services = useMemo(() => (Array.isArray(rawServices) ? rawServices : []), [rawServices]);
+  const contacts = useMemo(() => (Array.isArray(rawContacts) ? rawContacts : []), [rawContacts]);
+  const tours = useMemo(() => (Array.isArray(rawTours) ? rawTours : []), [rawTours]);
+  const areas = useMemo(() => (Array.isArray(rawAreas) ? rawAreas : []), [rawAreas]);
+  const properties = useMemo(() => (Array.isArray(rawProperties) ? rawProperties : []), [rawProperties]);
+  const users = useMemo(() => (Array.isArray(rawUsers) ? rawUsers : []), [rawUsers]);
 
   const metrics = useMemo(
     () => [
@@ -105,7 +112,7 @@ const Dashboard = () => {
       },
       {
         label: "Approved Reviews",
-        value: testimonials.filter((item) => item.status === "Approved").length,
+        value: testimonials.filter((item) => item?.status === "Approved").length,
         trend: "Published live",
         isPositive: true,
         icon: FaCheckCircle,
@@ -125,9 +132,8 @@ const Dashboard = () => {
     ]
   );
 
-  // Recent activity aggregated from recent items
   const recentActivities = useMemo(() => {
-    const tourItems = (tours || []).slice(0, 3).map((t) => ({
+    const tourItems = tours.slice(0, 3).map((t) => ({
       id: t._id || Math.random(),
       title: `Tour Request from ${t.name || t.fullName || "Customer"}`,
       sub: t.propertyTitle || "Property Viewing",
@@ -136,7 +142,7 @@ const Dashboard = () => {
       badgeBg: "bg-purple-500/10 text-purple-300 border-purple-500/20",
     }));
 
-    const contactItems = (contacts || []).slice(0, 3).map((c) => ({
+    const contactItems = contacts.slice(0, 3).map((c) => ({
       id: c._id || Math.random(),
       title: `Message from ${c.name || "Visitor"}`,
       sub: c.subject || c.message || "General Enquiry",
@@ -175,7 +181,6 @@ const Dashboard = () => {
             </p>
           </div>
 
-          {/* Quick Actions Bar */}
           <div className="flex flex-wrap items-center gap-3">
             <button
               onClick={() => navigate("/properties")}
@@ -230,7 +235,6 @@ const Dashboard = () => {
 
       {/* ANALYTICS VISUALIZERS SECTION */}
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Inventory & Lead Breakdown Chart (Visual SVG Bars) */}
         <Motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -250,7 +254,6 @@ const Dashboard = () => {
             </span>
           </div>
 
-          {/* Visual SVG Progress Bars */}
           <div className="space-y-4">
             {[
               { title: "Properties Inventory", count: properties.length, max: Math.max(properties.length, 20), color: "bg-blue-500" },
