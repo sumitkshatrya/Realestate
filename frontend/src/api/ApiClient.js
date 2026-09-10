@@ -1,10 +1,12 @@
-﻿class ApiClient {
+class ApiClient {
   constructor(baseURL) {
-    this.baseURL = baseURL;
+    const raw = baseURL || import.meta.env.VITE_BACKEND_URL || "http://localhost:8080";
+    this.baseURL = raw.replace(/\/+$/, "");
   }
 
   async _fetch(endpoint, options = {}) {
-    const url = `${this.baseURL}${endpoint}`;
+    const formattedEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
+    const url = `${this.baseURL}${formattedEndpoint}`;
 
     const defaultHeaders = {
       "Content-Type": "application/json",
@@ -33,7 +35,7 @@
       const response = await fetch(url, config);
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: "An unknown error occurred." }));
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+        throw new Error(errorData.message || errorData.error || `HTTP error! status: ${response.status}`);
       }
       return response.json();
     } catch (error) {

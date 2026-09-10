@@ -45,6 +45,7 @@ const ContactAgentForm = ({ agentName, propertyName, propertyId }) => {
         message: `I am interested in the property "${propertyName}". Please send me more details.`,
       }));
     } catch (err) {
+      console.error(err);
       toast.error("Failed to send message. Please try again.");
     } finally {
       setLoading(false);

@@ -13,17 +13,28 @@ export const propertyAPI = {
   },
 
   createProperty: async (propertyData) => {
-    const response = await API.post("/properties", propertyData);
+    const isFormData = propertyData instanceof FormData;
+    const response = await API.post("/properties", propertyData, {
+      headers: isFormData ? { "Content-Type": "multipart/form-data" } : {},
+    });
     return response.data;
   },
 
   updateProperty: async (id, propertyData) => {
-    const response = await API.put(`/properties/${id}`, propertyData);
+    const isFormData = propertyData instanceof FormData;
+    const response = await API.put(`/properties/${id}`, propertyData, {
+      headers: isFormData ? { "Content-Type": "multipart/form-data" } : {},
+    });
     return response.data;
   },
 
   deleteProperty: async (id) => {
     const response = await API.delete(`/properties/${id}`);
+    return response.data;
+  },
+
+  seedProperties: async () => {
+    const response = await API.post("/properties/seed");
     return response.data;
   },
 };

@@ -9,13 +9,23 @@ import { useDebounce } from "../hooks/useDebounce";
 import toast from "react-hot-toast";
 import PropertyCard from "../components/PropertyCard";
 
+import { getSocket } from "../api/socketClient";
+
 const categoriesList = [
+  { label: "All Categories", value: "" },
+  { label: "Luxury Apartment", value: "Luxury Apartment" },
+  { label: "Private Villa / House", value: "Private Villa / House" },
+  { label: "Penthouse / Condo", value: "Penthouse / Condo" },
+  { label: "Duplex", value: "Duplex" },
+  { label: "Townhome", value: "Townhome" },
+  { label: "Commercial Space", value: "Commercial Space" },
+];
+
+const purposeList = [
   { label: "All Properties", value: "" },
-  { label: "Apartments", value: "apartments" },
-  { label: "Houses & Villas", value: "houses" },
-  { label: "Penthouses", value: "condos" },
-  { label: "Duplexes", value: "duplexes" },
-  { label: "Townhomes", value: "townhomes" },
+  { label: "Buy (For Sale)", value: "buy" },
+  { label: "Rent (For Rent)", value: "rent" },
+  { label: "Commercial", value: "commercial" },
 ];
 
 const SkeletonCard = () => (
@@ -40,6 +50,7 @@ const Properties = ({ searchCriteria, setSearchCriteria }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeCategory, setActiveCategory] = useState(searchCriteria.category || "");
+  const [activePurpose, setActivePurpose] = useState(searchCriteria.purpose || searchCriteria.type || "");
   const [showMapModal, setShowMapModal] = useState(false);
 
   const debouncedSearchCriteria = useDebounce(searchCriteria, 400);
@@ -54,11 +65,15 @@ const Properties = ({ searchCriteria, setSearchCriteria }) => {
         const fetchedProperties = data?.data || [];
         setProperties(fetchedProperties);
 
-        if (fetchedProperties.length > 0 && !fetchedProperties.find(p => p._id === selectedProperty?._id)) {
-          setSelectedProperty(fetchedProperties[0]);
-        } else if (fetchedProperties.length === 0) {
-          setSelectedProperty(null);
-        }
+        setSelectedProperty((prev) => {
+          if (fetchedProperties.length > 0 && !fetchedProperties.find((p) => p._id === prev?._id)) {
+            return fetchedProperties[0];
+          }
+          if (fetchedProperties.length === 0) {
+            return null;
+          }
+          return prev;
+        });
       } catch (err) {
         setError("Unable to retrieve real estate listings. Please verify server connection.");
         console.error(err);
@@ -69,6 +84,48 @@ const Properties = ({ searchCriteria, setSearchCriteria }) => {
     fetchProperties();
   }, [debouncedSearchCriteria]);
 
+  // Real-time WebSocket event listener
+  useEffect(() => {
+    const socket = getSocket();
+
+    const handleCreated = (newProperty) => {
+      setProperties((prev) => [newProperty, ...prev]);
+      toast.success(`✨ New listing added: "${newProperty.name}"`, { id: `created-${newProperty._id}` });
+    };
+
+    const handleUpdated = (updatedProperty) => {
+      setProperties((prev) =>
+        prev.map((item) => (item._id === updatedProperty._id ? updatedProperty : item))
+      );
+      setSelectedProperty((prevSelected) =>
+        prevSelected?._id === updatedProperty._id ? updatedProperty : prevSelected
+      );
+      toast.success(`🔄 "${updatedProperty.name}" details updated live`, { id: `updated-${updatedProperty._id}` });
+    };
+
+    const handleDeleted = ({ id }) => {
+      setProperties((prev) => prev.filter((item) => item._id !== id));
+      setSelectedProperty((prevSelected) =>
+        prevSelected?._id === id ? null : prevSelected
+      );
+    };
+
+    socket.on("property:created", handleCreated);
+    socket.on("property:updated", handleUpdated);
+    socket.on("property:deleted", handleDeleted);
+
+    return () => {
+      socket.off("property:created", handleCreated);
+      socket.off("property:updated", handleUpdated);
+      socket.off("property:deleted", handleDeleted);
+    };
+  }, [selectedProperty]);
+
+  const handlePurposeFilter = (purposeValue) => {
+    setActivePurpose(purposeValue);
+    setSearchCriteria({ ...searchCriteria, purpose: purposeValue, type: purposeValue });
+  };
+
   const handleCategoryFilter = (catValue) => {
     setActiveCategory(catValue);
     setSearchCriteria({ ...searchCriteria, category: catValue });
@@ -76,7 +133,8 @@ const Properties = ({ searchCriteria, setSearchCriteria }) => {
 
   const handleClearSearch = () => {
     setActiveCategory("");
-    setSearchCriteria({ q: "", type: "", category: "" });
+    setActivePurpose("");
+    setSearchCriteria({ q: "", type: "", purpose: "", category: "", status: "" });
   };
 
   const handleToggleFavorite = useCallback(async (propertyId) => {
@@ -104,7 +162,7 @@ const Properties = ({ searchCriteria, setSearchCriteria }) => {
   }, [isAuthenticated, updateUser, user, authLoading]);
 
   const mapUrl = selectedProperty
-    ? `https://www.openstreetmap.org/export/embed.html?bbox=${(selectedProperty.longitude || -115.17) - 0.06}%2C${(selectedProperty.latitude || 36.16) - 0.04}%2C${(selectedProperty.longitude || -115.17) + 0.06}%2C${(selectedProperty.latitude || 36.16) + 0.04}&layer=mapnik&marker=${selectedProperty.latitude || 36.16}%2C${selectedProperty.longitude || -115.17}`
+    ? `https://www.openstreetmap.org/export/embed.html?bbox=${(selectedProperty.longitude || 75.82) - 0.008}%2C${(selectedProperty.latitude || 26.84) - 0.005}%2C${(selectedProperty.longitude || 75.82) + 0.008}%2C${(selectedProperty.latitude || 26.84) + 0.005}&layer=mapnik&marker=${selectedProperty.latitude || 26.84}%2C${selectedProperty.longitude || 75.82}`
     : "";
 
   return (
@@ -123,16 +181,33 @@ const Properties = ({ searchCriteria, setSearchCriteria }) => {
             Curated Portfolio
           </span>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 tracking-tight">
-            Explore Standout Luxury Homes
+            Explore Standout Properties
           </h2>
           <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed">
-            Every listing is vetted for architectural excellence, location value, and superior amenities.
+            Find residential houses, luxury apartments, and prime commercial real estate available for buy or rent.
           </p>
         </Motion.div>
 
         {/* Filter Bar Controls */}
         <div className="max-w-4xl mx-auto mb-10 space-y-4">
           
+          {/* Purpose Tabs (Buy / Rent / Commercial) */}
+          <div className="flex items-center justify-center gap-2 p-1.5 bg-slate-200/70 backdrop-blur-md rounded-2xl max-w-xl mx-auto">
+            {purposeList.map((p) => (
+              <button
+                key={p.value}
+                onClick={() => handlePurposeFilter(p.value)}
+                className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-extrabold transition-all duration-200 ${
+                  activePurpose === p.value
+                    ? "bg-slate-900 text-white shadow-md"
+                    : "text-slate-700 hover:text-slate-900 hover:bg-white/50"
+                }`}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+
           {/* Search Box */}
           <div className="relative flex items-center">
             <FaSearch className="absolute left-5 text-slate-400 text-base" />
@@ -162,7 +237,7 @@ const Properties = ({ searchCriteria, setSearchCriteria }) => {
                 onClick={() => handleCategoryFilter(cat.value)}
                 className={`px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer border ${
                   activeCategory === cat.value
-                    ? "bg-slate-900 text-white border-slate-900 shadow-md"
+                    ? "bg-blue-600 text-white border-blue-600 shadow-md"
                     : "bg-white text-slate-600 border-slate-200 hover:bg-slate-100"
                 }`}
               >
@@ -170,7 +245,7 @@ const Properties = ({ searchCriteria, setSearchCriteria }) => {
               </button>
             ))}
 
-            {(searchCriteria.q || searchCriteria.type || searchCriteria.category) && (
+            {(searchCriteria.q || searchCriteria.type || searchCriteria.purpose || searchCriteria.category) && (
               <button
                 onClick={handleClearSearch}
                 className="px-4 py-2 rounded-xl text-xs font-bold text-red-600 bg-red-50 border border-red-200 hover:bg-red-100 transition whitespace-nowrap cursor-pointer ml-2 flex items-center gap-1"
@@ -235,6 +310,9 @@ const Properties = ({ searchCriteria, setSearchCriteria }) => {
                   onSelectProperty={(prop) => {
                     setSelectedProperty(prop);
                     setShowMapModal(true);
+                    setTimeout(() => {
+                      document.getElementById("selected-property-map")?.scrollIntoView({ behavior: "smooth", block: "center" });
+                    }, 100);
                   }}
                   isFavorite={user?.favorites?.includes(item._id)}
                   isAuthenticated={isAuthenticated}
@@ -243,12 +321,14 @@ const Properties = ({ searchCriteria, setSearchCriteria }) => {
             </div>
 
             {/* Interactive Embedded Map Modal / Preview Banner */}
+            {/* Interactive Embedded Map Preview Banner for Selected Property */}
             {selectedProperty && (
               <Motion.div
+                id="selected-property-map"
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                className="mt-16 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl"
+                className="mt-16 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl scroll-mt-24"
               >
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-6 bg-slate-900 text-white gap-4">
                   <div className="flex items-center gap-3">
@@ -269,6 +349,20 @@ const Properties = ({ searchCriteria, setSearchCriteria }) => {
                   >
                     Open Fullscreen Map
                   </a>
+                  <div className="flex items-center gap-2">
+                    <a
+                      href={
+                        typeof selectedProperty.latitude === "number" && typeof selectedProperty.longitude === "number"
+                          ? `https://maps.google.com/?q=${selectedProperty.latitude},${selectedProperty.longitude}`
+                          : `https://maps.google.com/?q=${encodeURIComponent(selectedProperty.name + ", " + selectedProperty.address)}`
+                      }
+                      target="_blank"
+                      rel="noreferrer"
+                      className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-md transition cursor-pointer"
+                    >
+                      Open Google Maps
+                    </a>
+                  </div>
                 </div>
                 <iframe
                   title={`Map location for ${selectedProperty.name}`}

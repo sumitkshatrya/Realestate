@@ -107,7 +107,7 @@ const ServicesManager = () => {
       closeDrawer();
       await fetchServices();
     } catch (error) {
-      /* Handled by global interceptor */
+      console.error(error);
     }
   };
 
@@ -120,7 +120,7 @@ const ServicesManager = () => {
           await servicesAPI.deleteService(id);
           await fetchServices();
         } catch (error) {
-          /* Handled by global interceptor */
+          console.error(error);
         }
       },
     });
@@ -134,7 +134,7 @@ const ServicesManager = () => {
       });
       await fetchServices();
     } catch (error) {
-      /* Handled by global interceptor */
+      console.error(error);
     }
   };
 

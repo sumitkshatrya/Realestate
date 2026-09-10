@@ -147,9 +147,9 @@ const Hero = ({ setSearchCriteria = () => {} }) => {
               <div className="flex rounded-2xl bg-slate-950/80 p-1.5 border border-slate-800 mb-6">
                 <button
                   type="button"
-                  onClick={() => handleTabChange("sales")}
+                  onClick={() => handleTabChange("buy")}
                   className={`flex-1 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition flex items-center justify-center gap-1.5 cursor-pointer ${
-                    activeTab === "sales"
+                    activeTab === "buy" || activeTab === "sales"
                       ? "bg-amber-500 text-slate-950 shadow-lg"
                       : "text-slate-400 hover:text-white"
                   }`}
@@ -159,9 +159,9 @@ const Hero = ({ setSearchCriteria = () => {} }) => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleTabChange("rentals")}
+                  onClick={() => handleTabChange("rent")}
                   className={`flex-1 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition flex items-center justify-center gap-1.5 cursor-pointer ${
-                    activeTab === "rentals"
+                    activeTab === "rent" || activeTab === "rentals"
                       ? "bg-amber-500 text-slate-950 shadow-lg"
                       : "text-slate-400 hover:text-white"
                   }`}
@@ -221,11 +221,14 @@ const Hero = ({ setSearchCriteria = () => {} }) => {
                     className="w-full rounded-xl bg-slate-950/80 border border-slate-700/80 px-4 py-3 text-sm text-white outline-none focus:border-amber-400 transition"
                   >
                     <option value="" className="bg-slate-900">All Categories</option>
-                    <option value="apartments" className="bg-slate-900">Luxury Apartment</option>
-                    <option value="houses" className="bg-slate-900">Private Villa / House</option>
-                    <option value="condos" className="bg-slate-900">Penthouse / Condo</option>
-                    <option value="duplexes" className="bg-slate-900">Duplex</option>
-                    <option value="townhomes" className="bg-slate-900">Townhome</option>
+                    <option value="Luxury Apartment" className="bg-slate-900">Luxury Apartment</option>
+                    <option value="Private Villa / House" className="bg-slate-900">Private Villa / House</option>
+                    <option value="Penthouse / Condo" className="bg-slate-900">Penthouse / Condo</option>
+                    <option value="Duplex" className="bg-slate-900">Duplex</option>
+                    <option value="Townhome" className="bg-slate-900">Townhome</option>
+                    <option value="Commercial Space" className="bg-slate-900">Commercial Space</option>
+                    <option value="Office" className="bg-slate-900">Office</option>
+                    <option value="Retail" className="bg-slate-900">Retail</option>
                   </select>
                 </div>
 

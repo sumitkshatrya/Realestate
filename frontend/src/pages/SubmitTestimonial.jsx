@@ -1,38 +1,118 @@
-import { useState } from "react";
-import React from "react";
-import { submitTestimonial } from "../api/testimonialApi.js";
-import toast from "react-hot-toast";
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { AnimatePresence, motion as Motion } from "framer-motion";
+import { 
+  FaStar, 
+  FaUpload, 
+  FaCircleCheck, 
+  FaArrowLeft, 
+  FaXmark, 
+  FaPaperPlane,
+  FaUser,
+  FaEnvelope,
+  FaBriefcase,
+  FaBuilding,
+  FaCommentDots,
+  FaQuoteLeft,
+  FaShieldHalved,
+  FaWandMagicSparkles,
+  FaImage
+} from "react-icons/fa6";
+import { submitTestimonial } from "../api/testimonialApi.js";
+import { useAuth } from "../context/useAuth";
+import toast from "react-hot-toast";
 
-const steps = ["User Info", "Rating", "Content", "Consent"];
+const ratingLabels = {
+  1: "Disappointing",
+  2: "Fair",
+  3: "Good & Reliable",
+  4: "Very Good",
+  5: "Exceptional",
+};
+
+const DESIGNATION_SUGGESTIONS = [
+  "Home Buyer",
+  "Home Seller",
+  "Property Investor",
+  "Tenant",
+  "Commercial Client",
+];
 
 export default function SubmitTestimonial() {
-  const [step, setStep] = useState(0);
+  const { user, isAuthenticated } = useAuth();
+  
   const [form, setForm] = useState({
     fullName: "",
     email: "",
-    designation: "",
+    designation: "Home Buyer",
     companyName: "",
-    rating: 0,
+    rating: 5,
     title: "",
     feedback: "",
     consent: false,
   });
+
+  const [hoverRating, setHoverRating] = useState(0);
   const [profileFile, setProfileFile] = useState(null);
+  const [profilePreview, setProfilePreview] = useState(null);
   const [mediaFile, setMediaFile] = useState(null);
+  const [mediaPreview, setMediaPreview] = useState(null);
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      setForm((prev) => ({
+        ...prev,
+        fullName: user.username || "",
+        email: user.email || "",
+      }));
+    }
+  }, [isAuthenticated, user]);
+
+  const activeRating = hoverRating || form.rating;
+
   const handleChange = (field, value) => {
-    setForm({ ...form, [field]: value });
+    if (field === "feedback" && value.length > 500) return;
+    setForm((prev) => ({ ...prev, [field]: value }));
   };
 
-  const next = () => step < steps.length - 1 && setStep(step + 1);
-  const back = () => step > 0 && setStep(step - 1);
+  const handleProfileFile = (file) => {
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Profile photo must be under 5MB.");
+      return;
+    }
+    setProfileFile(file);
+    setProfilePreview(URL.createObjectURL(file));
+  };
 
-  const handleSubmit = async () => {
+  const handleMediaFile = (file) => {
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Attachment media must be under 10MB.");
+      return;
+    }
+    setMediaFile(file);
+    setMediaPreview(URL.createObjectURL(file));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!form.fullName.trim() || !form.email.trim()) {
+      toast.error("Please provide your full name and email address.");
+      return;
+    }
+    if (!form.title.trim()) {
+      toast.error("Please enter a review headline.");
+      return;
+    }
+    if (!form.feedback.trim() || form.feedback.trim().length < 10) {
+      toast.error("Please provide detailed feedback (at least 10 characters).");
+      return;
+    }
     if (!form.consent) {
-      toast.error("Please give consent to submit your testimonial.");
+      toast.error("Please accept consent to publish your review.");
       return;
     }
 
@@ -47,262 +127,392 @@ export default function SubmitTestimonial() {
       await submitTestimonial(formData);
 
       setSuccess(true);
-      setTimeout(() => setSuccess(false), 3000);
-
       setForm({
-        fullName: "",
-        email: "",
-        designation: "",
+        fullName: isAuthenticated && user ? user.username || "" : "",
+        email: isAuthenticated && user ? user.email || "" : "",
+        designation: "Home Buyer",
         companyName: "",
-        rating: 0,
+        rating: 5,
         title: "",
         feedback: "",
         consent: false,
       });
       setProfileFile(null);
+      setProfilePreview(null);
       setMediaFile(null);
-      setStep(0);
+      setMediaPreview(null);
     } catch (err) {
       console.error(err);
-      toast.error("❌ Submission failed!");
+      toast.error(err.response?.data?.message || err.message || "Testimonial submission failed.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-6 bg-white rounded-2xl shadow-xl mt-10 relative">
-      <h2 className="text-3xl font-bold mb-4 text-center text-red-600">
-        Submit Your Testimonial
-      </h2>
+    <div className="bg-slate-950 min-h-screen pt-24 pb-20 text-slate-100 relative overflow-hidden">
+      {/* Ambient background glows */}
+      <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-amber-500/10 blur-[120px] rounded-full pointer-events-none" />
+      <div className="absolute bottom-10 right-10 w-96 h-96 bg-blue-600/10 blur-[120px] rounded-full pointer-events-none" />
 
-      {/* Progress Bar */}
-      <div className="flex items-center mb-6">
-        {steps.map((s, i) => (
-          <div key={i} className="flex-1">
-            <div className="relative">
-              <div
-                className={`w-full h-2 rounded-full ${
-                  i <= step ? "bg-red-500" : "bg-gray-300"
-                } transition-all duration-300`}
-              />
-              <span
-                className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                  i <= step
-                    ? "bg-red-500 text-white"
-                    : "bg-gray-300 text-gray-600"
-                }`}
-              >
-                {i + 1}
-              </span>
+      <div className="container mx-auto px-4 max-w-2xl relative z-10">
+        
+        {/* Back Link */}
+        <div className="mb-6">
+          <Link
+            to="/testimonials"
+            className="inline-flex items-center gap-2 text-slate-400 hover:text-amber-400 font-semibold text-xs transition duration-200 group"
+          >
+            <FaArrowLeft className="group-hover:-translate-x-1 transition-transform text-xs" />
+            Back to Reviews
+          </Link>
+        </div>
+
+        {/* Main Card */}
+        <Motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="rounded-3xl border border-slate-800 bg-slate-900/90 p-6 sm:p-10 shadow-2xl backdrop-blur-xl relative overflow-hidden"
+        >
+          {/* Decorative Corner Icon */}
+          <FaQuoteLeft className="absolute top-6 right-6 text-slate-800/40 text-5xl pointer-events-none" />
+
+          {/* Header */}
+          <div className="mb-8 relative">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-bold uppercase tracking-widest mb-3">
+              <FaWandMagicSparkles className="text-amber-400 text-xs" />
+              Verified Client Review
             </div>
-            <p className="text-center mt-2 text-sm font-medium">{s}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Step Form */}
-      <Motion.div
-        key={step}
-        initial={{ opacity: 0, x: 50 }}
-        animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: -50 }}
-        transition={{ duration: 0.3 }}
-      >
-        {/* Step 1 - User Info */}
-        {step === 0 && (
-          <div className="space-y-4">
-            <input
-              type="text"
-              placeholder="Full Name *"
-              className="border p-3 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400 transition"
-              value={form.fullName}
-              onChange={(e) => handleChange("fullName", e.target.value)}
-            />
-            <input
-              type="email"
-              placeholder="Email *"
-              className="border p-3 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400 transition"
-              value={form.email}
-              onChange={(e) => handleChange("email", e.target.value)}
-            />
-            <input
-              type="text"
-              placeholder="Designation"
-              className="border p-3 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400 transition"
-              value={form.designation}
-              onChange={(e) => handleChange("designation", e.target.value)}
-            />
-            <input
-              type="text"
-              placeholder="Company Name"
-              className="border p-3 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400 transition"
-              value={form.companyName}
-              onChange={(e) => handleChange("companyName", e.target.value)}
-            />
-            <label className="block font-medium">Profile Picture:</label>
-            <input
-              type="file"
-              accept="image/*"
-              className="border p-2 w-full rounded-lg"
-              onChange={(e) => setProfileFile(e.target.files[0])}
-            />
-            {profileFile && (
-              <p className="text-sm text-gray-600">
-                Selected: {profileFile.name}
-              </p>
-            )}
-          </div>
-        )}
-
-        {/* Step 2 - Rating */}
-        {step === 1 && (
-          <div className="space-y-4">
-            <label className="block font-medium">Rating:</label>
-            <div className="flex space-x-2">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <span
-                  key={star}
-                  onClick={() => handleChange("rating", star)}
-                  className={`cursor-pointer text-4xl ${
-                    form.rating >= star ? "text-yellow-400" : "text-gray-300"
-                  } transition transform hover:scale-110`}
-                >
-                  ★
-                </span>
-              ))}
-            </div>
-            <p className="text-sm text-gray-600">
-              Selected: {form.rating} star{form.rating > 1 ? "s" : ""}
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+              Share Your <span className="bg-gradient-to-r from-amber-300 via-amber-400 to-amber-500 bg-clip-text text-transparent">Experience</span>
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-400 mt-2 leading-relaxed">
+              Your feedback helps future clients navigate the real estate market with clarity and confidence.
             </p>
-          </div>
-        )}
 
-        {/* Step 3 - Content */}
-        {step === 2 && (
-          <div className="space-y-4">
-            <input
-              type="text"
-              placeholder="Title *"
-              className="border p-3 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400 transition"
-              value={form.title}
-              onChange={(e) => handleChange("title", e.target.value)}
-            />
-            <textarea
-              placeholder="Detailed Feedback *"
-              className="border p-3 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400 transition"
-              rows={4}
-              value={form.feedback}
-              onChange={(e) => handleChange("feedback", e.target.value)}
-            />
-            <label className="block font-medium">Attach Media:</label>
-            <input
-              type="file"
-              accept="image/*,video/*"
-              className="border p-2 w-full rounded-lg"
-              onChange={(e) => setMediaFile(e.target.files[0])}
-            />
-            {mediaFile && (
-              <p className="text-sm text-gray-600">
-                Selected: {mediaFile.name}
-              </p>
+            {isAuthenticated && (
+              <div className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-blue-950/40 border border-blue-500/20 text-xs text-blue-300">
+                <FaCircleCheck className="text-blue-400 text-xs" />
+                <span>Logged in as <strong>{user?.username || user?.email}</strong></span>
+              </div>
             )}
           </div>
-        )}
 
-        {/* Step 4 - Consent */}
-        {step === 3 && (
-          <div className="space-y-4">
-            <label className="flex items-center space-x-3">
-              <input
-                type="checkbox"
-                checked={form.consent}
-                onChange={(e) => handleChange("consent", e.target.checked)}
-                className="w-5 h-5 accent-red-500"
+          <form onSubmit={handleSubmit} className="space-y-6">
+            
+            {/* Interactive Rating Picker */}
+            <div className="p-4 sm:p-5 rounded-2xl bg-slate-950/80 border border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                  Overall Experience Rating <span className="text-amber-400">*</span>
+                </label>
+                <div className="flex items-center gap-1.5">
+                  {[1, 2, 3, 4, 5].map((star) => {
+                    const isActive = star <= activeRating;
+                    return (
+                      <Motion.button
+                        type="button"
+                        key={star}
+                        whileHover={{ scale: 1.15 }}
+                        whileTap={{ scale: 0.9 }}
+                        onMouseEnter={() => setHoverRating(star)}
+                        onMouseLeave={() => setHoverRating(0)}
+                        onClick={() => handleChange("rating", star)}
+                        className="p-1 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400/40 transition cursor-pointer"
+                      >
+                        <FaStar
+                          className={`text-2xl sm:text-3xl transition-colors ${
+                            isActive ? "text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]" : "text-slate-800"
+                          }`}
+                        />
+                      </Motion.button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="text-center sm:text-right shrink-0">
+                <span className="inline-block px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-400 font-extrabold text-xs">
+                  {activeRating} / 5 — {ratingLabels[activeRating]}
+                </span>
+              </div>
+            </div>
+
+            {/* Client Info Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Full Name */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 mb-1.5">
+                  Full Name <span className="text-rose-400">*</span>
+                </label>
+                <div className="relative">
+                  <FaUser className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs" />
+                  <input
+                    type="text"
+                    required
+                    placeholder="John Doe"
+                    value={form.fullName}
+                    onChange={(e) => handleChange("fullName", e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-800 bg-slate-950/80 text-xs text-white placeholder-slate-500 focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-400 transition"
+                  />
+                </div>
+              </div>
+
+              {/* Email Address */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 mb-1.5">
+                  Email Address <span className="text-rose-400">*</span>
+                </label>
+                <div className="relative">
+                  <FaEnvelope className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs" />
+                  <input
+                    type="email"
+                    required
+                    placeholder="john@example.com"
+                    value={form.email}
+                    onChange={(e) => handleChange("email", e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-800 bg-slate-950/80 text-xs text-white placeholder-slate-500 focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-400 transition"
+                  />
+                </div>
+              </div>
+
+              {/* Role / Designation */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 mb-1.5">
+                  Client Role / Relationship
+                </label>
+                <div className="relative">
+                  <FaBriefcase className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs" />
+                  <select
+                    value={form.designation}
+                    onChange={(e) => handleChange("designation", e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-800 bg-slate-950/80 text-xs text-white focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-400 transition appearance-none cursor-pointer"
+                  >
+                    {DESIGNATION_SUGGESTIONS.map((item) => (
+                      <option key={item} value={item} className="bg-slate-900 text-white">
+                        {item}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Company / City */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 mb-1.5">
+                  Company or Location <span className="text-slate-500">(Optional)</span>
+                </label>
+                <div className="relative">
+                  <FaBuilding className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs" />
+                  <input
+                    type="text"
+                    placeholder="e.g. New York, NY"
+                    value={form.companyName}
+                    onChange={(e) => handleChange("companyName", e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-800 bg-slate-950/80 text-xs text-white placeholder-slate-500 focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-400 transition"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Headline Title */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 mb-1.5">
+                Review Headline <span className="text-rose-400">*</span>
+              </label>
+              <div className="relative">
+                <FaCommentDots className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs" />
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Smooth transaction & fantastic advisory!"
+                  value={form.title}
+                  onChange={(e) => handleChange("title", e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-800 bg-slate-950/80 text-xs text-white placeholder-slate-500 focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-400 transition"
+                />
+              </div>
+            </div>
+
+            {/* Detailed Feedback Textarea */}
+            <div>
+              <div className="flex justify-between items-center mb-1.5">
+                <label className="block text-xs font-semibold text-slate-400">
+                  Detailed Feedback <span className="text-rose-400">*</span>
+                </label>
+                <span className="text-[11px] text-slate-500 font-mono">
+                  {form.feedback.length} / 500
+                </span>
+              </div>
+              <textarea
+                rows={4}
+                required
+                placeholder="Share your experience regarding property search, agent communication, pricing guidance, and overall satisfaction..."
+                value={form.feedback}
+                onChange={(e) => handleChange("feedback", e.target.value)}
+                className="w-full p-3.5 rounded-xl border border-slate-800 bg-slate-950/80 text-xs text-white placeholder-slate-500 focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-400 transition resize-none leading-relaxed"
               />
-              <span className="text-gray-700 font-medium">
-                I consent to my testimonial being published.
-              </span>
-            </label>
-          </div>
-        )}
-      </Motion.div>
+            </div>
 
-      {/* Navigation Buttons */}
-      <div className="flex justify-between mt-6">
-        {step > 0 && (
-          <button
-            onClick={back}
-            className="px-5 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition font-medium"
-          >
-            Back
-          </button>
-        )}
-        {step < steps.length - 1 ? (
-          <button
-            onClick={next}
-            className="px-5 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition font-medium"
-          >
-            Next
-          </button>
-        ) : (
-          <button
-            onClick={handleSubmit}
-            disabled={loading || !form.consent}
-            className="flex items-center justify-center px-5 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition font-medium disabled:bg-green-400 disabled:cursor-not-allowed"
-          >
-            {loading ? (
-              <>
-                <svg
-                  className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Submitting...
-              </>
-            ) : (
-              "Submit"
-            )}
-          </button>
-        )}
+            {/* Media Uploads Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+              {/* Profile Photo */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 mb-1.5">
+                  Profile Avatar <span className="text-slate-500">(Optional)</span>
+                </label>
+                {profilePreview ? (
+                  <div className="relative p-2 rounded-xl bg-slate-950 border border-amber-500/40 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <img src={profilePreview} alt="Avatar" className="w-8 h-8 rounded-full object-cover shrink-0" />
+                      <span className="text-xs text-slate-300 font-medium truncate">Avatar Uploaded</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setProfileFile(null);
+                        setProfilePreview(null);
+                      }}
+                      className="p-1 text-slate-400 hover:text-rose-400 text-xs transition cursor-pointer"
+                    >
+                      <FaXmark />
+                    </button>
+                  </div>
+                ) : (
+                  <label className="flex items-center justify-center gap-2 p-3 rounded-xl border border-dashed border-slate-800 bg-slate-950/60 hover:bg-slate-950 hover:border-amber-400/40 cursor-pointer transition text-xs text-slate-400 hover:text-slate-200">
+                    <FaUpload className="text-amber-400 text-xs" />
+                    <span>Upload Photo</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleProfileFile(e.target.files[0])}
+                      className="hidden"
+                    />
+                  </label>
+                )}
+              </div>
+
+              {/* Property Attachment */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 mb-1.5">
+                  Property Attachment <span className="text-slate-500">(Optional)</span>
+                </label>
+                {mediaPreview ? (
+                  <div className="relative p-2 rounded-xl bg-slate-950 border border-amber-500/40 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <FaImage className="text-amber-400 text-sm shrink-0" />
+                      <span className="text-xs text-amber-300 font-medium truncate">Media Attached</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMediaFile(null);
+                        setMediaPreview(null);
+                      }}
+                      className="p-1 text-slate-400 hover:text-rose-400 text-xs transition cursor-pointer"
+                    >
+                      <FaXmark />
+                    </button>
+                  </div>
+                ) : (
+                  <label className="flex items-center justify-center gap-2 p-3 rounded-xl border border-dashed border-slate-800 bg-slate-950/60 hover:bg-slate-950 hover:border-amber-400/40 cursor-pointer transition text-xs text-slate-400 hover:text-slate-200">
+                    <FaUpload className="text-amber-400 text-xs" />
+                    <span>Attach Photo/Video</span>
+                    <input
+                      type="file"
+                      accept="image/*,video/*"
+                      onChange={(e) => handleMediaFile(e.target.files[0])}
+                      className="hidden"
+                    />
+                  </label>
+                )}
+              </div>
+            </div>
+
+            {/* Consent & Submit */}
+            <div className="pt-4 border-t border-slate-800/80 space-y-4">
+              <label className="flex items-start gap-3 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  required
+                  checked={form.consent}
+                  onChange={(e) => handleChange("consent", e.target.checked)}
+                  className="mt-0.5 h-4 w-4 rounded border-slate-700 bg-slate-950 text-amber-500 focus:ring-amber-400 accent-amber-500 cursor-pointer"
+                />
+                <span className="text-xs text-slate-400 group-hover:text-slate-300 transition leading-relaxed">
+                  I confirm this is an authentic client review based on genuine real estate services and consent to its public display upon moderation.
+                </span>
+              </label>
+
+              <button
+                type="submit"
+                disabled={loading || !form.consent}
+                className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-extrabold text-xs uppercase tracking-wider shadow-lg shadow-amber-500/20 hover:shadow-amber-500/35 transition duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-slate-950/30 border-t-slate-950 rounded-full animate-spin" />
+                    <span>Submitting Review...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Publish Review</span>
+                    <FaPaperPlane className="text-xs" />
+                  </>
+                )}
+              </button>
+
+              <div className="flex items-center justify-center gap-2 text-[11px] text-slate-500">
+                <FaShieldHalved className="text-emerald-400 text-xs" />
+                <span>Screened for authenticity & anti-spam compliance</span>
+              </div>
+            </div>
+
+          </form>
+        </Motion.div>
+
       </div>
 
-      {/* Success Popup */}
+      {/* Success Modal */}
       <AnimatePresence>
         {success && (
           <Motion.div
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 backdrop-blur-xl p-4"
           >
             <Motion.div
-              className="bg-white rounded-3xl p-10 flex flex-col items-center justify-center shadow-2xl"
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0 }}
-              transition={{ type: "spring", stiffness: 120 }}
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-md w-full text-center shadow-2xl space-y-4 relative overflow-hidden"
             >
-              <div className="text-green-500 text-6xl mb-4 animate-bounce">
-                ✔️
+              <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-3xl flex items-center justify-center mx-auto">
+                <FaCircleCheck />
               </div>
-              <h3 className="text-3xl font-bold mb-2 text-center text-gray-800">
-                Thank You!
-              </h3>
-              <p className="text-gray-600 mb-4 text-center">
-                Your testimonial has been submitted successfully.
+              
+              <h3 className="text-2xl font-bold text-white">Review Submitted!</h3>
+              <p className="text-xs text-slate-400 leading-relaxed max-w-sm mx-auto">
+                Thank you for your valuable feedback. Your review will be published to the client portal following rapid staff moderation.
               </p>
-              <Motion.div
-                className="text-green-500 text-6xl animate-bounce"
-                animate={{ y: [0, -20, 0] }}
-                transition={{ repeat: Infinity, duration: 1 }}
-              >
-                ⬇️
-              </Motion.div>
+
+              <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+                <Link
+                  to="/testimonials"
+                  onClick={() => setSuccess(false)}
+                  className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs shadow-md transition"
+                >
+                  Return to Reviews
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => setSuccess(false)}
+                  className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs transition"
+                >
+                  Submit Another
+                </button>
+              </div>
             </Motion.div>
           </Motion.div>
         )}

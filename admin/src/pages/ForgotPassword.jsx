@@ -25,6 +25,7 @@ const ForgotPassword = () => {
           "If an account with that email exists, a password reset link has been sent."
       );
     } catch (error) {
+      console.error(error);
       // Generic response prevents email enumeration
       setMessage(
         "If an account with that email exists, a password reset link has been sent."

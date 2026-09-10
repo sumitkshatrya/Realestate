@@ -133,8 +133,8 @@ const Dashboard = () => {
   );
 
   const recentActivities = useMemo(() => {
-    const tourItems = tours.slice(0, 3).map((t) => ({
-      id: t._id || Math.random(),
+    const tourItems = tours.slice(0, 3).map((t, idx) => ({
+      id: t._id || `tour-${idx}`,
       title: `Tour Request from ${t.name || t.fullName || "Customer"}`,
       sub: t.propertyTitle || "Property Viewing",
       date: t.createdAt ? new Date(t.createdAt).toLocaleDateString() : "Recent",
@@ -142,8 +142,8 @@ const Dashboard = () => {
       badgeBg: "bg-purple-500/10 text-purple-300 border-purple-500/20",
     }));
 
-    const contactItems = contacts.slice(0, 3).map((c) => ({
-      id: c._id || Math.random(),
+    const contactItems = contacts.slice(0, 3).map((c, idx) => ({
+      id: c._id || `contact-${idx}`,
       title: `Message from ${c.name || "Visitor"}`,
       sub: c.subject || c.message || "General Enquiry",
       date: c.createdAt ? new Date(c.createdAt).toLocaleDateString() : "Recent",

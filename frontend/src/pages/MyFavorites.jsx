@@ -81,6 +81,7 @@ const MyFavorites = () => {
               try {
                 await userAPI.toggleFavorite(propertyId);
               } catch (undoErr) {
+                console.error(undoErr);
                 toast.error("Failed to restore property.");
               }
             }}
@@ -91,6 +92,7 @@ const MyFavorites = () => {
       ));
       await removePromise;
     } catch (err) {
+      console.error(err);
       toast.error("Failed to remove saved property.");
       setFavorites(originalFavorites);
     }

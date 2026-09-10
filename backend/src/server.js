@@ -1,13 +1,17 @@
 import dotenv from "dotenv";
-dotenv.config();
-
+import http from "http";
 import DBconnect from "./lib/db.js";
 import app from "./app.js";
+import { initSocket } from "./socket.js";
 
+dotenv.config();
 DBconnect();
 
-const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+const server = http.createServer(app);
+initSocket(server);
 
+const PORT = process.env.PORT || 8080;
+
+server.listen(PORT, () => {
+  console.log(`🚀 Server and WebSocket running on port ${PORT}`);
+});

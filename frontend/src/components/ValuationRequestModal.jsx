@@ -59,6 +59,7 @@ const ValuationRequestModal = ({ isOpen, onClose, agent }) => {
       toast.success("Valuation request sent successfully!");
       onClose();
     } catch (err) {
+      console.error(err);
       toast.error("Failed to send request. Please try again.");
     } finally {
       setLoading(false);

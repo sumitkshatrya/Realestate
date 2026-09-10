@@ -52,6 +52,7 @@ const AgentProfile = () => {
     try {
       await userAPI.toggleFavorite(propertyId);
     } catch (err) {
+      console.error(err);
       toast.error("Failed to update favorites.");
       updateUser({ favorites: originalFavorites });
     }

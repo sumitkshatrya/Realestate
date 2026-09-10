@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion as Motion, AnimatePresence } from "framer-motion";
 import {
@@ -39,14 +39,24 @@ const CommandPalette = ({ isOpen, onClose }) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const navigate = useNavigate();
 
+  const handleQueryChange = (e) => {
+    setQuery(e.target.value);
+    setSelectedIndex(0);
+  };
+
   const filteredItems = COMMAND_ITEMS.filter((item) =>
     item.title.toLowerCase().includes(query.toLowerCase()) ||
     item.category.toLowerCase().includes(query.toLowerCase())
   );
 
-  useEffect(() => {
-    setSelectedIndex(0);
-  }, [query]);
+  const handleSelect = useCallback(
+    (item) => {
+      onClose();
+      setQuery("");
+      navigate(item.path);
+    },
+    [navigate, onClose]
+  );
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -79,13 +89,7 @@ const CommandPalette = ({ isOpen, onClose }) => {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, selectedIndex, filteredItems]);
-
-  const handleSelect = (item) => {
-    onClose();
-    setQuery("");
-    navigate(item.path);
-  };
+  }, [isOpen, selectedIndex, filteredItems, handleSelect, onClose]);
 
   return (
     <AnimatePresence>
@@ -114,7 +118,7 @@ const CommandPalette = ({ isOpen, onClose }) => {
               <input
                 type="text"
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                onChange={handleQueryChange}
                 placeholder="Type a command or search workspace... (e.g. Properties, Users)"
                 className="w-full bg-transparent text-white placeholder-slate-500 focus:outline-none text-sm font-medium"
                 autoFocus

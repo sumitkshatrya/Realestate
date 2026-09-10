@@ -71,6 +71,7 @@ const EditAgentProfileModal = ({ isOpen, onClose, agent, onProfileUpdate }) => {
       toast.success('Profile updated successfully!');
       onClose();
     } catch (err) {
+      console.error(err);
       toast.error('Failed to update profile. Please try again.');
     } finally {
       setLoading(false);

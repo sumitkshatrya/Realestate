@@ -69,7 +69,7 @@ const PopularAreasManager = () => {
       closeDrawer();
       await fetchAreas();
     } catch (error) {
-      /* Handled by global interceptor */
+      console.error(error);
     }
   };
 
@@ -82,7 +82,7 @@ const PopularAreasManager = () => {
           await popularAreaAPI.deleteArea(id);
           await fetchAreas();
         } catch (error) {
-          /* Handled by global interceptor */
+          console.error(error);
         }
       },
     });
@@ -96,7 +96,7 @@ const PopularAreasManager = () => {
       });
       await fetchAreas();
     } catch (error) {
-      /* Handled by global interceptor */
+      console.error(error);
     }
   };
 

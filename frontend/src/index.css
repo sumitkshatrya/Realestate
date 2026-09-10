@@ -33,19 +33,30 @@ body {
   overflow-x: hidden;
 }
 
-/* Custom Scrollbar */
+/* Hide Scrollbar Globally across all browsers and containers */
+html, body, *, ::-webkit-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;     /* Firefox */
+}
+
 ::-webkit-scrollbar {
-  width: 8px;
+  display: none;
+  width: 0px;
+  height: 0px;
+  background: transparent;
 }
-::-webkit-scrollbar-track {
-  background: #f1f5f9;
+
+.no-scrollbar::-webkit-scrollbar,
+.custom-scrollbar::-webkit-scrollbar {
+  display: none;
+  width: 0px;
+  height: 0px;
 }
-::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 9999px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+
+.no-scrollbar,
+.custom-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -111,4 +122,3 @@ a:hover {
 .btn-secondary {
   @apply bg-slate-100 text-slate-800 hover:bg-slate-200 active:scale-[0.98] border border-slate-200 focus:ring-slate-400;
 }
-

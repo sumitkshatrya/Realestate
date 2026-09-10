@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { propertyAPI } from "../api/propertyApi";
 import { userAPI } from "../api/userApi";
+import { getSocket } from "../api/socketClient";
 import { useAuth } from "../context/useAuth";
 import toast from "react-hot-toast";
 import { FaMapMarkerAlt } from "react-icons/fa";
@@ -67,6 +68,43 @@ const PropertyDetail = () => {
     fetchProperty();
   }, [id]);
 
+  useEffect(() => {
+    if (!id) return;
+    const socket = getSocket();
+
+    const handlePropertyUpdated = (updatedProp) => {
+      if (updatedProp && (updatedProp._id === id || updatedProp.id === id)) {
+        const images = Array.isArray(updatedProp.images) && updatedProp.images.length > 0
+          ? updatedProp.images
+          : [updatedProp.images || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80'];
+        
+        setProperty((prev) => {
+          if (prev && prev.status !== updatedProp.status) {
+            toast.info(`Listing status updated to ${updatedProp.status.toUpperCase()}`);
+          } else {
+            toast.info("Listing details updated in real time");
+          }
+          return { ...updatedProp, images };
+        });
+      }
+    };
+
+    const handlePropertyDeleted = ({ id: deletedId }) => {
+      if (deletedId === id) {
+        toast.error("This property listing has been removed by admin.");
+        setError("This property listing has been removed.");
+      }
+    };
+
+    socket.on("property:updated", handlePropertyUpdated);
+    socket.on("property:deleted", handlePropertyDeleted);
+
+    return () => {
+      socket.off("property:updated", handlePropertyUpdated);
+      socket.off("property:deleted", handlePropertyDeleted);
+    };
+  }, [id]);
+
   const handleToggleFavorite = async (propertyId) => {
     if (!isAuthenticated) {
       toast.error("Please sign in to manage saved homes.");
@@ -85,8 +123,23 @@ const PropertyDetail = () => {
       await userAPI.toggleFavorite(propertyId);
       toast.success(isCurrentlyFavorite ? "Removed from saved homes." : "Saved to favorites!");
     } catch (err) {
+      console.error(err);
       toast.error("Failed to update favorites.");
       updateUser({ favorites: originalFavorites });
+    }
+  };
+
+  const handleOpenMap = () => {
+    if (!property) return;
+    const { latitude, longitude, address } = property;
+    let url = "";
+    if (typeof latitude === "number" && typeof longitude === "number" && !isNaN(latitude) && !isNaN(longitude)) {
+      url = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
+    } else if (address) {
+      url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+    }
+    if (url) {
+      window.open(url, "_blank", "noopener,noreferrer");
     }
   };
 
@@ -213,11 +266,76 @@ const PropertyDetail = () => {
           {/* Main Info Left Column */}
           <div className="lg:col-span-8 space-y-8">
             <div className="bg-white rounded-3xl p-8 border border-slate-200/80 shadow-sm space-y-4">
+              {/* Purpose, Category & Availability Badges */}
+              <div className="flex flex-wrap items-center gap-2">
+                <span
+                  className={`px-3.5 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider text-white ${
+                    (property.purpose || "").toLowerCase() === "rent"
+                      ? "bg-blue-600"
+                      : (property.purpose || "").toLowerCase() === "commercial"
+                      ? "bg-purple-600"
+                      : "bg-emerald-600"
+                  }`}
+                >
+                  {(property.purpose || "").toLowerCase() === "rent"
+                    ? "For Rent"
+                    : (property.purpose || "").toLowerCase() === "commercial"
+                    ? "Commercial"
+                    : "For Sale"}
+                </span>
+
+                {property.category && (
+                  <span className="px-3.5 py-1 rounded-full bg-slate-900 text-white text-xs font-bold">
+                    {property.category}
+                  </span>
+                )}
+
+                <span
+                  className={`px-3.5 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider ${
+                    (property.status || "").toLowerCase() === "sold"
+                      ? "bg-rose-100 text-rose-700 border border-rose-300"
+                      : (property.status || "").toLowerCase() === "rented"
+                      ? "bg-blue-100 text-blue-700 border border-blue-300"
+                      : (property.status || "").toLowerCase() === "booked"
+                      ? "bg-amber-100 text-amber-800 border border-amber-300"
+                      : "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                  }`}
+                >
+                  Status: {property.status || "available"}
+                </span>
+              </div>
+
+              {/* Status Alert Banner if not available */}
+              {(property.status || "").toLowerCase() !== "available" && (
+                <div
+                  className={`p-4 rounded-2xl border text-sm font-bold flex items-center gap-3 ${
+                    (property.status || "").toLowerCase() === "sold"
+                      ? "bg-rose-50 border-rose-200 text-rose-800"
+                      : (property.status || "").toLowerCase() === "rented"
+                      ? "bg-blue-50 border-blue-200 text-blue-800"
+                      : "bg-amber-50 border-amber-200 text-amber-800"
+                  }`}
+                >
+                  <span className="text-lg">
+                    {(property.status || "").toLowerCase() === "sold"
+                      ? "🏷️"
+                      : (property.status || "").toLowerCase() === "rented"
+                      ? "🔑"
+                      : "📅"}
+                  </span>
+                  <div>
+                    <p className="font-extrabold uppercase tracking-wide">
+                      This property has been {(property.status || "booked").toUpperCase()}
+                    </p>
+                    <p className="text-xs font-normal opacity-90">
+                      You can still contact our team below for waitlist inquiries or similar alternative listings.
+                    </p>
+                  </div>
+                </div>
+              )}
+
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
-                  <span className="inline-block px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-extrabold uppercase tracking-wider mb-2">
-                    {property.type || "For Sale"}
-                  </span>
                   <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
                     {property.name}
                   </h1>
@@ -226,30 +344,37 @@ const PropertyDetail = () => {
                   <p className="text-3xl sm:text-4xl font-black text-blue-600 tracking-tight">
                     {property.price}
                   </p>
-                  <p className="text-xs text-slate-500 font-medium mt-1">Est. $5,420/month</p>
+                  <p className="text-xs text-slate-500 font-medium mt-1">
+                    {(property.purpose || "").toLowerCase() === "rent" ? "/ month" : "Est. Mortgage"}
+                  </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 text-slate-600 text-sm">
-                <FaMapMarkerAlt className="text-amber-500" />
-                <span>{property.address}</span>
-              </div>
+              <button
+                type="button"
+                onClick={handleOpenMap}
+                className="flex items-center gap-2 text-slate-600 hover:text-blue-600 hover:underline transition-colors text-sm cursor-pointer text-left font-medium"
+                title="Click to view location on Google Maps"
+              >
+                <FaMapMarkerAlt className="text-amber-500 text-base shrink-0" />
+                <span>{property.address} <span className="text-xs text-blue-600 font-semibold underline ml-1">(Open Map)</span></span>
+              </button>
 
               {/* Key Specs Bar */}
               <div className="grid grid-cols-3 gap-4 pt-4 border-t border-slate-100 text-center">
                 <div className="p-3 bg-slate-50 rounded-2xl">
                   <FaBed className="mx-auto text-xl text-blue-600 mb-1" />
-                  <p className="font-extrabold text-slate-900">{property.bed}</p>
+                  <p className="font-extrabold text-slate-900">{property.bed || 0}</p>
                   <p className="text-xs text-slate-500 font-medium">Bedrooms</p>
                 </div>
                 <div className="p-3 bg-slate-50 rounded-2xl">
                   <FaBath className="mx-auto text-xl text-blue-600 mb-1" />
-                  <p className="font-extrabold text-slate-900">{property.bath}</p>
+                  <p className="font-extrabold text-slate-900">{property.bath || 0}</p>
                   <p className="text-xs text-slate-500 font-medium">Bathrooms</p>
                 </div>
                 <div className="p-3 bg-slate-50 rounded-2xl">
                   <MdSpaceDashboard className="mx-auto text-xl text-blue-600 mb-1" />
-                  <p className="font-extrabold text-slate-900">{property.area}</p>
+                  <p className="font-extrabold text-slate-900">{property.area || "N/A"}</p>
                   <p className="text-xs text-slate-500 font-medium">Square Feet</p>
                 </div>
               </div>
@@ -266,16 +391,29 @@ const PropertyDetail = () => {
             {/* Tour Schedule Box */}
             <div className="p-6 rounded-3xl bg-slate-900 text-white shadow-xl space-y-4">
               <h3 className="text-xl font-bold flex items-center gap-2">
-                <FaCalendarCheck className="text-amber-400" /> Schedule A Viewing
+                <FaCalendarCheck className="text-amber-400" />
+                {(property.purpose || "").toLowerCase() === "rent"
+                  ? "Rent & Tour Inquiry"
+                  : (property.purpose || "").toLowerCase() === "commercial"
+                  ? "Commercial Leasing"
+                  : "Schedule A Viewing"}
               </h3>
               <p className="text-xs text-slate-300">
-                Book a private in-person or live video walkthrough with an estate specialist.
+                {(property.status || "").toLowerCase() === "available"
+                  ? "Book a private in-person or live video walkthrough with an estate specialist."
+                  : `This property is currently ${(property.status || "booked").toUpperCase()}. Contact us for waitlists.`}
               </p>
               <button
                 onClick={() => setIsTourModalOpen(true)}
-                className="w-full py-3.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-sm shadow-md transition cursor-pointer active:scale-95"
+                className={`w-full py-3.5 rounded-xl font-extrabold text-sm shadow-md transition cursor-pointer active:scale-95 ${
+                  (property.status || "").toLowerCase() === "available"
+                    ? "bg-amber-500 hover:bg-amber-400 text-slate-950"
+                    : "bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700"
+                }`}
               >
-                Request Private Tour
+                {(property.status || "").toLowerCase() === "available"
+                  ? "Request Private Tour / Booking"
+                  : `Inquire (${(property.status || "booked").toUpperCase()})`}
               </button>
             </div>
 

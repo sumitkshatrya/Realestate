@@ -56,27 +56,6 @@ const PasswordStrengthIndicator = ({
   /* NO PASSWORD                                                            */
   /* ---------------------------------------------------------------------- */
 
-  if (!password || strength < 0) {
-    return null;
-  }
-
-  /* ---------------------------------------------------------------------- */
-  /* NORMALIZE STRENGTH                                                     */
-  /* ---------------------------------------------------------------------- */
-
-  const normalizedStrength = Math.min(
-    Math.max(Number(strength) || 0, 0),
-    3
-  );
-
-  const config =
-    strengthConfig[normalizedStrength] ||
-    strengthConfig[0];
-
-  /* ---------------------------------------------------------------------- */
-  /* PASSWORD REQUIREMENTS                                                  */
-  /* ---------------------------------------------------------------------- */
-
   const requirements = useMemo(() => {
     return [
       {
@@ -101,6 +80,19 @@ const PasswordStrengthIndicator = ({
       },
     ];
   }, [password]);
+
+  const normalizedStrength = Math.min(
+    Math.max(Number(strength) || 0, 0),
+    3
+  );
+
+  const config =
+    strengthConfig[normalizedStrength] ||
+    strengthConfig[0];
+
+  if (!password || strength < 0) {
+    return null;
+  }
 
   const completedRequirements =
     requirements.filter((item) => item.valid).length;

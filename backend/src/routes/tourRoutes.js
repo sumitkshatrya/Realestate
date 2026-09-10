@@ -6,12 +6,11 @@ import {
   deleteTour,
 } from "../controllers/tourController.js";
 import { protectAdmin } from "../middleware/Auth.Middleware.js";
-import { formLimiter } from "../middleware/rateLimiter.js";
 
 const router = express.Router();
 
 // Public - schedule a tour
-router.post("/schedule", formLimiter, scheduleTour);
+router.post("/schedule", scheduleTour);
 
 // Admin - manage tour requests
 router.get("/", protectAdmin, getAllTours);
@@ -19,5 +18,4 @@ router.put("/:id/status", protectAdmin, updateTourStatus);
 router.delete("/:id", protectAdmin, deleteTour);
 
 export default router;
-
 

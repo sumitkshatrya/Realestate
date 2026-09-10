@@ -15,17 +15,26 @@ import {
   FaEye,
   FaBuilding,
   FaImage,
+  FaUpload,
+  FaLink,
+  FaExclamationTriangle,
+  FaCheckSquare,
+  FaSquare,
+  FaDatabase,
 } from "react-icons/fa";
 import { propertyAPI } from "../api/propertyApi";
 import { useFetchData } from "../api/useFetchData";
 import { useConfirmationModal } from "./ModalContext";
 import { useForm } from "react-hook-form";
+import { toast } from "react-toastify";
+
+import { getSocket } from "../api/socketClient";
 
 const BASE_URL = import.meta.env.VITE_APP_BASE_URL || "";
 
 const getImageUrl = (url) => {
   if (!url) return "";
-  if (url.startsWith("http://") || url.startsWith("https://")) return url;
+  if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:")) return url;
   return `${BASE_URL}${url}`;
 };
 
@@ -39,6 +48,9 @@ const defaultForm = {
   area: "",
   latitude: "",
   longitude: "",
+  purpose: "buy",
+  category: "Luxury Apartment",
+  status: "available",
   images: "",
   description: "",
   isActive: true,
@@ -47,17 +59,29 @@ const defaultForm = {
 const PropertiesManager = () => {
   const [viewMode, setViewMode] = useState("grid"); // "grid" | "table"
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all"); // "all" | "active" | "inactive"
+  const [purposeFilter, setPurposeFilter] = useState("all"); // "all" | "buy" | "rent" | "commercial"
+  const [statusFilter, setStatusFilter] = useState("all"); // "all" | "available" | "booked" | "rented" | "sold" | "inactive"
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [editingProperty, setEditingProperty] = useState(null);
+
+  // Property Image Management Choice state
+  const [imageInputMode, setImageInputMode] = useState("url"); // "url" | "upload"
+  const [existingImages, setExistingImages] = useState([]);
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [selectedImageIds, setSelectedImageIds] = useState([]);
+  const [failedImageUrls, setFailedImageUrls] = useState({});
 
   const confirm = useConfirmationModal();
   const {
     register,
     handleSubmit,
     reset,
+    setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm({ defaultValues: defaultForm });
+
+  const imagesText = watch("images");
 
   const {
     data: properties,
@@ -65,14 +89,101 @@ const PropertiesManager = () => {
     refetch: fetchProperties,
   } = useFetchData(propertyAPI.getProperties);
 
+  // Real-time WebSocket listener for live admin sync
+  React.useEffect(() => {
+    const socket = getSocket();
+
+    const handleSocketChange = () => {
+      fetchProperties();
+    };
+
+    socket.on("property:created", handleSocketChange);
+    socket.on("property:updated", handleSocketChange);
+    socket.on("property:deleted", handleSocketChange);
+
+    return () => {
+      socket.off("property:created", handleSocketChange);
+      socket.off("property:updated", handleSocketChange);
+      socket.off("property:deleted", handleSocketChange);
+    };
+  }, [fetchProperties]);
+
+  // Parsed text URLs from textarea
+  const textUrls = useMemo(() => {
+    if (!imagesText) return [];
+    return imagesText
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean);
+  }, [imagesText]);
+
+  // Combined list of all gallery items (Existing DB URLs + Typed Text URLs + Selected File Uploads)
+  const allGalleryItems = useMemo(() => {
+    const items = [];
+
+    // Existing images from DB
+    existingImages.forEach((url, idx) => {
+      items.push({
+        id: `existing-${idx}-${url}`,
+        type: "existing",
+        index: idx,
+        url,
+        displayUrl: getImageUrl(url),
+        isUploaded: url.startsWith("/uploads/"),
+      });
+    });
+
+    // Typed URLs from textarea (not already in existingImages)
+    textUrls.forEach((url, idx) => {
+      if (!existingImages.includes(url)) {
+        items.push({
+          id: `texturl-${idx}-${url}`,
+          type: "textUrl",
+          index: idx,
+          url,
+          displayUrl: getImageUrl(url),
+          isUploaded: false,
+        });
+      }
+    });
+
+    // Local file uploads
+    selectedFiles.forEach((file, idx) => {
+      items.push({
+        id: `file-${idx}-${file.name}`,
+        type: "file",
+        index: idx,
+        file,
+        displayUrl: URL.createObjectURL(file),
+        isUploaded: true,
+      });
+    });
+
+    return items;
+  }, [existingImages, textUrls, selectedFiles]);
+
   const openAddDrawer = () => {
     setEditingProperty(null);
+    setExistingImages([]);
+    setSelectedFiles([]);
+    setSelectedImageIds([]);
+    setFailedImageUrls({});
+    setImageInputMode("url");
     reset(defaultForm);
     setIsDrawerOpen(true);
   };
 
   const handleEdit = (property) => {
     setEditingProperty(property);
+    const imgs = Array.isArray(property.images) ? property.images : [];
+    setExistingImages(imgs);
+    setSelectedFiles([]);
+    setSelectedImageIds([]);
+    setFailedImageUrls({});
+
+    const hasUploaded = imgs.some((i) => i.startsWith("/uploads/"));
+    setImageInputMode(hasUploaded ? "upload" : "url");
+
     reset({
       name: property.name || "",
       slug: property.slug || "",
@@ -83,7 +194,12 @@ const PropertiesManager = () => {
       area: property.area || "",
       latitude: property.latitude ?? "",
       longitude: property.longitude ?? "",
-      images: Array.isArray(property.images) ? property.images.join("\n") : "",
+      purpose: property.purpose || "buy",
+      category: property.category || "Luxury Apartment",
+      status: property.status || "available",
+      images: imgs
+        .filter((i) => !i.startsWith("/uploads/"))
+        .join("\n"),
       description: property.description || "",
       isActive: property.isActive !== false,
     });
@@ -93,31 +209,165 @@ const PropertiesManager = () => {
   const closeDrawer = () => {
     setIsDrawerOpen(false);
     setEditingProperty(null);
+    setExistingImages([]);
+    setSelectedFiles([]);
+    setSelectedImageIds([]);
+    setFailedImageUrls({});
     reset(defaultForm);
+  };
+
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const newFiles = Array.from(e.target.files);
+      setSelectedFiles((prev) => [...prev, ...newFiles]);
+    }
+  };
+
+  const toggleSelectImage = (id) => {
+    setSelectedImageIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedImageIds.length === allGalleryItems.length) {
+      setSelectedImageIds([]);
+    } else {
+      setSelectedImageIds(allGalleryItems.map((item) => item.id));
+    }
+  };
+
+  const deleteSingleItem = (item) => {
+    if (item.type === "existing") {
+      const targetUrl = item.url;
+      setExistingImages((prev) => prev.filter((_, i) => i !== item.index));
+      const updatedText = textUrls.filter((u) => u !== targetUrl).join("\n");
+      setValue("images", updatedText);
+    } else if (item.type === "textUrl") {
+      const targetUrl = item.url;
+      const updatedText = textUrls.filter((u) => u !== targetUrl).join("\n");
+      setValue("images", updatedText);
+    } else if (item.type === "file") {
+      setSelectedFiles((prev) => prev.filter((_, i) => i !== item.index));
+    }
+    setSelectedImageIds((prev) => prev.filter((id) => id !== item.id));
+  };
+
+  const deleteSelectedItems = () => {
+    const itemsToDelete = allGalleryItems.filter((item) =>
+      selectedImageIds.includes(item.id)
+    );
+
+    let updatedExisting = [...existingImages];
+    let updatedTextUrls = [...textUrls];
+    let updatedFiles = [...selectedFiles];
+
+    itemsToDelete.forEach((item) => {
+      if (item.type === "existing") {
+        updatedExisting = updatedExisting.filter((u) => u !== item.url);
+        updatedTextUrls = updatedTextUrls.filter((u) => u !== item.url);
+      } else if (item.type === "textUrl") {
+        updatedTextUrls = updatedTextUrls.filter((u) => u !== item.url);
+      } else if (item.type === "file") {
+        updatedFiles = updatedFiles.filter((_, i) => i !== item.index);
+      }
+    });
+
+    setExistingImages(updatedExisting);
+    setValue("images", updatedTextUrls.join("\n"));
+    setSelectedFiles(updatedFiles);
+    setSelectedImageIds([]);
   };
 
   const onSubmit = async (data) => {
     try {
-      const payload = {
-        ...data,
-        bed: Number(data.bed) || 0,
-        bath: Number(data.bath) || 0,
-        latitude: data.latitude === "" ? undefined : Number(data.latitude),
-        longitude: data.longitude === "" ? undefined : Number(data.longitude),
-        images: data.images
-          ? data.images.split("\n").map((i) => i.trim()).filter(Boolean)
-          : [],
-      };
+      // Gather active URLs from allGalleryItems
+      const activeUrls = allGalleryItems
+        .filter((item) => item.type === "existing" || item.type === "textUrl")
+        .map((item) => item.url);
 
-      if (editingProperty) {
-        await propertyAPI.updateProperty(editingProperty._id, payload);
+      const activeFiles = allGalleryItems
+        .filter((item) => item.type === "file")
+        .map((item) => item.file);
+
+      if (activeFiles.length > 0) {
+        // Send multipart FormData when new files are selected
+        const formData = new FormData();
+        formData.append("name", data.name || "");
+        formData.append("price", data.price || "");
+        formData.append("slug", data.slug || "");
+        formData.append("address", data.address || "");
+        formData.append("bed", String(Number(data.bed) || 0));
+        formData.append("bath", String(Number(data.bath) || 0));
+        formData.append("area", data.area || "");
+        if (data.latitude !== "" && data.latitude !== undefined) {
+          formData.append("latitude", String(data.latitude));
+        }
+        if (data.longitude !== "" && data.longitude !== undefined) {
+          formData.append("longitude", String(data.longitude));
+        }
+        formData.append("purpose", data.purpose || "buy");
+        formData.append("category", data.category || "Luxury Apartment");
+        formData.append("status", data.status || "available");
+        formData.append("description", data.description || "");
+        formData.append("isActive", String(data.isActive !== false));
+
+        // Append image URLs array
+        formData.append("images", JSON.stringify(activeUrls));
+
+        // Append file uploads
+        activeFiles.forEach((file) => {
+          formData.append("imageFiles", file);
+        });
+
+        if (editingProperty) {
+          await propertyAPI.updateProperty(editingProperty._id, formData);
+        } else {
+          await propertyAPI.createProperty(formData);
+        }
       } else {
-        await propertyAPI.createProperty(payload);
+        // Send JSON when no files are selected
+        const payload = {
+          ...data,
+          bed: Number(data.bed) || 0,
+          bath: Number(data.bath) || 0,
+          latitude: data.latitude === "" ? undefined : Number(data.latitude),
+          longitude: data.longitude === "" ? undefined : Number(data.longitude),
+          purpose: data.purpose || "buy",
+          category: data.category || "Luxury Apartment",
+          status: data.status || "available",
+          images: activeUrls,
+        };
+
+        if (editingProperty) {
+          await propertyAPI.updateProperty(editingProperty._id, payload);
+        } else {
+          await propertyAPI.createProperty(payload);
+        }
       }
+
       closeDrawer();
       await fetchProperties();
     } catch (error) {
-      /* Handled by global interceptor */
+      console.error(error);
+    }
+  };
+
+  const openMapLocation = (e, prop) => {
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+    if (!prop) return;
+    const { latitude, longitude, address } = prop;
+    let url = "";
+    if (typeof latitude === "number" && typeof longitude === "number" && !isNaN(latitude) && !isNaN(longitude)) {
+      url = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
+    } else if (address) {
+      url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+    }
+    if (url) {
+      window.open(url, "_blank", "noopener,noreferrer");
     }
   };
 
@@ -130,10 +380,22 @@ const PropertiesManager = () => {
           await propertyAPI.deleteProperty(id);
           await fetchProperties();
         } catch (error) {
-          /* Handled by global interceptor */
+          console.error(error);
         }
       },
     });
+  };
+
+  const updatePropertyStatus = async (property, newStatus) => {
+    try {
+      await propertyAPI.updateProperty(property._id, {
+        ...property,
+        status: newStatus,
+      });
+      await fetchProperties();
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const togglePropertyStatus = async (property) => {
@@ -144,7 +406,7 @@ const PropertiesManager = () => {
       });
       await fetchProperties();
     } catch (error) {
-      /* Handled by global interceptor */
+      console.error(error);
     }
   };
 
@@ -153,16 +415,37 @@ const PropertiesManager = () => {
     return (properties || []).filter((prop) => {
       const matchesSearch =
         (prop.name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (prop.address || "").toLowerCase().includes(searchQuery.toLowerCase());
+        (prop.address || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (prop.category || "").toLowerCase().includes(searchQuery.toLowerCase());
+
+      const matchesPurpose =
+        purposeFilter === "all" ||
+        (prop.purpose || "buy").toLowerCase() === purposeFilter.toLowerCase();
 
       const matchesStatus =
         statusFilter === "all" ||
-        (statusFilter === "active" && prop.isActive !== false) ||
-        (statusFilter === "inactive" && prop.isActive === false);
+        (statusFilter === "inactive" && prop.isActive === false) ||
+        (statusFilter !== "inactive" && (prop.status || "available").toLowerCase() === statusFilter.toLowerCase());
 
-      return matchesSearch && matchesStatus;
+      return matchesSearch && matchesPurpose && matchesStatus;
     });
-  }, [properties, searchQuery, statusFilter]);
+  }, [properties, searchQuery, purposeFilter, statusFilter]);
+
+  const handleSeedProperties = async () => {
+    confirm({
+      title: "Load 30 Property Dataset?",
+      message: "This will dynamically insert the 30 real estate properties (Jaipur, Noida, Gurugram, Bengaluru, Mumbai, Goa, etc.) into your database.",
+      onConfirm: async () => {
+        try {
+          const res = await propertyAPI.seedProperties();
+          toast.success(res?.message || "Successfully seeded 30 properties dynamically!");
+          await fetchProperties();
+        } catch (error) {
+          console.error(error);
+        }
+      },
+    });
+  };
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
@@ -183,13 +466,22 @@ const PropertiesManager = () => {
           </p>
         </div>
 
-        <button
-          onClick={openAddDrawer}
-          className="btn btn-primary shadow-lg shrink-0"
-        >
-          <FaPlus className="text-xs" />
-          <span>New Property Listing</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-3 shrink-0">
+          <button
+            onClick={handleSeedProperties}
+            className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-blue-300 font-bold text-xs border border-blue-500/30 shadow-md transition flex items-center gap-2 cursor-pointer"
+          >
+            <FaDatabase className="text-xs" />
+            <span>Load 30 Properties Dataset</span>
+          </button>
+          <button
+            onClick={openAddDrawer}
+            className="btn btn-primary shadow-lg shrink-0"
+          >
+            <FaPlus className="text-xs" />
+            <span>New Property Listing</span>
+          </button>
+        </div>
       </Motion.div>
 
       {/* SEARCH & CONTROLS BAR */}
@@ -201,21 +493,36 @@ const PropertiesManager = () => {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by title, location, address..."
+              placeholder="Search by title, location, category..."
               className="input-field pl-10"
             />
           </div>
         </div>
 
-        <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
-          {/* Status Filter */}
+        <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto justify-end">
+          {/* Purpose Filter */}
+          <select
+            value={purposeFilter}
+            onChange={(e) => setPurposeFilter(e.target.value)}
+            className="input-field w-auto text-xs py-2 bg-slate-900 text-slate-200"
+          >
+            <option value="all">All Purpose (Buy/Rent/Commercial)</option>
+            <option value="buy">For Sale (Buy)</option>
+            <option value="rent">For Rent</option>
+            <option value="commercial">Commercial</option>
+          </select>
+
+          {/* Availability Status Filter */}
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="input-field w-auto text-xs py-2"
+            className="input-field w-auto text-xs py-2 bg-slate-900 text-slate-200"
           >
-            <option value="all">All Statuses</option>
-            <option value="active">Active Only</option>
+            <option value="all">All Availability Statuses</option>
+            <option value="available">Available</option>
+            <option value="booked">Booked</option>
+            <option value="rented">Rented</option>
+            <option value="sold">Sold</option>
             <option value="inactive">Inactive Only</option>
           </select>
 
@@ -261,6 +568,8 @@ const PropertiesManager = () => {
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {filteredProperties.map((property, idx) => {
             const firstImage = Array.isArray(property.images) && property.images.length > 0 ? getImageUrl(property.images[0]) : "";
+            const currentStatus = (property.status || "available").toLowerCase();
+            const currentPurpose = (property.purpose || "buy").toLowerCase();
 
             return (
               <Motion.article
@@ -289,15 +598,44 @@ const PropertiesManager = () => {
                     {property.price || "Contact for price"}
                   </span>
 
-                  {/* Status Badge */}
+                  {/* Purpose & Status Badges */}
+                  <div className="absolute top-3 left-3 flex flex-wrap gap-1.5 z-10">
+                    <span
+                      className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                        currentPurpose === "rent"
+                          ? "bg-blue-600 text-white"
+                          : currentPurpose === "commercial"
+                          ? "bg-purple-600 text-white"
+                          : "bg-emerald-600 text-white"
+                      }`}
+                    >
+                      {currentPurpose === "rent"
+                        ? "For Rent"
+                        : currentPurpose === "commercial"
+                        ? "Commercial"
+                        : "For Sale"}
+                    </span>
+
+                    {property.category && (
+                      <span className="rounded-full bg-slate-950/80 backdrop-blur-md px-2 py-0.5 text-[10px] font-semibold text-slate-300 border border-white/10">
+                        {property.category}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Availability Status Tag */}
                   <span
                     className={`absolute top-3 right-3 rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
-                      property.isActive !== false
-                        ? "border-emerald-500/30 bg-emerald-500/20 text-emerald-300"
-                        : "border-slate-500/30 bg-slate-800 text-slate-400"
+                      currentStatus === "sold"
+                        ? "border-rose-500/50 bg-rose-500/20 text-rose-300"
+                        : currentStatus === "rented"
+                        ? "border-blue-500/50 bg-blue-500/20 text-blue-300"
+                        : currentStatus === "booked"
+                        ? "border-amber-500/50 bg-amber-500/20 text-amber-300"
+                        : "border-emerald-500/50 bg-emerald-500/20 text-emerald-300"
                     }`}
                   >
-                    {property.isActive !== false ? "Active" : "Inactive"}
+                    {currentStatus.toUpperCase()}
                   </span>
                 </div>
 
@@ -307,10 +645,15 @@ const PropertiesManager = () => {
                     <h3 className="text-base font-bold text-white line-clamp-1 group-hover:text-red-400 transition">
                       {property.name}
                     </h3>
-                    <p className="text-xs text-slate-400 mt-1 flex items-center gap-1.5 line-clamp-1">
+                    <button
+                      type="button"
+                      onClick={(e) => openMapLocation(e, property)}
+                      className="text-xs text-slate-400 hover:text-blue-400 hover:underline mt-1 flex items-center gap-1.5 line-clamp-1 cursor-pointer text-left font-medium"
+                      title="Click to view location on map"
+                    >
                       <FaMapMarkerAlt className="text-red-400 text-[10px] shrink-0" />
                       {property.address || "Location unspecified"}
-                    </p>
+                    </button>
                   </div>
 
                   {/* Specs Pill */}
@@ -333,6 +676,21 @@ const PropertiesManager = () => {
                         {property.area || "N/A"}
                       </span>
                     </div>
+                  </div>
+
+                  {/* Availability Status Quick Change Select */}
+                  <div className="flex items-center justify-between text-xs pt-1">
+                    <span className="text-[11px] font-semibold text-slate-400">Set Availability:</span>
+                    <select
+                      value={currentStatus}
+                      onChange={(e) => updatePropertyStatus(property, e.target.value)}
+                      className="bg-slate-950 border border-white/10 text-white rounded-lg text-[11px] px-2 py-1 focus:outline-none focus:border-red-500"
+                    >
+                      <option value="available">Available</option>
+                      <option value="booked">Booked</option>
+                      <option value="rented">Rented</option>
+                      <option value="sold">Sold</option>
+                    </select>
                   </div>
 
                   {/* Action Buttons */}
@@ -375,51 +733,66 @@ const PropertiesManager = () => {
               <thead className="border-b border-white/10 bg-white/[0.02] text-[10px] font-bold uppercase tracking-wider text-slate-500">
                 <tr>
                   <th className="p-4">Property</th>
-                  <th className="p-4">Address</th>
+                  <th className="p-4">Purpose & Category</th>
                   <th className="p-4">Price</th>
-                  <th className="p-4">Specs</th>
-                  <th className="p-4">Status</th>
+                  <th className="p-4">Availability Status</th>
                   <th className="p-4 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5 text-xs">
-                {filteredProperties.map((prop) => (
-                  <tr key={prop._id} className="hover:bg-white/[0.02] transition">
-                    <td className="p-4 font-bold text-white">{prop.name}</td>
-                    <td className="p-4 text-slate-400">{prop.address || "N/A"}</td>
-                    <td className="p-4 font-bold text-red-400">{prop.price || "N/A"}</td>
-                    <td className="p-4 text-slate-300">
-                      {prop.bed} Bed • {prop.bath} Bath • {prop.area || "N/A"}
-                    </td>
-                    <td className="p-4">
-                      <span
-                        className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
-                          prop.isActive !== false
-                            ? "bg-emerald-500/10 text-emerald-300"
-                            : "bg-slate-800 text-slate-400"
-                        }`}
-                      >
-                        {prop.isActive !== false ? "Active" : "Inactive"}
-                      </span>
-                    </td>
-                    <td className="p-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
+                {filteredProperties.map((prop) => {
+                  const currentStatus = (prop.status || "available").toLowerCase();
+                  const currentPurpose = (prop.purpose || "buy").toLowerCase();
+
+                  return (
+                    <tr key={prop._id} className="hover:bg-white/[0.02] transition">
+                      <td className="p-4 font-bold text-white">
+                        <div>{prop.name}</div>
                         <button
-                          onClick={() => handleEdit(prop)}
-                          className="p-2 rounded-lg bg-white/5 text-slate-300 hover:text-white"
+                          type="button"
+                          onClick={(e) => openMapLocation(e, prop)}
+                          className="text-[11px] font-normal text-slate-400 hover:text-blue-400 hover:underline flex items-center gap-1 mt-0.5 cursor-pointer text-left"
+                          title="Click to view location on map"
                         >
-                          <FaEdit />
+                          <FaMapMarkerAlt className="text-red-400 text-[10px]" />
+                          <span>{prop.address || "N/A"}</span>
                         </button>
-                        <button
-                          onClick={() => handleDelete(prop._id)}
-                          className="p-2 rounded-lg bg-rose-500/10 text-rose-300 hover:bg-rose-500/20"
+                      </td>
+                      <td className="p-4 text-slate-300">
+                        <span className="capitalize font-bold text-blue-400">{currentPurpose}</span> • {prop.category || "Luxury Apartment"}
+                      </td>
+                      <td className="p-4 font-bold text-red-400">{prop.price || "N/A"}</td>
+                      <td className="p-4">
+                        <select
+                          value={currentStatus}
+                          onChange={(e) => updatePropertyStatus(prop, e.target.value)}
+                          className="bg-slate-950 border border-white/10 text-white rounded-lg text-xs px-2 py-1"
                         >
-                          <FaTrash />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                          <option value="available">Available</option>
+                          <option value="booked">Booked</option>
+                          <option value="rented">Rented</option>
+                          <option value="sold">Sold</option>
+                        </select>
+                      </td>
+                      <td className="p-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => handleEdit(prop)}
+                            className="p-2 rounded-lg bg-white/5 text-slate-300 hover:text-white"
+                          >
+                            <FaEdit />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(prop._id)}
+                            className="p-2 rounded-lg bg-rose-500/10 text-rose-300 hover:bg-rose-500/20"
+                          >
+                            <FaTrash />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -516,6 +889,49 @@ const PropertiesManager = () => {
                   {errors.address && <p className="mt-1 text-xs text-red-400">{errors.address.message}</p>}
                 </div>
 
+                {/* Purpose, Category, Availability Status */}
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 mb-1">
+                      Purpose *
+                    </label>
+                    <select {...register("purpose")} className="input-field bg-slate-950 text-xs">
+                      <option value="buy">For Sale (Buy)</option>
+                      <option value="rent">For Rent</option>
+                      <option value="commercial">Commercial</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 mb-1">
+                      Category *
+                    </label>
+                    <select {...register("category")} className="input-field bg-slate-950 text-xs">
+                      <option value="Luxury Apartment">Luxury Apartment</option>
+                      <option value="Private Villa / House">Private Villa / House</option>
+                      <option value="Penthouse / Condo">Penthouse / Condo</option>
+                      <option value="Duplex">Duplex</option>
+                      <option value="Townhome">Townhome</option>
+                      <option value="Commercial Space">Commercial Space</option>
+                      <option value="Office">Office</option>
+                      <option value="Retail">Retail</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 mb-1">
+                      Status *
+                    </label>
+                    <select {...register("status")} className="input-field bg-slate-950 text-xs">
+                      <option value="available">Available</option>
+                      <option value="booked">Booked</option>
+                      <option value="rented">Rented</option>
+                      <option value="sold">Sold</option>
+                    </select>
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-3 gap-3">
                   <div>
                     <label className="block text-xs font-semibold text-slate-300 mb-1">Beds</label>
@@ -542,16 +958,216 @@ const PropertiesManager = () => {
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
-                    Image URLs (One URL per line)
-                  </label>
-                  <textarea
-                    rows={4}
-                    {...register("images")}
-                    placeholder="https://images.unsplash.com/photo-1512917774080-9991f1c4c750&#10;https://images.unsplash.com/photo-1613977257363-707ba9348227"
-                    className="input-field font-mono text-xs"
-                  />
+                {/* PROPERTY IMAGES CHOICE: URL VS FILE UPLOAD & MULTI-SELECT DELETION */}
+                <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-bold text-white uppercase tracking-wider">
+                      PROPERTY IMAGES
+                    </label>
+
+                    {/* Mode Toggle Switch */}
+                    <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-white/10 text-[11px]">
+                      <button
+                        type="button"
+                        onClick={() => setImageInputMode("url")}
+                        className={`flex items-center gap-1.5 px-3 py-1 rounded-lg font-semibold transition ${
+                          imageInputMode === "url"
+                            ? "bg-red-500 text-white shadow"
+                            : "text-slate-400 hover:text-white"
+                        }`}
+                      >
+                        <FaLink className="text-[10px]" />
+                        <span>Image URLs</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setImageInputMode("upload")}
+                        className={`flex items-center gap-1.5 px-3 py-1 rounded-lg font-semibold transition ${
+                          imageInputMode === "upload"
+                            ? "bg-red-500 text-white shadow"
+                            : "text-slate-400 hover:text-white"
+                        }`}
+                      >
+                        <FaUpload className="text-[10px]" />
+                        <span>Upload Files</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Mode 1: Image URLs input */}
+                  {imageInputMode === "url" && (
+                    <div>
+                      <p className="text-[11px] text-slate-400 mb-1.5">
+                        Paste public image URLs (one direct link per line):
+                      </p>
+                      <textarea
+                        rows={4}
+                        {...register("images")}
+                        placeholder="https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1200&q=80"
+                        className="input-field font-mono text-xs"
+                      />
+                    </div>
+                  )}
+
+                  {/* Mode 2: Multi-File Upload input */}
+                  {imageInputMode === "upload" && (
+                    <div className="space-y-3">
+                      <p className="text-[11px] text-slate-400">
+                        Upload multi image files directly from your computer (JPG, PNG, WEBP):
+                      </p>
+
+                      <label className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-white/20 hover:border-red-500/50 rounded-2xl cursor-pointer bg-slate-950/50 hover:bg-slate-950 transition text-center group">
+                        <FaUpload className="text-2xl text-slate-500 group-hover:text-red-400 transition mb-2" />
+                        <span className="text-xs font-bold text-slate-200">
+                          Click to select or drag & drop multiple image files
+                        </span>
+                        <span className="text-[10px] text-slate-500 mt-1">
+                          You can select multiple photos at once
+                        </span>
+                        <input
+                          type="file"
+                          multiple
+                          accept="image/*"
+                          onChange={handleFileChange}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+                  )}
+
+                  {/* Combined Image Gallery Preview & Multi-Select Deletion */}
+                  {allGalleryItems.length > 0 && (
+                    <div className="space-y-3 pt-3 border-t border-white/10">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-semibold text-slate-300">
+                          Current Gallery ({allGalleryItems.length} images)
+                        </span>
+
+                        <div className="flex items-center gap-2">
+                          {/* Select All Toggle */}
+                          <button
+                            type="button"
+                            onClick={toggleSelectAll}
+                            className="text-[11px] font-semibold text-slate-400 hover:text-white flex items-center gap-1 transition"
+                          >
+                            {selectedImageIds.length === allGalleryItems.length ? (
+                              <>
+                                <FaCheckSquare className="text-red-400 text-xs" />
+                                <span>Deselect All</span>
+                              </>
+                            ) : (
+                              <>
+                                <FaSquare className="text-slate-500 text-xs" />
+                                <span>Select All</span>
+                              </>
+                            )}
+                          </button>
+
+                          {/* Delete Selected Button */}
+                          {selectedImageIds.length > 0 && (
+                            <button
+                              type="button"
+                              onClick={deleteSelectedItems}
+                              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-500/20 text-rose-300 border border-rose-500/30 hover:bg-rose-500/30 text-[11px] font-bold transition shadow-sm"
+                            >
+                              <FaTrash className="text-[10px]" />
+                              <span>Delete Selected ({selectedImageIds.length})</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Thumbnails Grid */}
+                      <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 max-h-64 overflow-y-auto p-1">
+                        {allGalleryItems.map((item) => {
+                          const isSelected = selectedImageIds.includes(item.id);
+                          const isFailed = failedImageUrls[item.id];
+
+                          return (
+                            <div
+                              key={item.id}
+                              className={`relative group rounded-xl overflow-hidden aspect-square border transition-all ${
+                                isSelected
+                                  ? "border-red-500 ring-2 ring-red-500/40 bg-red-950/20"
+                                  : isFailed
+                                  ? "border-rose-500/50 bg-rose-950/20"
+                                  : "border-white/10 bg-slate-950 hover:border-white/30"
+                              }`}
+                            >
+                              {/* Selection Checkbox */}
+                              <button
+                                type="button"
+                                onClick={() => toggleSelectImage(item.id)}
+                                className="absolute top-1.5 left-1.5 z-20 p-1 rounded bg-slate-950/80 text-white border border-white/20 hover:border-white transition"
+                                title="Select to delete"
+                              >
+                                {isSelected ? (
+                                  <FaCheckSquare className="text-red-400 text-xs" />
+                                ) : (
+                                  <FaSquare className="text-slate-500 text-xs" />
+                                )}
+                              </button>
+
+                              {/* Prominent Direct Delete Button */}
+                              <button
+                                type="button"
+                                onClick={() => deleteSingleItem(item)}
+                                className="absolute top-1.5 right-1.5 z-20 p-1.5 rounded-full bg-rose-600 text-white shadow-md hover:bg-rose-700 transition"
+                                title="Delete image"
+                              >
+                                <FaTrash className="text-[10px]" />
+                              </button>
+
+                              {/* Image or Broken Link Fallback */}
+                              {isFailed ? (
+                                <div className="flex flex-col items-center justify-center p-2 text-center h-full bg-slate-950 text-rose-400 text-[10px] space-y-1">
+                                  <FaExclamationTriangle className="text-lg text-rose-500" />
+                                  <span className="font-bold leading-tight">Invalid Link</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => deleteSingleItem(item)}
+                                    className="px-2 py-0.5 text-[9px] font-bold bg-rose-500 text-white rounded hover:bg-rose-600 transition mt-1"
+                                  >
+                                    Delete Link
+                                  </button>
+                                </div>
+                              ) : (
+                                <img
+                                  src={item.displayUrl}
+                                  alt="Property asset"
+                                  onError={() =>
+                                    setFailedImageUrls((prev) => ({
+                                      ...prev,
+                                      [item.id]: true,
+                                    }))
+                                  }
+                                  className="w-full h-full object-cover"
+                                />
+                              )}
+
+                              {/* Bottom Type Badge */}
+                              <span
+                                className={`absolute bottom-1 left-1 z-10 px-1.5 py-0.5 text-[9px] font-bold rounded ${
+                                  item.type === "file"
+                                    ? "bg-blue-600 text-white"
+                                    : item.type === "existing"
+                                    ? "bg-slate-950/80 text-slate-300 border border-white/10"
+                                    : "bg-amber-600/90 text-white"
+                                }`}
+                              >
+                                {item.type === "file"
+                                  ? "File"
+                                  : item.type === "existing"
+                                  ? "Existing"
+                                  : "URL"}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div>
@@ -585,3 +1201,4 @@ const PropertiesManager = () => {
 };
 
 export default PropertiesManager;
+

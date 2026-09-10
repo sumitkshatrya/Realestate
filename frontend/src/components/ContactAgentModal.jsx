@@ -49,11 +49,12 @@ const ContactAgentModal = ({ isOpen, onClose, agent }) => {
       await contactAPI.contactAgent({
         ...formData,
         agentName: agent.username,
-        agentEmail: agent.email, // Pass agent's email to backend
+        agentEmail: agent.email, 
       });
       toast.success("Message sent successfully!");
       onClose();
     } catch (err) {
+      console.error(err);
       toast.error("Failed to send message. Please try again.");
     } finally {
       setLoading(false);

@@ -49,6 +49,31 @@ const propertySchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    purpose: {
+      type: String,
+      enum: ["buy", "rent", "commercial"],
+      default: "buy",
+    },
+    category: {
+      type: String,
+      enum: [
+        "Luxury Apartment",
+        "Private Villa / House",
+        "Penthouse / Condo",
+        "Duplex",
+        "Townhome",
+        "Commercial Space",
+        "Office",
+        "Retail",
+        "Other",
+      ],
+      default: "Luxury Apartment",
+    },
+    status: {
+      type: String,
+      enum: ["available", "booked", "rented", "sold"],
+      default: "available",
+    },
   },
   {
     timestamps: true,
