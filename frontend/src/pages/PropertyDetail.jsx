@@ -15,6 +15,13 @@ import ImageLightbox from "../components/ImageLightbox";
 import PropertyTabs from "../components/PropertyTabs";
 import ContactAgentForm from "../components/ContactAgentForm";
 
+const getImageUrl = (url) => {
+  if (!url) return "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80";
+  if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:")) return url;
+  const backendBase = (import.meta.env.VITE_BACKEND_URL || "http://localhost:8080").replace(/\/+$/, "");
+  return `${backendBase}${url.startsWith("/") ? "" : "/"}${url}`;
+};
+
 const PropertyDetail = () => {
   const { id } = useParams();
   const [property, setProperty] = useState(null);
@@ -36,15 +43,14 @@ const PropertyDetail = () => {
         setError(null);
         setSimilarLoading(true);
 
-        const [propertyResponse, similarResponse] = await Promise.all([
-          propertyAPI.getPropertyById(id),
-          propertyAPI.getSimilarProperties(id),
-        ]);
-
+        const propertyResponse = await propertyAPI.getPropertyById(id);
         const propertyData = propertyResponse.data;
-        propertyData.images = Array.isArray(propertyData.images) && propertyData.images.length > 0
+
+        const rawImages = Array.isArray(propertyData.images) && propertyData.images.length > 0
           ? propertyData.images
           : [propertyData.images || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80'];
+
+        propertyData.images = rawImages.map(getImageUrl);
 
         setProperty(propertyData);
 
@@ -55,13 +61,21 @@ const PropertyDetail = () => {
         localStorage.setItem('recentlyViewed', JSON.stringify(updatedRecentlyViewed));
 
         setSelectedImage(0);
-        setSimilarProperties(similarResponse.data || []);
+
+        try {
+          const similarResponse = await propertyAPI.getSimilarProperties(id);
+          setSimilarProperties(similarResponse?.data || []);
+        } catch (simErr) {
+          console.error("Failed to load similar properties:", simErr);
+          setSimilarProperties([]);
+        } finally {
+          setSimilarLoading(false);
+        }
       } catch (err) {
         setError("Unable to load property details. Please try again.");
         console.error(err);
       } finally {
         setLoading(false);
-        setSimilarLoading(false);
       }
     };
 
@@ -74,10 +88,12 @@ const PropertyDetail = () => {
 
     const handlePropertyUpdated = (updatedProp) => {
       if (updatedProp && (updatedProp._id === id || updatedProp.id === id)) {
-        const images = Array.isArray(updatedProp.images) && updatedProp.images.length > 0
+        const rawImages = Array.isArray(updatedProp.images) && updatedProp.images.length > 0
           ? updatedProp.images
           : [updatedProp.images || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80'];
         
+        const images = rawImages.map(getImageUrl);
+
         setProperty((prev) => {
           if (prev && prev.status !== updatedProp.status) {
             toast.info(`Listing status updated to ${updatedProp.status.toUpperCase()}`);
@@ -111,21 +127,29 @@ const PropertyDetail = () => {
       return;
     }
 
-    const isCurrentlyFavorite = user?.favorites?.includes(propertyId);
-    const originalFavorites = user?.favorites ? [...user.favorites] : [];
+    const currentFavs = (user?.favorites || []).map((f) => (f?._id || f).toString());
+    const isCurrentlyFavorite = currentFavs.includes(String(propertyId));
 
     const newFavorites = isCurrentlyFavorite
-      ? originalFavorites.filter((favId) => favId !== propertyId)
-      : [...originalFavorites, propertyId];
-    updateUser({ favorites: newFavorites });
+      ? currentFavs.filter((favId) => favId !== String(propertyId))
+      : [...currentFavs, String(propertyId)];
+
+    if (updateUser) {
+      updateUser({ favorites: newFavorites });
+    }
 
     try {
-      await userAPI.toggleFavorite(propertyId);
+      const response = await userAPI.toggleFavorite(propertyId);
+      if (response?.data?.favorites && updateUser) {
+        updateUser({ favorites: response.data.favorites });
+      }
       toast.success(isCurrentlyFavorite ? "Removed from saved homes." : "Saved to favorites!");
     } catch (err) {
       console.error(err);
       toast.error("Failed to update favorites.");
-      updateUser({ favorites: originalFavorites });
+      if (updateUser) {
+        updateUser({ favorites: currentFavs });
+      }
     }
   };
 
@@ -180,6 +204,8 @@ const PropertyDetail = () => {
     );
   }
 
+  const isSaved = (user?.favorites || []).some((f) => String(f?._id || f) === String(property?._id));
+
   return (
     <div className="bg-slate-50 pt-28 pb-20">
       <div className="container mx-auto px-4 sm:px-6 max-w-7xl">
@@ -204,13 +230,13 @@ const PropertyDetail = () => {
             <button
               onClick={() => handleToggleFavorite(property._id)}
               className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-sm cursor-pointer border ${
-                user?.favorites?.includes(property._id)
+                isSaved
                   ? "bg-red-500 text-white border-red-500"
                   : "bg-white text-slate-700 border-slate-200 hover:bg-red-50 hover:text-red-600"
               }`}
             >
               <FaHeart />
-              {user?.favorites?.includes(property._id) ? "Saved" : "Save Listing"}
+              {isSaved ? "Saved" : "Save Listing"}
             </button>
           </div>
         </div>

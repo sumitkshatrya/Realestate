@@ -16,6 +16,7 @@ const UserSchema = new mongoose.Schema({
     type: String,
     enum: ["email", "sms", "call"],
     required: true,
+    default: "email",
   },
   verificationCode: Number,
   verificationCodeExpire: Date,

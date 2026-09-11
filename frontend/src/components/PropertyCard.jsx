@@ -4,6 +4,13 @@ import { motion } from "framer-motion";
 import { FaBath, FaBed, FaMapMarkerAlt, FaHeart, FaArrowRight, FaEye } from "react-icons/fa";
 import { MdSpaceDashboard } from "react-icons/md";
 
+const getImageUrl = (url) => {
+  if (!url) return "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=800&q=80";
+  if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:")) return url;
+  const backendBase = (import.meta.env.VITE_BACKEND_URL || "http://localhost:8080").replace(/\/+$/, "");
+  return `${backendBase}${url.startsWith("/") ? "" : "/"}${url}`;
+};
+
 const PropertyCard = ({ property, item, onToggleFavorite, onSelectProperty, isFavorite, isAuthenticated }) => {
   const prop = property || item || {};
   const { _id, images, name, address, price, bed, bath, area, type, category, purpose, status, latitude, longitude } = prop;
@@ -11,9 +18,12 @@ const PropertyCard = ({ property, item, onToggleFavorite, onSelectProperty, isFa
   const currentPurpose = (purpose || type || "buy").toLowerCase();
   const currentStatus = (status || "available").toLowerCase();
 
-  const displayImage = Array.isArray(images) && images.length > 0 
+  const rawImage = Array.isArray(images) && images.length > 0 
     ? images[0] 
     : (typeof images === 'string' ? images : 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=800&q=80');
+  const displayImage = getImageUrl(rawImage);
+
+  const targetId = _id || prop.id;
 
   const handleOpenMap = (e) => {
     if (e) {
@@ -121,7 +131,7 @@ const PropertyCard = ({ property, item, onToggleFavorite, onSelectProperty, isFa
               onClick={(e) => {
                 e.stopPropagation();
                 e.preventDefault();
-                onToggleFavorite(_id);
+                if (targetId) onToggleFavorite(targetId);
               }}
               className={`absolute top-4 right-4 z-20 flex h-10 w-10 items-center justify-center rounded-full backdrop-blur-md transition-all duration-300 shadow-md cursor-pointer ${
                 isFavorite

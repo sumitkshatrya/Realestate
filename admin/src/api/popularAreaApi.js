@@ -8,7 +8,7 @@ const normalizeAreasList = (payload) => {
 
 export const popularAreaAPI = {
   getAreas: async () => {
-    const response = await API.get("/popular-areas");
+    const response = await API.get("/popular-areas", { params: { includeInactive: true } });
     return normalizeAreasList(response.data);
   },
 
@@ -27,4 +27,3 @@ export const popularAreaAPI = {
     return response.data;
   },
 };
-

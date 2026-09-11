@@ -29,8 +29,7 @@
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "rate-limit-redis": "^2.1.0",
-    "redis": "^4.6.4",
-    "twilio": "^5.9.0"
+    "redis": "^4.6.4"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",

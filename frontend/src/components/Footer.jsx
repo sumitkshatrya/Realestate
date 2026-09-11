@@ -44,7 +44,7 @@ const Footer = () => {
                 <img src={logo} alt="LuxEstate Logo" className="h-6 w-auto" />
               </div>
               <span className="text-xl font-extrabold text-white tracking-tight">
-                LUX<span className="text-amber-400 font-light">ESTATE</span>
+                PROPS<span className="text-amber-400 font-light">ESTATE</span>
               </span>
             </div>
             <p className="text-sm text-slate-400 leading-relaxed">
@@ -84,15 +84,15 @@ const Footer = () => {
             <h3 className="text-base font-bold text-white uppercase tracking-wider text-amber-400">Headquarters</h3>
             <div className="flex items-start gap-3 text-sm text-slate-300">
               <FaBuilding className="size-4 mt-1 text-amber-400 shrink-0" />
-              <span>108 Griffith Peak Dr, Suite 500, Las Vegas, NV 89135</span>
+              <span>100 Real Estate Blvd, Suite 400,Uttar Pradesh, India</span>
             </div>
             <div className="flex items-center gap-3 text-sm text-slate-300">
               <FaMobile className="size-4 text-amber-400 shrink-0" />
-              <span>+1 (800) 458-9000</span>
+              <span>+91 9528865099</span>
             </div>
             <div className="flex items-center gap-3 text-sm text-slate-300">
               <IoMdMail className="size-4 text-amber-400 shrink-0" />
-              <span>advisory@luxestate.com</span>
+              <span>skumar21082001@gmail.com</span>
             </div>
           </div>
 
@@ -126,7 +126,7 @@ const Footer = () => {
 
         {/* Bottom copyright line */}
         <div className="mt-16 border-t border-slate-800/80 pt-8 text-center text-xs text-slate-500 container mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p>&copy; {new Date().getFullYear()} LUXESTATE Real Estate Inc. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} PROPSSTATE Real Estate Inc. All rights reserved.</p>
           <div className="flex gap-6 text-slate-400">
             <a href="#" className="hover:text-white transition">Privacy Policy</a>
             <a href="#" className="hover:text-white transition">Terms of Service</a>

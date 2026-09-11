@@ -577,10 +577,7 @@ const AdminTable = ({
                         : "hover:bg-white/[0.025]"
                     }`}
                   >
-                    {/* -------------------------------------------------- */}
-                    {/* SELECT                                               */}
-                    {/* -------------------------------------------------- */}
-
+                   
                     <td className="sticky left-0 z-10 bg-slate-950 px-5 py-5 group-hover:bg-slate-900">
                       <input
                         type="checkbox"
@@ -593,10 +590,7 @@ const AdminTable = ({
                       />
                     </td>
 
-                    {/* -------------------------------------------------- */}
-                    {/* CUSTOMER                                             */}
-                    {/* -------------------------------------------------- */}
-
+              
                     <td className="px-5 py-5 align-top">
                       <div className="flex min-w-[220px] items-center gap-3">
                         <UserAvatar
@@ -614,10 +608,6 @@ const AdminTable = ({
                         </div>
                       </div>
                     </td>
-
-                    {/* -------------------------------------------------- */}
-                    {/* TESTIMONIAL                                          */}
-                    {/* -------------------------------------------------- */}
 
                     <td className="px-5 py-5 align-top">
                       <div className="max-w-[360px]">
@@ -653,19 +643,12 @@ const AdminTable = ({
                       />
                     </td>
 
-                    {/* -------------------------------------------------- */}
-                    {/* MEDIA                                                */}
-                    {/* -------------------------------------------------- */}
-
                     <td className="px-5 py-5 align-top">
                       <MediaPreview
                         mediaUrl={testimonial.mediaUrl}
                       />
                     </td>
 
-                    {/* -------------------------------------------------- */}
-                    {/* DATE                                                 */}
-                    {/* -------------------------------------------------- */}
 
                     <td className="px-5 py-5 align-top">
                       <div className="min-w-[120px]">
@@ -678,10 +661,6 @@ const AdminTable = ({
                         </p>
                       </div>
                     </td>
-
-                    {/* -------------------------------------------------- */}
-                    {/* ACTIONS                                              */}
-                    {/* -------------------------------------------------- */}
 
                     <td className="px-5 py-5 align-top">
                       <div className="flex min-w-[210px] flex-wrap gap-2">
@@ -740,10 +719,6 @@ const AdminTable = ({
             </tbody>
           </table>
         </div>
-
-        {/* -------------------------------------------------------------- */}
-        {/* FOOTER                                                         */}
-        {/* -------------------------------------------------------------- */}
 
         <div className="flex flex-col gap-3 border-t border-white/10 bg-white/[0.02] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-xs text-slate-500">

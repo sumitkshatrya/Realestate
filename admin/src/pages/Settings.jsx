@@ -23,8 +23,8 @@ const Settings = () => {
   // Form states
   const [platformConfig, setPlatformConfig] = useState({
     siteName: "Realestate Elite Portal",
-    supportEmail: "support@realestate.com",
-    contactPhone: "+91 98765 43210",
+    supportEmail: "skumar21082001@gmail.com",
+    contactPhone: "+91 9528865099",
     currency: "INR (₹)",
     maintenanceMode: false,
   });

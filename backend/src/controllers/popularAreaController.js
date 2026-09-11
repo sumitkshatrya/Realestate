@@ -7,7 +7,9 @@ import ErrorHandler from "../middleware/error.js";
 // @route   GET /api/popular-areas
 // @access  Public
 export const getPopularAreas = catchAsyncError(async (req, res, next) => {
-  const areas = await PopularArea.find({ isActive: true }).sort({ name: 1 });
+  const { includeInactive } = req.query;
+  const filter = includeInactive === "true" ? {} : { isActive: true };
+  const areas = await PopularArea.find(filter).sort({ name: 1 });
   res.status(200).json(new ApiResponse(areas, "Popular areas fetched successfully."));
 });
 
@@ -15,8 +17,23 @@ export const getPopularAreas = catchAsyncError(async (req, res, next) => {
 // @route   POST /api/popular-areas
 // @access  Admin
 export const createPopularArea = catchAsyncError(async (req, res, next) => {
-  const { name, propertyCount, imageUrl } = req.body;
-  const area = await PopularArea.create({ name, propertyCount, imageUrl });
+  let finalImageUrl = req.body.imageUrl;
+  if (req.file) {
+    finalImageUrl = `/uploads/${req.file.filename}`;
+  }
+
+  if (!finalImageUrl) {
+    return next(new ErrorHandler("Please upload an image file or provide an image URL.", 400));
+  }
+
+  const { name, propertyCount, isActive } = req.body;
+  const area = await PopularArea.create({
+    name,
+    propertyCount,
+    imageUrl: finalImageUrl,
+    isActive: isActive !== undefined ? isActive : true,
+  });
+
   res.status(201).json(new ApiResponse(area, "Popular area created successfully."));
 });
 
@@ -25,7 +42,13 @@ export const createPopularArea = catchAsyncError(async (req, res, next) => {
 // @access  Admin
 export const updatePopularArea = catchAsyncError(async (req, res, next) => {
   const { id } = req.params;
-  const updatedArea = await PopularArea.findByIdAndUpdate(id, req.body, {
+  const updateData = { ...req.body };
+
+  if (req.file) {
+    updateData.imageUrl = `/uploads/${req.file.filename}`;
+  }
+
+  const updatedArea = await PopularArea.findByIdAndUpdate(id, updateData, {
     new: true,
     runValidators: true,
   });

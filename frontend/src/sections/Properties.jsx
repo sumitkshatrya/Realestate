@@ -314,7 +314,11 @@ const Properties = ({ searchCriteria, setSearchCriteria }) => {
                       document.getElementById("selected-property-map")?.scrollIntoView({ behavior: "smooth", block: "center" });
                     }, 100);
                   }}
-                  isFavorite={user?.favorites?.includes(item._id)}
+                  isFavorite={Boolean(
+                    (user?.favorites || []).some(
+                      (f) => String(f?._id || f) === String(item._id || item.id)
+                    )
+                  )}
                   isAuthenticated={isAuthenticated}
                 />
               ))}

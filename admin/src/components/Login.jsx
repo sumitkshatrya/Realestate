@@ -78,10 +78,7 @@ const Login = () => {
   return (
     <div className="relative min-h-screen overflow-hidden bg-slate-950">
 
-      {/* =========================================================
-          VILLA BACKGROUND
-      ========================================================== */}
-
+     
       <Motion.div
         className="absolute inset-0"
         initial={{ scale: 1.08, opacity: 0 }}
@@ -107,19 +104,11 @@ const Login = () => {
         />
       </Motion.div>
 
-      {/* =========================================================
-          DARK LUXURY OVERLAY
-      ========================================================== */}
-
       <div className="absolute inset-0 bg-black/55" />
 
       <div className="absolute inset-0 bg-gradient-to-br from-slate-950/90 via-slate-950/45 to-red-950/50" />
 
       <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-black/30" />
-
-      {/* =========================================================
-          ANIMATED LIGHT GLOW
-      ========================================================== */}
 
       <Motion.div
         className="absolute -left-32 top-10 h-96 w-96 rounded-full bg-red-500/20 blur-3xl"

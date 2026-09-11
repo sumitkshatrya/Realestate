@@ -22,14 +22,36 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
+  const saveSession = useCallback((userData, responseData) => {
+    if (!userData) return;
+    const token =
+      responseData?.token ||
+      responseData?.accessToken ||
+      userData?.token ||
+      userData?.accessToken;
+    if (token) {
+      localStorage.setItem("userToken", token);
+    }
+    try {
+      localStorage.setItem("user", JSON.stringify(userData));
+    } catch (err) {
+      console.error("Failed to save user in localStorage:", err);
+    }
+    setUser(userData);
+  }, []);
+
   useEffect(() => {
+    const handleUnauthorized = () => {
+      setUser(null);
+    };
+    window.addEventListener("auth:unauthorized", handleUnauthorized);
+
     const verifyUser = async () => {
       try {
         const response = await authAPI.verify();
         const userData = response?.data || response?.user || null;
         if (userData) {
-          setUser(userData);
-          localStorage.setItem("user", JSON.stringify(userData));
+          saveSession(userData, response);
           return;
         }
       } catch {
@@ -38,23 +60,31 @@ export const AuthProvider = ({ children }) => {
       handleStoredUser();
     };
     verifyUser();
-  }, [handleStoredUser]);
 
-  const login = useCallback(async (credentials) => {
-    const response = await authAPI.login(credentials);
-    const userData = response?.data || response?.user || null;
-    if (userData) {
-      setUser(userData);
-      localStorage.setItem("user", JSON.stringify(userData));
-    }
-    return response;
-  }, []);
+    return () => {
+      window.removeEventListener("auth:unauthorized", handleUnauthorized);
+    };
+  }, [handleStoredUser, saveSession]);
 
-  const signup = useCallback((userData) => {
-    if (!userData) return;
-    setUser(userData);
-    localStorage.setItem("user", JSON.stringify(userData));
-  }, []);
+  const login = useCallback(
+    async (credentials) => {
+      const response = await authAPI.login(credentials);
+      const userData = response?.data || response?.user || null;
+      if (userData) {
+        saveSession(userData, response);
+      }
+      return response;
+    },
+    [saveSession]
+  );
+
+  const signup = useCallback(
+    (userData, responseData) => {
+      if (!userData) return;
+      saveSession(userData, responseData);
+    },
+    [saveSession]
+  );
 
   const logout = useCallback(async () => {
     try {
@@ -68,6 +98,19 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
+  const updateUser = useCallback((updatedFields) => {
+    setUser((prevUser) => {
+      if (!prevUser) return updatedFields || null;
+      const newUser = { ...prevUser, ...updatedFields };
+      try {
+        localStorage.setItem("user", JSON.stringify(newUser));
+      } catch (err) {
+        console.error("Failed to update user in localStorage:", err);
+      }
+      return newUser;
+    });
+  }, []);
+
   const isAuthenticated = !!user;
 
   const value = {
@@ -76,6 +119,7 @@ export const AuthProvider = ({ children }) => {
     login,
     signup,
     logout,
+    updateUser,
     loading,
   };
 

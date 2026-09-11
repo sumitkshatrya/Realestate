@@ -4,8 +4,9 @@ import {
   createPopularArea,
   updatePopularArea,
   deletePopularArea,
-} from "../controllers/popularAreaController.js";
+} from "../controllers/PopularAreaController.js";
 import { protectAdmin } from "../middleware/Auth.Middleware.js";
+import upload from "../middleware/multer.js";
 
 const router = express.Router();
 
@@ -13,8 +14,8 @@ const router = express.Router();
 router.get("/", getPopularAreas);
 
 // Admin routes
-router.post("/", protectAdmin, createPopularArea);
-router.put("/:id", protectAdmin, updatePopularArea);
+router.post("/", protectAdmin, upload.single("image"), createPopularArea);
+router.put("/:id", protectAdmin, upload.single("image"), updatePopularArea);
 router.delete("/:id", protectAdmin, deletePopularArea);
 
 export default router;

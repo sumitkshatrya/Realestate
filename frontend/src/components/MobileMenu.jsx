@@ -146,7 +146,7 @@ const MobileMenu = ({
             >
               <div>
                 <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                  RealEstate
+                  PROPS<span className="text-amber-400">ESTATE</span>
                 </h2>
                 <p className="text-sm text-gray-500">
                   Luxury Living

@@ -44,6 +44,13 @@ const MapBounds = ({ properties }) => {
   return null;
 };
 
+const getImageUrl = (url) => {
+  if (!url) return "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=800&q=80";
+  if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:")) return url;
+  const backendBase = (import.meta.env.VITE_BACKEND_URL || "http://localhost:8080").replace(/\/+$/, "");
+  return `${backendBase}${url.startsWith("/") ? "" : "/"}${url}`;
+};
+
 const ListingsMap = ({ properties, onVisibleChange, hoveredPropertyId, onMarkerClick }) => {
   const propertiesWithCoords = useMemo(() => {
     return properties.filter(p => p.latitude && p.longitude);
@@ -79,7 +86,7 @@ const ListingsMap = ({ properties, onVisibleChange, hoveredPropertyId, onMarkerC
           >
             <Popup>
               <div className="w-64">
-                <img src={property.images[0]} alt={property.name} className="w-full h-32 object-cover rounded-lg mb-2" />
+                <img src={getImageUrl(Array.isArray(property.images) ? property.images[0] : property.images)} alt={property.name} className="w-full h-32 object-cover rounded-lg mb-2" />
                 <h3 className="font-bold text-lg mb-1 truncate" title={property.name}>{property.name}</h3>
                 <p className="text-rose-600 font-bold text-lg mb-3">{property.price}</p>
                 

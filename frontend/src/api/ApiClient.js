@@ -35,7 +35,13 @@ class ApiClient {
       const response = await fetch(url, config);
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: "An unknown error occurred." }));
-        throw new Error(errorData.message || errorData.error || `HTTP error! status: ${response.status}`);
+        const errorMessage = errorData.message || errorData.error || `HTTP error! status: ${response.status}`;
+        if (response.status === 401 && !formattedEndpoint.includes("/login") && !formattedEndpoint.includes("/verify")) {
+          localStorage.removeItem("userToken");
+          localStorage.removeItem("user");
+          window.dispatchEvent(new Event("auth:unauthorized"));
+        }
+        throw new Error(errorMessage);
       }
       return response.json();
     } catch (error) {

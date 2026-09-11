@@ -319,10 +319,6 @@ const ConfirmationModal = ({
               </div>
             </div>
 
-            {/* ======================================================== */}
-            {/* BOTTOM SHINE                                             */}
-            {/* ======================================================== */}
-
             <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-white/[0.015] to-transparent" />
           </motion.div>
         </div>

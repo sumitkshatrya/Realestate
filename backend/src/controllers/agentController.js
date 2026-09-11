@@ -19,8 +19,8 @@ export const getAgentProfile = catchAsyncError(async (req, res, next) => {
     user = {
       _id: id,
       username: "Senior Estate Specialist",
-      email: "contact@realestate.com",
-      phone: "+1 (800) 555-0199",
+      email: "skumar21082001@gmail.com",
+      phone: "+91 9528865099",
       bio: "Dedicated luxury property consultant with over 10 years of experience matching clients with premier residential and commercial properties.",
       profilePicture: "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=400&q=80",
       propertiesSold: 42,

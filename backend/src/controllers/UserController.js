@@ -2,24 +2,23 @@ import ErrorHandler from "../middleware/error.js";
 import catchAsyncError from "../middleware/catchAsyncError.js";
 import User from "../models/User.js";
 import { sendEmail } from "../utils/sendEmail.js";
-import twilio from "twilio";
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
 import ApiResponse from "../utils/ApiResponse.js";
 
 dotenv.config();
-const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
 
 // ================= REGISTER =================
 const register = catchAsyncError(async (req, res, next) => {
   try {
     const { username, email, password, phone, verificationMethod } = req.body;
+    const method = verificationMethod || "email";
 
-    if (!username || !email || !password || !phone || !verificationMethod) {
+    if (!username || !email || !password || !phone) {
       return next(new ErrorHandler("All fields are required", 400));
     }
 
-    if (!["email", "sms", "call"].includes(verificationMethod)) {
+    if (!["email", "sms", "call"].includes(method)) {
       return next(new ErrorHandler("Invalid verification method", 400));
     }
 
@@ -58,7 +57,7 @@ const register = catchAsyncError(async (req, res, next) => {
         email,
         phone,
         password,
-        verificationMethod,
+        verificationMethod: method,
       });
     }
 
@@ -67,7 +66,7 @@ const register = catchAsyncError(async (req, res, next) => {
 
     try {
       await sendVerificationCode(
-        verificationMethod,
+        method,
         verificationCode,
         phone,
         email,
@@ -162,6 +161,8 @@ const loginUser = async (req, res, next) => {
             phone: user.phone,
             accountVerified: user.accountVerified,
             favorites: user.favorites || [],
+            token: accessToken,
+            accessToken: accessToken,
           },
           "Login successful",
           200
@@ -366,31 +367,15 @@ async function sendVerificationCode(
   username
 ) {
   try {
-    if (verificationMethod === "email") {
+    if (email) {
       const message = generateEmailTemplate(username, verificationCode);
       await sendEmail(email, "Your verification code", message);
-      console.log("📧 Email sent successfully to:", email);
-    } else if (verificationMethod === "sms") {
-      await client.messages.create({
-        body: `Your verification code is ${verificationCode}`,
-        from: process.env.TWILIO_PHONE_NUMBER,
-        to: phone,
-      });
-      console.log("📩 SMS sent successfully to:", phone);
-    } else if (verificationMethod === "call") {
-      const codeWithSpaces = verificationCode.toString().split("").join(" ");
-      const call = await client.calls.create({
-        twiml: `<Response><Say>Your verification code is ${codeWithSpaces}</Say></Response>`,
-        from: process.env.TWILIO_PHONE_NUMBER,
-        to: phone,
-      });
-      console.log("📞 Voice call initiated:", call.sid);
-    } else {
-      throw new ErrorHandler("Invalid verification method", 400);
+      console.log("📧 Verification email sent successfully to:", email);
     }
+    console.log(`🔑 [VERIFICATION CODE] OTP for ${phone || email} (${username}): ${verificationCode}`);
   } catch (err) {
-    console.error("sendVerificationCode error:", err);
-    throw new ErrorHandler(err.message || "Failed to send verification code", 500);
+    console.error("sendVerificationCode email error:", err.message || err);
+    console.log(`🔑 [DEV VERIFICATION CODE] OTP for ${phone || email} (${username}): ${verificationCode}`);
   }
 }
 
@@ -447,18 +432,46 @@ const verifyOtp = catchAsyncError(async (req, res, next) => {
   user.verificationCodeExpire = undefined;
   await user.save();
 
-  // 6. Return success
-  res.status(200).json({
-    success: true,
-    message: "✅ Account verified successfully",
-    user: {
-      id: user._id,
-      username: user.username,
-      email: user.email,
-      phone: user.phone,
-      accountVerified: user.accountVerified,
-    },
-  });
+  // Generate JWT tokens
+  const accessToken = jwt.sign(
+    { id: user._id },
+    process.env.ACCESS_TOKEN_SECRET,
+    { expiresIn: "1h" }
+  );
+
+  const refreshToken = jwt.sign(
+    { id: user._id },
+    process.env.REFRESH_TOKEN_SECRET,
+    { expiresIn: "7d" }
+  );
+
+  const cookieOptions = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  };
+
+  // 6. Return success with token
+  res
+    .cookie("accessToken", accessToken, cookieOptions)
+    .cookie("refreshToken", refreshToken, cookieOptions)
+    .status(200)
+    .json({
+      success: true,
+      message: "✅ Account verified successfully",
+      user: {
+        _id: user._id,
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        phone: user.phone,
+        accountVerified: user.accountVerified,
+        favorites: user.favorites || [],
+        token: accessToken,
+        accessToken: accessToken,
+      },
+    });
 });
 
 // ================= TOGGLE FAVORITE =================
@@ -470,7 +483,8 @@ const toggleFavorite = catchAsyncError(async (req, res, next) => {
     return next(new ErrorHandler("User not found", 404));
   }
 
-  const index = user.favorites.indexOf(propertyId);
+  const stringFavorites = (user.favorites || []).map((fav) => (fav?._id || fav).toString());
+  const index = stringFavorites.indexOf(String(propertyId));
   let message;
 
   if (index === -1) {
@@ -484,7 +498,8 @@ const toggleFavorite = catchAsyncError(async (req, res, next) => {
   }
 
   await user.save();
-  res.status(200).json(new ApiResponse({ favorites: user.favorites }, message, 200));
+  const updatedIds = user.favorites.map((fav) => (fav?._id || fav).toString());
+  res.status(200).json(new ApiResponse({ favorites: updatedIds }, message, 200));
 });
 
 // ================= GET FAVORITE PROPERTIES =================

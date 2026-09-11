@@ -1,13 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { AnimatePresence, motion as Motion } from "framer-motion";
+import { FaStar, FaUpload, FaArrowLeft, FaPaperPlane } from "react-icons/fa";
 import { 
-  FaStar, 
-  FaUpload, 
-  FaCircleCheck, 
-  FaArrowLeft, 
   FaXmark, 
-  FaPaperPlane,
   FaUser,
   FaEnvelope,
   FaBriefcase,
@@ -16,7 +12,8 @@ import {
   FaQuoteLeft,
   FaShieldHalved,
   FaWandMagicSparkles,
-  FaImage
+  FaImage,
+  FaCircleCheck
 } from "react-icons/fa6";
 import { submitTestimonial } from "../api/testimonialApi.js";
 import { useAuth } from "../context/useAuth";

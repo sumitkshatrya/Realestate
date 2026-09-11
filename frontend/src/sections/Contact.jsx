@@ -330,8 +330,8 @@ const Contact = () => {
                   </div>
                   <div>
                     <div className="text-xs text-slate-400 font-medium">Phone Support</div>
-                    <div className="text-sm font-semibold text-slate-200">+1 (555) 123-4567</div>
-                    <div className="text-[11px] text-slate-500">Mon-Fri 8am - 8pm EST</div>
+                    <div className="text-sm font-semibold text-slate-200">+91 9528865099</div>
+                    <div className="text-[11px] text-slate-500">Mon-Fri 8am - 8pm IST</div>
                   </div>
                 </div>
 
@@ -341,7 +341,7 @@ const Contact = () => {
                   </div>
                   <div>
                     <div className="text-xs text-slate-400 font-medium">Email Inquiry</div>
-                    <div className="text-sm font-semibold text-slate-200">hello@realestate.com</div>
+                    <div className="text-sm font-semibold text-slate-200">skumar21082001@gmail.com</div>
                     <div className="text-[11px] text-slate-500">24/7 digital intake</div>
                   </div>
                 </div>
@@ -353,7 +353,7 @@ const Contact = () => {
                   <div>
                     <div className="text-xs text-slate-400 font-medium">Headquarters</div>
                     <div className="text-sm font-semibold text-slate-200">100 Real Estate Blvd, Suite 400</div>
-                    <div className="text-[11px] text-slate-500">New York, NY 10001</div>
+                    <div className="text-[11px] text-slate-500">India</div>
                   </div>
                 </div>
               </div>

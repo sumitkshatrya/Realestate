@@ -85,7 +85,7 @@ const Header = () => {
           </div>
           <div>
             <h1 className="text-xl font-extrabold tracking-tight text-white flex items-center gap-1">
-              LUX<span className="text-amber-400 font-light">ESTATE</span>
+              PROPS<span className="text-amber-400 font-light">ESTATE</span>
             </h1>
             <p className="text-[10px] uppercase tracking-widest text-slate-400 font-medium">Prime Living</p>
           </div>
@@ -240,4 +240,4 @@ const Header = () => {
   );
 };
 
-export default Header;
+export default Header;

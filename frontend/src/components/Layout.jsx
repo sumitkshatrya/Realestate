@@ -7,7 +7,7 @@ const Layout = () => {
   return (
     <>
       <Header />
-      <Outlet /> {/* This will render the matched child route element */}
+      <Outlet /> 
       <Footer />
     </>
   );

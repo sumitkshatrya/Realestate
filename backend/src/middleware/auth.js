@@ -22,15 +22,22 @@ export const verifyToken = catchAsyncError(async (req, res, next) => {
       return next(new ErrorHandler("Unauthorized access - no token provided", 401));
     }
 
-    // 3️⃣ Verify token
-    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
-    // It's better practice to not select out the refresh token here, but in the controller if needed.
+    // 3️⃣ Verify token with fallback
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET || "testing-realstate");
+    } catch {
+      try {
+        decoded = jwt.verify(token, process.env.JWT_SECRET || "testing-realstate");
+      } catch (err) {
+        throw err;
+      }
+    }
+
     const user = await User.findById(decoded?.id);
 
     if (!user) {
-      return res
-        .status(401)
-        .json({ message: "unauthorized access - user not found" });
+      return next(new ErrorHandler("Unauthorized access - user not found", 401));
     }
 
     req.user = user;

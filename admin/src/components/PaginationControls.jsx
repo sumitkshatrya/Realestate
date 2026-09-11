@@ -210,10 +210,7 @@ const PaginationControls = ({
       className="mt-6 rounded-2xl border border-white/10 bg-slate-950/70 p-3 shadow-xl backdrop-blur-xl sm:p-4"
     >
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        {/* ================================================================ */}
-        {/* SUMMARY                                                          */}
-        {/* ================================================================ */}
-
+       
         <div className="order-2 text-center lg:order-1 lg:text-left">
           {summary ? (
             <p className="text-xs text-slate-500">
@@ -243,10 +240,6 @@ const PaginationControls = ({
             </p>
           )}
         </div>
-
-        {/* ================================================================ */}
-        {/* CONTROLS                                                         */}
-        {/* ================================================================ */}
 
         <div className="order-1 flex items-center justify-center gap-1.5 lg:order-2">
           {/* First */}

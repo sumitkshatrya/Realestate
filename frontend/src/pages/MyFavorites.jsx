@@ -16,7 +16,7 @@ const MyFavorites = () => {
   const [viewMode, setViewMode] = useState("list");
   const [visibleOnMap, setVisibleOnMap] = useState([]);
   const [hoveredPropertyId, setHoveredPropertyId] = useState(null);
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, updateUser } = useAuth();
 
   const parsePrice = (priceString) =>
     parseFloat((priceString || "").replace(/[^0-9.-]+/g, "")) || 0;
@@ -31,9 +31,15 @@ const MyFavorites = () => {
       try {
         setLoading(true);
         const response = await userAPI.getFavorites();
-        setFavorites(response.data || []);
+        const favList = response.data || [];
+        setFavorites(favList);
+        if (updateUser) {
+          updateUser({ favorites: favList.map((p) => p._id) });
+        }
       } catch (err) {
-        setError("Failed to load your saved properties.");
+        if (!err?.message?.toLowerCase().includes("unauthorized")) {
+          setError("Failed to load your saved properties.");
+        }
         console.error(err);
       } finally {
         setLoading(false);
@@ -41,7 +47,7 @@ const MyFavorites = () => {
     };
 
     fetchFavorites();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, updateUser]);
 
   const sortedFavorites = useMemo(() => {
     const sorted = [...favorites];
@@ -66,10 +72,18 @@ const MyFavorites = () => {
     const propertyToRemove = favorites.find((p) => p._id === propertyId);
     if (!propertyToRemove) return;
 
-    setFavorites((prev) => prev.filter((p) => p._id !== propertyId));
+    const newFavs = favorites.filter((p) => p._id !== propertyId);
+    setFavorites(newFavs);
+    if (updateUser) {
+      updateUser({ favorites: newFavs.map((p) => p._id) });
+    }
 
     try {
-      const removePromise = userAPI.toggleFavorite(propertyId);
+      const response = await userAPI.toggleFavorite(propertyId);
+      if (response?.data?.favorites && updateUser) {
+        updateUser({ favorites: response.data.favorites });
+      }
+
       toast((t) => (
         <div className="flex items-center justify-between gap-4">
           <span className="text-sm font-medium text-slate-800">Removed from saved homes.</span>
@@ -78,11 +92,21 @@ const MyFavorites = () => {
             onClick={async () => {
               toast.dismiss(t.id);
               setFavorites(originalFavorites);
+              if (updateUser) {
+                updateUser({ favorites: originalFavorites.map((p) => p._id) });
+              }
               try {
-                await userAPI.toggleFavorite(propertyId);
+                const res = await userAPI.toggleFavorite(propertyId);
+                if (res?.data?.favorites && updateUser) {
+                  updateUser({ favorites: res.data.favorites });
+                }
               } catch (undoErr) {
                 console.error(undoErr);
                 toast.error("Failed to restore property.");
+                setFavorites(newFavs);
+                if (updateUser) {
+                  updateUser({ favorites: newFavs.map((p) => p._id) });
+                }
               }
             }}
           >
@@ -90,11 +114,13 @@ const MyFavorites = () => {
           </button>
         </div>
       ));
-      await removePromise;
     } catch (err) {
       console.error(err);
       toast.error("Failed to remove saved property.");
       setFavorites(originalFavorites);
+      if (updateUser) {
+        updateUser({ favorites: originalFavorites.map((p) => p._id) });
+      }
     }
   };
 

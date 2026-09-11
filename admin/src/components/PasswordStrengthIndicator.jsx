@@ -181,10 +181,7 @@ const PasswordStrengthIndicator = ({
         </div>
       )}
 
-      {/* ================================================================== */}
-      {/* REQUIREMENTS                                                        */}
-      {/* ================================================================== */}
-
+     
       {showRequirements && (
         <div>
           <div className="mb-2 flex items-center justify-between">

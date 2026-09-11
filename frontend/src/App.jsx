@@ -21,6 +21,7 @@ import MyFavorites from "./pages/MyFavorites";
 import UserProfile from "./pages/UserProfile";
 import AboutPage from "./pages/AboutPage"; 
 import AgentProfile from "./pages/AgentProfile"; 
+import ServiceDetail from "./pages/ServiceDetail";
 import { useEffect, useState } from "react";
 
 const Home = () => {
@@ -73,6 +74,8 @@ const App = () => {
           <Route path="/about-us" element={<AboutPage />} />
           <Route path="/submit-testimonial" element={<SubmitTestimonial />} />
           <Route path="/properties/:id" element={<PropertyDetail />} />
+          <Route path="/services" element={<ServiceDetail />} />
+          <Route path="/services/:id" element={<ServiceDetail />} />
           <Route path="/my-favorites" element={<MyFavorites />} />
           <Route path="/profile" element={<UserProfile />} />
           <Route path="/agent/:id" element={<AgentProfile />} />

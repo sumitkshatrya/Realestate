@@ -19,9 +19,10 @@ import {
   FaCheck,
 } from "react-icons/fa";
 import { servicesAPI } from "../api/servicesApi";
-import { useFetchData } from "../api/useFetchData";
+import { useFetchData, clearFetchCache } from "../api/useFetchData";
 import { useConfirmationModal } from "./ModalContext";
 import { useForm } from "react-hook-form";
+import { toast } from "react-toastify";
 
 const iconMap = {
   FaHome,
@@ -38,17 +39,17 @@ const iconMap = {
 };
 
 const iconOptions = [
-  { value: "FaHome", label: "Home", icon: FaHome },
-  { value: "FaKey", label: "Key", icon: FaKey },
-  { value: "FaMapMarkerAlt", label: "Location", icon: FaMapMarkerAlt },
-  { value: "FaChartLine", label: "Chart", icon: FaChartLine },
-  { value: "FaBuilding", label: "Building", icon: FaBuilding },
-  { value: "FaTools", label: "Tools", icon: FaTools },
-  { value: "FaHandshake", label: "Handshake", icon: FaHandshake },
-  { value: "FaCity", label: "City", icon: FaCity },
-  { value: "FaSearchDollar", label: "Search Dollar", icon: FaSearchDollar },
-  { value: "FaClipboardList", label: "Clipboard", icon: FaClipboardList },
-  { value: "FaLayerGroup", label: "Services", icon: FaLayerGroup },
+  { value: "FaHome", label: "Home (FaHome)", icon: FaHome },
+  { value: "FaKey", label: "Key / Access (FaKey)", icon: FaKey },
+  { value: "FaMapMarkerAlt", label: "Location (FaMapMarkerAlt)", icon: FaMapMarkerAlt },
+  { value: "FaChartLine", label: "Valuation / Analytics (FaChartLine)", icon: FaChartLine },
+  { value: "FaBuilding", label: "Property / Management (FaBuilding)", icon: FaBuilding },
+  { value: "FaTools", label: "Maintenance (FaTools)", icon: FaTools },
+  { value: "FaHandshake", label: "Deals & Advisory (FaHandshake)", icon: FaHandshake },
+  { value: "FaCity", label: "Commercial / City (FaCity)", icon: FaCity },
+  { value: "FaSearchDollar", label: "Investment Search (FaSearchDollar)", icon: FaSearchDollar },
+  { value: "FaClipboardList", label: "Legal / Audit (FaClipboardList)", icon: FaClipboardList },
+  { value: "FaLayerGroup", label: "General Service (FaLayerGroup)", icon: FaLayerGroup },
 ];
 
 const defaultForm = {
@@ -99,15 +100,26 @@ const ServicesManager = () => {
 
   const onSubmit = async (data) => {
     try {
+      const payload = {
+        ...data,
+        order: Number(data.order) || 0,
+        slug: data.title.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, ""),
+      };
+
       if (editingService) {
-        await servicesAPI.updateService(editingService._id, data);
+        await servicesAPI.updateService(editingService._id, payload);
+        toast.success("Service updated successfully!");
       } else {
-        await servicesAPI.createService(data);
+        await servicesAPI.createService(payload);
+        toast.success("New service created successfully!");
       }
+      
       closeDrawer();
+      clearFetchCache();
       await fetchServices();
     } catch (error) {
       console.error(error);
+      toast.error(error.response?.data?.message || "Failed to save service. Please try again.");
     }
   };
 
@@ -118,9 +130,12 @@ const ServicesManager = () => {
       onConfirm: async () => {
         try {
           await servicesAPI.deleteService(id);
+          toast.success("Service deleted successfully.");
+          clearFetchCache();
           await fetchServices();
         } catch (error) {
           console.error(error);
+          toast.error("Failed to delete service.");
         }
       },
     });
@@ -132,9 +147,12 @@ const ServicesManager = () => {
         ...service,
         isActive: service.isActive === false,
       });
+      toast.info(`Service ${service.isActive !== false ? "deactivated" : "activated"}.`);
+      clearFetchCache();
       await fetchServices();
     } catch (error) {
       console.error(error);
+      toast.error("Failed to update service status.");
     }
   };
 
@@ -153,7 +171,7 @@ const ServicesManager = () => {
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-white mt-2">Platform Services</h1>
           <p className="text-xs sm:text-sm text-slate-400 mt-1">
-            Manage real estate services, consulting offerings, and platform features.
+            Create and manage real estate services, consulting offerings, and platform features.
           </p>
         </div>
 
@@ -170,9 +188,13 @@ const ServicesManager = () => {
         </div>
       ) : (services || []).length === 0 ? (
         <div className="rounded-3xl border border-white/10 bg-slate-900/60 p-16 text-center">
-          <FaLayerGroup className="text-3xl text-slate-600 mx-auto mb-3" />
+          <FaLayerGroup className="text-4xl text-slate-600 mx-auto mb-3" />
           <p className="text-base font-bold text-white">No Services Found</p>
-          <p className="text-xs text-slate-400 mt-1">Add client offerings and services to display on the public application.</p>
+          <p className="text-xs text-slate-400 mt-1 mb-4">Add client offerings and services to display on the public application.</p>
+          <button onClick={openAddDrawer} className="btn btn-primary inline-flex items-center gap-2">
+            <FaPlus className="text-xs" />
+            <span>Create First Service</span>
+          </button>
         </div>
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -224,14 +246,14 @@ const ServicesManager = () => {
                   </button>
                   <button
                     onClick={() => handleEdit(service)}
-                    className="p-2.5 rounded-xl border border-white/10 bg-white/5 text-slate-300 hover:text-white transition"
+                    className="p-2.5 rounded-xl border border-white/10 bg-white/5 text-slate-300 hover:text-white transition cursor-pointer"
                     title="Edit Service"
                   >
                     <FaEdit className="text-xs" />
                   </button>
                   <button
                     onClick={() => handleDelete(service._id)}
-                    className="p-2.5 rounded-xl border border-rose-500/20 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20 transition"
+                    className="p-2.5 rounded-xl border border-rose-500/20 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20 transition cursor-pointer"
                     title="Delete Service"
                   >
                     <FaTrash className="text-xs" />
@@ -265,7 +287,7 @@ const ServicesManager = () => {
                 <h2 className="text-xl font-bold text-white">
                   {editingService ? "Edit Platform Service" : "New Platform Service"}
                 </h2>
-                <button onClick={closeDrawer} className="p-2 rounded-xl border border-white/10 text-slate-400 hover:text-white">
+                <button onClick={closeDrawer} className="p-2 rounded-xl border border-white/10 text-slate-400 hover:text-white cursor-pointer">
                   <FaTimes />
                 </button>
               </div>
@@ -284,9 +306,9 @@ const ServicesManager = () => {
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-300 mb-1">Icon Style</label>
-                  <select {...register("icon")} className="input-field">
+                  <select {...register("icon")} className="input-field cursor-pointer">
                     {iconOptions.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
+                      <option key={opt.value} value={opt.value} className="bg-slate-900 text-white">
                         {opt.label}
                       </option>
                     ))}
@@ -294,21 +316,43 @@ const ServicesManager = () => {
                 </div>
 
                 <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">Display Priority (Order)</label>
+                  <input
+                    type="number"
+                    {...register("order")}
+                    placeholder="0"
+                    className="input-field"
+                  />
+                </div>
+
+                <div>
                   <label className="block text-xs font-semibold text-slate-300 mb-1">Service Description *</label>
                   <textarea
                     rows={4}
                     {...register("description", { required: "Description is required." })}
-                    placeholder="Describe key benefits and features offered..."
-                    className="input-field text-xs"
+                    placeholder="Describe key benefits and features offered to clients..."
+                    className="input-field text-xs resize-none"
                   />
                   {errors.description && <p className="mt-1 text-xs text-red-400">{errors.description.message}</p>}
+                </div>
+
+                <div className="flex items-center gap-2 pt-2">
+                  <input
+                    type="checkbox"
+                    id="isActive"
+                    {...register("isActive")}
+                    className="h-4 w-4 rounded border-slate-700 bg-slate-950 text-rose-500 focus:ring-rose-400 cursor-pointer"
+                  />
+                  <label htmlFor="isActive" className="text-xs font-medium text-slate-300 cursor-pointer">
+                    Publish Service Immediately (Active)
+                  </label>
                 </div>
 
                 <div className="flex justify-end gap-3 pt-4 border-t border-white/10">
                   <button type="button" onClick={closeDrawer} className="btn btn-secondary">
                     Cancel
                   </button>
-                  <button type="submit" disabled={isSubmitting} className="btn btn-primary">
+                  <button type="submit" disabled={isSubmitting} className="btn btn-primary cursor-pointer">
                     <FaCheck className="text-xs" />
                     {editingService ? "Save Changes" : "Create Service"}
                   </button>

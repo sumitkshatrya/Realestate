@@ -16,6 +16,7 @@ import {
   FaArrowLeft,
 } from "react-icons/fa";
 import { authAPI } from "../api/authApi";
+import { useAuth } from "../context/useAuth";
 
 const luxuryBackgrounds = [
   "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1920&q=80",
@@ -24,6 +25,7 @@ const luxuryBackgrounds = [
 ];
 
 export default function SignupForm({ onClose, switchToLogin }) {
+  const { signup } = useAuth();
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -118,13 +120,16 @@ export default function SignupForm({ onClose, switchToLogin }) {
         phone: formData.phone,
         verificationCode: otp.trim(),
       });
-      setSuccess(response?.message || "Verification successful! Redirecting to login...");
+      const userData = response?.user || response?.data || null;
+      if (userData && signup) {
+        signup(userData, response);
+      }
+      setSuccess(response?.message || "Verification successful! Logging you in...");
       setTimeout(() => {
-        if (switchToLogin) {
-          switchToLogin();
-        } else {
-          navigate("/login");
+        if (onClose) {
+          onClose();
         }
+        navigate("/");
       }, 1200);
     } catch (err) {
       setError(err?.message || "Invalid or expired verification code.");
@@ -277,25 +282,6 @@ export default function SignupForm({ onClose, switchToLogin }) {
                 </div>
               </div>
 
-              {/* Verification Method */}
-              <div>
-                <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1">
-                  Verification Method
-                </label>
-                <div className="relative">
-                  <FaShieldAlt className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs" />
-                  <select
-                    name="verificationMethod"
-                    value={formData.verificationMethod}
-                    onChange={handleChange}
-                    className="w-full rounded-xl border border-white/10 bg-slate-950/70 pl-9 pr-3.5 py-2.5 text-xs text-white focus:border-amber-400 focus:outline-none transition cursor-pointer appearance-none"
-                  >
-                    <option value="email" className="bg-slate-900 text-white">Email Code</option>
-                    <option value="sms" className="bg-slate-900 text-white">SMS Code</option>
-                    <option value="call" className="bg-slate-900 text-white">Phone Call</option>
-                  </select>
-                </div>
-              </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
