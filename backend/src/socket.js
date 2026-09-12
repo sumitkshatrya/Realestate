@@ -5,16 +5,23 @@ let io;
 export const initSocket = (httpServer) => {
   io = new Server(httpServer, {
     cors: {
-      origin: "*",
+      origin: (origin, callback) => {
+        // Allow requests with no origin (mobile apps, server-to-server, curl)
+        // or any web origin in production
+        return callback(null, true);
+      },
       methods: ["GET", "POST", "PUT", "DELETE"],
+      credentials: true,
     },
+    transports: ["polling", "websocket"],
+    allowEIO3: true,
   });
 
   io.on("connection", (socket) => {
     console.log(`🔌 Client connected to WebSocket: ${socket.id}`);
 
-    socket.on("disconnect", () => {
-      console.log(`🔌 Client disconnected: ${socket.id}`);
+    socket.on("disconnect", (reason) => {
+      console.log(`🔌 Client disconnected (${socket.id}): ${reason}`);
     });
   });
 
@@ -45,4 +52,3 @@ export const emitPropertyDeleted = (id) => {
     io.emit("property:deleted", { id });
   }
 };
-
