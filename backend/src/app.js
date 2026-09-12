@@ -26,7 +26,7 @@ app.use(
     origin: [
       process.env.FRONTEND_URI,
       process.env.ADMIN_URI,
-      "http://localhost:5174",
+      "http://localhost:5174" || "https://propsestate-admin.onrender.com/",
       "http://localhost:5173"|| "https://propsestate-ytdn.onrender.com/",
     ].filter(Boolean),
     methods: ["POST", "GET", "PUT", "DELETE"],
