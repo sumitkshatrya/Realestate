@@ -12,6 +12,7 @@ import contentRoutes from "./routes/contentRoutes.js"; // Import new content rou
 import tourRoutes from "./routes/tourRoutes.js";
 import popularAreaRoutes from "./routes/popularAreaRoutes.js";
 import agentRoutes from "./routes/agentRoutes.js";
+import aiRoutes from "./routes/aiRoutes.js";
 const app = express();
 
 //  Body parsers & cookies first
@@ -44,6 +45,7 @@ app.use("/api/content", contentRoutes); // Use new content routes
 app.use("/api/tours", tourRoutes);
 app.use("/api/popular-areas", popularAreaRoutes);
 app.use("/api/agents", agentRoutes);
+app.use("/api/ai", aiRoutes);
 //  Test route
 app.get("/", (req, res) => {
   res.send("this is server");

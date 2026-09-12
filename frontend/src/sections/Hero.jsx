@@ -1,9 +1,12 @@
 import React, { useState } from "react";
 import { motion as Motion } from "framer-motion";
 import { FaSearch } from "react-icons/fa";
-import { FaBuilding, FaHouse, FaKey, FaLocationDot } from "react-icons/fa6";
+import { FaBuilding, FaHouse, FaKey, FaLocationDot, FaWandMagicSparkles, FaCompass } from "react-icons/fa6";
 import { scroller } from "react-scroll";
 import heroImage from "../assets/images/hero1.webp";
+import AINaturalSearchBar from "../components/ai/AINaturalSearchBar";
+import AIConciergeModal from "../components/ai/AIConciergeModal";
+import AIFindMyHomeWizard from "../components/ai/AIFindMyHomeWizard";
 
 const stats = [
   {
@@ -24,11 +27,31 @@ const popularTags = ["Beverly Hills", "Waterfront Villa", "Penthouse", "Modern A
 
 const Hero = ({ setSearchCriteria = () => {} }) => {
   const [activeTab, setActiveTab] = useState("sales");
+  const [isConciergeOpen, setIsConciergeOpen] = useState(false);
+  const [isWizardOpen, setIsWizardOpen] = useState(false);
+
   const [formState, setFormState] = useState({
     q: "",
     type: "sales",
     category: "",
   });
+
+  const handleApplyAISearch = (structuredQuery) => {
+    const updated = {
+      ...formState,
+      q: structuredQuery.q || formState.q,
+      purpose: structuredQuery.purpose || formState.type,
+      category: structuredQuery.category || formState.category,
+      type: structuredQuery.purpose || formState.type,
+    };
+    setFormState(updated);
+    setSearchCriteria(updated);
+    scroller.scrollTo("properties", {
+      duration: 800,
+      smooth: "easeInOutQuart",
+      offset: -80,
+    });
+  };
 
   const handleTabChange = (type) => {
     setActiveTab(type);
@@ -96,6 +119,27 @@ const Hero = ({ setSearchCriteria = () => {} }) => {
             <p className="text-base sm:text-lg text-slate-300 max-w-2xl leading-relaxed">
               Explore curated luxury residences, architectural penthouses, beachfront villas, and high-yield commercial portfolios across top-tier global markets.
             </p>
+
+            {/* AI Assistant Quick Actions */}
+            <div className="flex flex-wrap items-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setIsConciergeOpen(true)}
+                className="px-4 py-2.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs shadow-lg transition flex items-center gap-2 cursor-pointer uppercase tracking-wider"
+              >
+                <FaWandMagicSparkles />
+                Ask AI Concierge
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsWizardOpen(true)}
+                className="px-4 py-2.5 rounded-2xl bg-slate-900/90 hover:bg-slate-800 text-white font-bold text-xs shadow-lg border border-slate-700 transition flex items-center gap-2 cursor-pointer"
+              >
+                <FaCompass className="text-amber-400" />
+                Guided "Find My Home" Wizard
+              </button>
+            </div>
 
             {/* Popular Search Tag Pills */}
             <div className="pt-2">
@@ -246,6 +290,18 @@ const Hero = ({ setSearchCriteria = () => {} }) => {
 
         </div>
       </div>
+
+      {/* AI Modals */}
+      <AIConciergeModal
+        isOpen={isConciergeOpen}
+        onClose={() => setIsConciergeOpen(false)}
+        onApplySearch={handleApplyAISearch}
+      />
+      <AIFindMyHomeWizard
+        isOpen={isWizardOpen}
+        onClose={() => setIsWizardOpen(false)}
+        onApplyProfile={handleApplyAISearch}
+      />
     </section>
   );
 };

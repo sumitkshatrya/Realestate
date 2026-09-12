@@ -28,6 +28,7 @@ const MobileMenu = ({
   onLogin,
   onSignup,
   onLogout,
+  onOpenSellModal,
 }) => {
   const menuRef = useFocusTrap(isOpen, onClose);
   const location = useLocation();
@@ -244,6 +245,22 @@ const MobileMenu = ({
                 transition={{ delay: 0.4 }}
                 className="my-8 border-t border-gray-200"
               />
+
+              {/* Sell / Rent CTA */}
+              {onOpenSellModal && (
+                <div className="mb-4">
+                  <button
+                    onClick={() => {
+                      onClose();
+                      onOpenSellModal();
+                    }}
+                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 px-5 py-3.5 font-extrabold text-slate-950 text-sm uppercase tracking-wider shadow-md transition cursor-pointer"
+                  >
+                    <FaBuilding />
+                    List Your Property (Sell / Rent)
+                  </button>
+                </div>
+              )}
 
               {/* Auth */}
               <Motion.div

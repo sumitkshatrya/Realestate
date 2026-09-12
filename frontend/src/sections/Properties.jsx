@@ -1,13 +1,15 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { motion as Motion, AnimatePresence } from "framer-motion";
 import { FaSearch, FaFilter } from "react-icons/fa";
-import { FaMapLocationDot, FaXmark, FaSliders } from "react-icons/fa6";
+import { FaMapLocationDot, FaXmark, FaSliders, FaScaleUnbalanced, FaWandMagicSparkles } from "react-icons/fa6";
 import { useAuth } from "../context/useAuth";
 import { propertyAPI } from "../api/propertyApi";
 import { userAPI } from "../api/userApi.js";
 import { useDebounce } from "../hooks/useDebounce";
 import toast from "react-hot-toast";
 import PropertyCard from "../components/PropertyCard";
+import AINaturalSearchBar from "../components/ai/AINaturalSearchBar";
+import AIPropertyComparisonModal from "../components/ai/AIPropertyComparisonModal";
 
 import { getSocket } from "../api/socketClient";
 
@@ -52,6 +54,28 @@ const Properties = ({ searchCriteria, setSearchCriteria }) => {
   const [activeCategory, setActiveCategory] = useState(searchCriteria.category || "");
   const [activePurpose, setActivePurpose] = useState(searchCriteria.purpose || searchCriteria.type || "");
   const [showMapModal, setShowMapModal] = useState(false);
+
+  // AI Multi-Property Compare State
+  const [comparedProperties, setComparedProperties] = useState([]);
+  const [isCompareModalOpen, setIsCompareModalOpen] = useState(false);
+
+  const handleToggleCompare = (property) => {
+    const propId = property._id || property.id;
+    setComparedProperties((prev) => {
+      const exists = prev.some((p) => String(p._id || p.id) === String(propId));
+      if (exists) {
+        toast.info(`Removed "${property.name}" from comparison`);
+        return prev.filter((p) => String(p._id || p.id) !== String(propId));
+      } else {
+        if (prev.length >= 4) {
+          toast.error("You can compare a maximum of 4 properties at once.");
+          return prev;
+        }
+        toast.success(`Added "${property.name}" to AI comparison!`);
+        return [...prev, property];
+      }
+    });
+  };
 
   const debouncedSearchCriteria = useDebounce(searchCriteria, 400);
   const { user, isAuthenticated, updateUser, loading: authLoading } = useAuth();
@@ -191,6 +215,19 @@ const Properties = ({ searchCriteria, setSearchCriteria }) => {
         {/* Filter Bar Controls */}
         <div className="max-w-4xl mx-auto mb-10 space-y-4">
           
+          {/* AI Natural Language Search */}
+          <AINaturalSearchBar
+            onApplySearch={(structured) => {
+              setSearchCriteria((prev) => ({
+                ...prev,
+                q: structured.q !== undefined ? structured.q : prev.q,
+                purpose: structured.purpose || prev.purpose,
+                category: structured.category || prev.category,
+                type: structured.purpose || prev.type,
+              }));
+            }}
+          />
+
           {/* Purpose Tabs (Buy / Rent / Commercial) */}
           <div className="flex items-center justify-center gap-2 p-1.5 bg-slate-200/70 backdrop-blur-md rounded-2xl max-w-xl mx-auto">
             {purposeList.map((p) => (
@@ -306,6 +343,9 @@ const Properties = ({ searchCriteria, setSearchCriteria }) => {
                 <PropertyCard
                   key={item._id}
                   item={item}
+                  searchCriteria={searchCriteria}
+                  onToggleCompare={handleToggleCompare}
+                  isCompared={comparedProperties.some((p) => String(p._id || p.id) === String(item._id || item.id))}
                   onToggleFavorite={handleToggleFavorite}
                   onSelectProperty={(prop) => {
                     setSelectedProperty(prop);
@@ -380,6 +420,49 @@ const Properties = ({ searchCriteria, setSearchCriteria }) => {
         )}
 
       </div>
+
+      {/* Floating Compare Action Bar */}
+      <AnimatePresence>
+        {comparedProperties.length > 0 && (
+          <Motion.div
+            initial={{ y: 80, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 80, opacity: 0 }}
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-slate-900 text-white rounded-2xl p-4 shadow-2xl border border-slate-700 flex items-center gap-4 max-w-xl w-[92%]"
+          >
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              <FaScaleUnbalanced className="text-amber-400 text-lg shrink-0" />
+              <div className="truncate text-xs">
+                <p className="font-extrabold text-white">{comparedProperties.length} Properties Selected</p>
+                <p className="text-slate-400 truncate">{comparedProperties.map((p) => p.name).join(", ")}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => setComparedProperties([])}
+                className="px-3 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white"
+              >
+                Clear
+              </button>
+              <button
+                onClick={() => setIsCompareModalOpen(true)}
+                className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs shadow-md transition flex items-center gap-1.5 cursor-pointer uppercase tracking-wider"
+              >
+                <FaWandMagicSparkles />
+                Compare with AI
+              </button>
+            </div>
+          </Motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* AI Comparison Modal */}
+      <AIPropertyComparisonModal
+        isOpen={isCompareModalOpen}
+        onClose={() => setIsCompareModalOpen(false)}
+        selectedProperties={comparedProperties}
+      />
     </section>
   );
 };

@@ -14,6 +14,7 @@ import PropertyCard from "../components/PropertyCard";
 import ImageLightbox from "../components/ImageLightbox";
 import PropertyTabs from "../components/PropertyTabs";
 import ContactAgentForm from "../components/ContactAgentForm";
+import AIPropertyInsightsCard from "../components/ai/AIPropertyInsightsCard";
 
 const getImageUrl = (url) => {
   if (!url) return "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80";
@@ -405,6 +406,9 @@ const PropertyDetail = () => {
                 </div>
               </div>
             </div>
+
+            {/* AI Property Intelligence Card */}
+            <AIPropertyInsightsCard property={property} />
 
             {/* Detailed Tabs Component */}
             <div className="bg-white rounded-3xl p-8 border border-slate-200/80 shadow-sm">

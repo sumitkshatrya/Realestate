@@ -1,8 +1,10 @@
 import React from "react";
 import { Link as RouterLink } from "react-router-dom";
 import { motion } from "framer-motion";
-import { FaBath, FaBed, FaMapMarkerAlt, FaHeart, FaArrowRight, FaEye } from "react-icons/fa";
+import { FaBath, FaBed, FaMapMarkerAlt, FaHeart, FaArrowRight } from "react-icons/fa";
+import { FaScaleUnbalanced } from "react-icons/fa6";
 import { MdSpaceDashboard } from "react-icons/md";
+import AIMatchScoreBadge from "./ai/AIMatchScoreBadge";
 
 const getImageUrl = (url) => {
   if (!url) return "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=800&q=80";
@@ -11,11 +13,21 @@ const getImageUrl = (url) => {
   return `${backendBase}${url.startsWith("/") ? "" : "/"}${url}`;
 };
 
-const PropertyCard = ({ property, item, onToggleFavorite, onSelectProperty, isFavorite, isAuthenticated }) => {
+const PropertyCard = ({
+  property,
+  item,
+  onToggleFavorite,
+  onSelectProperty,
+  isFavorite,
+  isAuthenticated,
+  searchCriteria = {},
+  onToggleCompare,
+  isCompared = false,
+}) => {
   const prop = property || item || {};
-  const { _id, images, name, address, price, bed, bath, area, type, category, purpose, status, latitude, longitude } = prop;
+  const { _id, images, name, address, price, bed, bath, area, category, purpose, status, latitude, longitude } = prop;
 
-  const currentPurpose = (purpose || type || "buy").toLowerCase();
+  const currentPurpose = (purpose || prop.type || "buy").toLowerCase();
   const currentStatus = (status || "available").toLowerCase();
 
   const rawImage = Array.isArray(images) && images.length > 0 
@@ -36,10 +48,8 @@ const PropertyCard = ({ property, item, onToggleFavorite, onSelectProperty, isFa
     }
     let url = "";
     if (typeof latitude === "number" && typeof longitude === "number" && !isNaN(latitude) && !isNaN(longitude)) {
-      url = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
       url = `https://maps.google.com/?q=${latitude},${longitude}`;
     } else if (address) {
-      url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
       url = `https://maps.google.com/?q=${encodeURIComponent((name ? name + ", " : "") + address)}`;
     }
     if (url) {
@@ -69,7 +79,7 @@ const PropertyCard = ({ property, item, onToggleFavorite, onSelectProperty, isFa
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent" />
 
           {/* Badges */}
-          <div className="absolute top-4 left-4 flex flex-wrap gap-1.5 z-10">
+          <div className="absolute top-4 left-4 flex flex-wrap gap-1.5 z-10 items-center">
             {/* Purpose Tag */}
             <span
               className={`rounded-full px-3 py-1 text-[11px] font-extrabold uppercase tracking-wider text-white shadow-md ${
@@ -93,7 +103,30 @@ const PropertyCard = ({ property, item, onToggleFavorite, onSelectProperty, isFa
                 {category}
               </span>
             )}
+            {/* AI Match Score Badge */}
+            <AIMatchScoreBadge property={prop} searchCriteria={searchCriteria} />
           </div>
+
+          {/* Compare Checkbox Button */}
+          {onToggleCompare && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                onToggleCompare(prop);
+              }}
+              className={`absolute top-4 right-16 z-20 flex h-9 items-center gap-1.5 rounded-full px-3 text-[10px] font-extrabold uppercase tracking-wider shadow-md backdrop-blur-md transition cursor-pointer ${
+                isCompared
+                  ? "bg-amber-500 text-slate-950 border border-amber-400"
+                  : "bg-slate-900/70 text-slate-200 hover:bg-slate-800 border border-white/20"
+              }`}
+              title="Add to AI comparison"
+            >
+              <FaScaleUnbalanced className="text-xs" />
+              {isCompared ? "Compared" : "+ Compare"}
+            </button>
+          )}
 
           {/* Availability Status Tag */}
           <div className="absolute top-4 right-16 z-10">
