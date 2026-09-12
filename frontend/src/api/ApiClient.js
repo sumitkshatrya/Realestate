@@ -1,6 +1,6 @@
 class ApiClient {
   constructor(baseURL) {
-    const raw = baseURL || import.meta.env.VITE_BACKEND_URL || "http://localhost:8080";
+    const raw = baseURL || import.meta.env.VITE_BACKEND_URL || "http://localhost:8080" ;
     this.baseURL = raw.replace(/\/+$/, "");
   }
 
