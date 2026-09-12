@@ -4,7 +4,7 @@ import {
   createPopularArea,
   updatePopularArea,
   deletePopularArea,
-} from "../controllers/PopularAreaController.js";
+} from "../controllers/popularAreaController.js";
 import { protectAdmin } from "../middleware/Auth.Middleware.js";
 import upload from "../middleware/multer.js";
 
