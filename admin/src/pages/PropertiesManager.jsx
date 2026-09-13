@@ -30,14 +30,7 @@ import { toast } from "react-toastify";
 
 import { getSocket } from "../api/socketClient";
 
-const BASE_URL = import.meta.env.VITE_APP_BASE_URL || "";
 import { getImageUrl } from "../utils/backendUrl";
-
-const getImageUrl = (url) => {
-  if (!url) return "";
-  if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:")) return url;
-  return `${BASE_URL}${url}`;
-};
 
 const defaultForm = {
   name: "",

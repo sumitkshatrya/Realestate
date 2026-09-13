@@ -6,12 +6,6 @@ import { FaScaleUnbalanced } from "react-icons/fa6";
 import { MdSpaceDashboard } from "react-icons/md";
 import AIMatchScoreBadge from "./ai/AIMatchScoreBadge";
 
-const getImageUrl = (url) => {
-  if (!url) return "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=800&q=80";
-  if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:")) return url;
-  const backendBase = (import.meta.env.VITE_BACKEND_URL || "http://localhost:8080").replace(/\/+$/, "");
-  return `${backendBase}${url.startsWith("/") ? "" : "/"}${url}`;
-};
 import { getImageUrl } from "../utils/backendUrl";
 
 const PropertyCard = ({
