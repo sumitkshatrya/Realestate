@@ -5,15 +5,10 @@ import { io } from "socket.io-client";
  */
 const getSocketUrl = () => {
   let raw =
-    import.meta.env.VITE_SOCKET_URL ||
-    import.meta.env.VITE_API_URL ||
-    import.meta.env.VITE_BACKEND_URL ||
-    import.meta.env.VITE_APP_URL ||
-    import.meta.env.VITE_APP_BASE_URL;
+    import.meta.env.VITE_BACKEND_URL 
 
   if (typeof raw === "string" && raw.trim()) {
     let clean = raw.trim();
-    // Handle invalid .env formatting like `"http://localhost:8080" || "https://..."`
     if (clean.includes("||")) {
       const parts = clean.split("||").map((p) => p.trim().replace(/^["']|["']$/g, ""));
       clean = parts.find((p) => p.startsWith("https://") || p.startsWith("http://")) || parts[0];
@@ -24,7 +19,6 @@ const getSocketUrl = () => {
     }
   }
 
-  // Production fallback: If running in browser on non-localhost domain, use window origin
   if (
     typeof window !== "undefined" &&
     window.location &&
