@@ -2,9 +2,9 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { clearFetchCache } from "./useFetchData";
 
-
-const rawBase = import.meta.env.VITE_API_URL;
-const baseURL = rawBase.endsWith("/api") ? rawBase : `${rawBase.replace(/\/+$/, "")}/api`;
+const rawBase = import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL || "http://localhost:8080/api";
+const cleanBase = rawBase.trim().replace(/^["']|["']$/g, "");
+const baseURL = cleanBase.endsWith("/api") ? cleanBase : `${cleanBase.replace(/\/+$/, "")}/api`;
 
 // Create a global Axios instance
 const API = axios.create({
@@ -23,30 +23,30 @@ API.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-
 API.interceptors.response.use(
-  (response) => response, 
+  (response) => response,
   (error) => {
-    
-    if (error.response && error.response.status === 401) {
-      
-      localStorage.removeItem("adminToken");
+    const url = error.config?.url || "";
+    const isAuthOrPasswordEndpoint =
+      url.includes("/login") ||
+      url.includes("/forgot-password") ||
+      url.includes("/reset-password");
 
-      
+    if (error.response && error.response.status === 401 && !isAuthOrPasswordEndpoint) {
+      localStorage.removeItem("adminToken");
       clearFetchCache();
 
-      
       if (window.location.pathname !== "/login") {
         window.location.href = "/login";
       }
     } else {
-     
       const message =
-        error.response?.data?.message || "An unexpected error occurred.";
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        "An unexpected error occurred.";
       toast.error(message);
     }
-    
-    
+
     return Promise.reject(error);
   }
 );

@@ -5,7 +5,7 @@ import { io } from "socket.io-client";
  */
 const getSocketUrl = () => {
   let raw =
-    import.meta.env.VITE_BACKEND_URL
+    import.meta.env.VITE_BACKEND_URL;
 
   if (typeof raw === "string" && raw.trim()) {
     let clean = raw.trim();

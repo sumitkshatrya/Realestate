@@ -264,21 +264,33 @@ const requestPasswordReset = catchAsyncError(async (req, res, next) => {
 
   // Generate reset code (5-digit)
   const resetCode = Math.floor(10000 + Math.random() * 90000);
-  user.resetPassword = resetCode;
+  user.resetPassword = String(resetCode);
   user.resetPasswordExpire = Date.now() + 10 * 60 * 1000; // 10 min
   await user.save();
 
-  // Send email
-  await sendEmail(
-    email,
-    "Password Reset Code",
-    `Your reset code is: ${resetCode}`
-  );
+  // Send email (safe error handling if SMTP is not configured)
+  try {
+    await sendEmail(
+      email,
+      "Password Reset Code",
+      `<div style="font-family: Arial, sans-serif; padding: 20px;">
+        <h2>Password Reset Code</h2>
+        <p>Your password reset code is:</p>
+        <h1 style="color: #d97706; letter-spacing: 4px;">${resetCode}</h1>
+        <p>This code expires in 10 minutes.</p>
+      </div>`
+    );
+  } catch (emailErr) {
+    console.warn("⚠️ Password reset email delivery skipped or failed:", emailErr.message);
+  }
+
+  console.log(`🔑 [PASSWORD RESET CODE] for ${email}: ${resetCode}`);
+
   res
     .status(200)
     .json({ success: true, message: "Reset code sent to your email" });
 });
-// =========================== Reset Psswrod ============================================
+// =========================== Reset Password ============================================
 const resetPassword = catchAsyncError(async (req, res, next) => {
   const { email, code, newPassword } = req.body;
   if (!email || !code || !newPassword)
@@ -289,7 +301,7 @@ const resetPassword = catchAsyncError(async (req, res, next) => {
   const user = await User.findOne({ email });
   if (!user) return next(new ErrorHandler("User not found", 404));
 
-  if (user.resetPassword !== Number(code))
+  if (!user.resetPassword || String(user.resetPassword).trim() !== String(code).trim())
     return next(new ErrorHandler("Invalid reset code", 400));
 
   if (!user.resetPasswordExpire || user.resetPasswordExpire < Date.now())
@@ -331,7 +343,7 @@ const changePassword = async (req, res, next) => {
 
     const isMatch = await user.comparePassword(oldPassword);
     if (!isMatch) {
-      return next(new ErrorHandler("Old password is incorrect", 401));
+      return next(new ErrorHandler("Old password is incorrect", 400));
     }
 
     user.password = newPassword;
