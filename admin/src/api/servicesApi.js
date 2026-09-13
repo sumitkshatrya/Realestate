@@ -1,4 +1,4 @@
-import API from "./axiosInstance"; // Import the global Axios instance
+import API from "./axiosInstance"; 
 
 const normalizeServicesList = (payload) => {
   if (Array.isArray(payload)) {

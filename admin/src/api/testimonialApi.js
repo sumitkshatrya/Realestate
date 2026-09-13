@@ -1,4 +1,4 @@
-import API from "./axiosInstance"; // Import the global Axios instance
+import API from "./axiosInstance"; 
 
 export const adminFetchAll = async (params = {}) => {
   // The base URL is now handled by the global instance, just append the specific path

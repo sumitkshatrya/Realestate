@@ -3,7 +3,7 @@ import { toast } from "react-toastify";
 import { clearFetchCache } from "./useFetchData";
 
 
-const rawBase = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
+const rawBase = import.meta.env.VITE_API_URL;
 const baseURL = rawBase.endsWith("/api") ? rawBase : `${rawBase.replace(/\/+$/, "")}/api`;
 
 // Create a global Axios instance
