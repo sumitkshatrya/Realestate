@@ -66,7 +66,7 @@ export const forgotPassword = async (req, res) => {
     admin.resetPasswordExpire = Date.now() + 10 * 60 * 1000; // 10 minutes
     await admin.save();
 
-    const adminBase = (process.env.ADMIN_URI || "http://localhost:5174").replace(/\/+$/, "");
+    const adminBase = (process.env.ADMIN_URI || "https://propsestate-admin.onrender.com").replace(/\/+$/, "");
     const resetUrl = `${adminBase}/reset-password/${resetToken}`;
 
     try {

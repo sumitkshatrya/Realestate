@@ -1,10 +1,10 @@
 import axios from "axios";
 import { toast } from "react-toastify";
 import { clearFetchCache } from "./useFetchData";
+import { getBackendBaseUrl } from "../utils/backendUrl";
 
-const rawBase = import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL || "http://localhost:8080/api";
-const cleanBase = rawBase.trim().replace(/^["']|["']$/g, "");
-const baseURL = cleanBase.endsWith("/api") ? cleanBase : `${cleanBase.replace(/\/+$/, "")}/api`;
+const base = getBackendBaseUrl();
+const baseURL = `${base}/api`;
 
 // Create a global Axios instance
 const API = axios.create({

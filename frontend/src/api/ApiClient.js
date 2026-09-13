@@ -1,6 +1,8 @@
+import { getBackendBaseUrl } from "../utils/backendUrl";
+
 class ApiClient {
   constructor(baseURL) {
-    const raw = baseURL || import.meta.env.VITE_BACKEND_URL;
+    const raw = baseURL || getBackendBaseUrl();
     this.baseURL = raw.replace(/\/+$/, "");
   }
 

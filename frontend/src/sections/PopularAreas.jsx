@@ -30,12 +30,7 @@ const DEFAULT_AREAS = [
   },
 ];
 
-const getImageUrl = (url) => {
-  if (!url) return "";
-  if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:")) return url;
-  const backendBase = (import.meta.env.VITE_BACKEND_URL || "http://localhost:8080").replace(/\/+$/, "");
-  return `${backendBase}${url.startsWith("/") ? "" : "/"}${url}`;
-};
+import { getImageUrl } from "../utils/backendUrl";
 
 const PopularAreas = () => {
   const [areas, setAreas] = useState([]);

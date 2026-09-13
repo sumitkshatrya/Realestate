@@ -25,12 +25,7 @@ const defaultForm = {
   isActive: true,
 };
 
-const getImageUrl = (url) => {
-  if (!url) return "";
-  if (url.startsWith("http://") || url.startsWith("https://")) return url;
-  const backendBase = (import.meta.env.VITE_API_URL || "http://localhost:8080/api").replace(/\/api\/?$/, "");
-  return `${backendBase}${url.startsWith("/") ? "" : "/"}${url}`;
-};
+import { getImageUrl } from "../utils/backendUrl";
 
 const PopularAreasManager = () => {
   const [editingArea, setEditingArea] = useState(null);

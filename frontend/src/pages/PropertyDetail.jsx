@@ -16,12 +16,7 @@ import PropertyTabs from "../components/PropertyTabs";
 import ContactAgentForm from "../components/ContactAgentForm";
 import AIPropertyInsightsCard from "../components/ai/AIPropertyInsightsCard";
 
-const getImageUrl = (url) => {
-  if (!url) return "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80";
-  if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:")) return url;
-  const backendBase = (import.meta.env.VITE_BACKEND_URL || "http://localhost:8080").replace(/\/+$/, "");
-  return `${backendBase}${url.startsWith("/") ? "" : "/"}${url}`;
-};
+import { getImageUrl } from "../utils/backendUrl";
 
 const PropertyDetail = () => {
   const { id } = useParams();
