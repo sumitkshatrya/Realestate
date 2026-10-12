@@ -36,11 +36,11 @@ const Modal = ({ isOpen, onClose, title, children, maxWidth = "max-w-2xl" }) => 
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 15 }}
             transition={{ duration: 0.25, ease: "easeOut" }}
-            className={`relative w-full ${maxWidth} rounded-3xl bg-white shadow-2xl overflow-hidden border border-slate-200 z-10 my-8`}
+            className={`relative w-full ${maxWidth} max-h-[90vh] flex flex-col rounded-3xl bg-white shadow-2xl overflow-hidden border border-slate-200 z-10 my-4 sm:my-8`}
           >
             {/* Modal Header */}
             {title && (
-              <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 bg-slate-50/50">
+              <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 bg-slate-50/50 shrink-0">
                 <h3 className="text-lg font-bold text-slate-900 tracking-tight">{title}</h3>
                 <button
                   type="button"
@@ -54,7 +54,7 @@ const Modal = ({ isOpen, onClose, title, children, maxWidth = "max-w-2xl" }) => 
             )}
 
             {/* Modal Content */}
-            <div className="p-6">{children}</div>
+            <div className="p-4 sm:p-6 overflow-y-auto">{children}</div>
           </motion.div>
         </div>
       )}

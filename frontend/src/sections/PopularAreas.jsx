@@ -64,8 +64,9 @@ const PopularAreas = () => {
   }, []);
 
   return (
-    <section className="section-shell overflow-hidden text-slate-900 py-20">
-      <div className="grid gap-10 lg:grid-cols-[1.05fr_1.95fr] lg:items-end">
+    <section className="bg-[var(--background-color)] pt-16 pb-8 overflow-hidden">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid gap-10 lg:grid-cols-[1.05fr_1.95fr] lg:items-end">
         <motion.div
           initial={{ opacity: 0, y: 28 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -164,8 +165,9 @@ const PopularAreas = () => {
           )}
         </div>
       </div>
-    </section>
-  );
+    </div>
+  </section>
+);
 };
 
 export default PopularAreas;

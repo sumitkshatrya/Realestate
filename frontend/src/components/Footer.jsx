@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FaFacebookF, FaInstagram, FaTwitter, FaYoutube, FaBuilding, FaMobile, FaArrowUp, FaPaperPlane } from 'react-icons/fa6';
+import { FaFacebookF, FaInstagram, FaTwitter, FaYoutube, FaBuilding, FaMobile, FaArrowUp, FaPaperPlane, FaRobot } from 'react-icons/fa6';
 import { Link as ScrollLink } from "react-scroll";
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import { IoMdMail } from 'react-icons/io';
@@ -7,18 +7,26 @@ import toast from 'react-hot-toast';
 import prop7 from '../assets/images/prop7.jpg';
 import prop8 from '../assets/images/prop8.jpg';
 import logo from "../assets/images/logo.png";
+import AiChatBox from './AiChatBox';
 
 const Footer = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [email, setEmail] = useState("");
 
+  const scrollToTop = () => {
+    document.documentElement.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  };
+
   const handleScrollToHomeTop = () => {
     if (location.pathname === '/') {
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      scrollToTop();
     } else {
       navigate('/');
-      setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100);
+      setTimeout(scrollToTop, 100);
     }
   };
 
@@ -68,23 +76,59 @@ const Footer = () => {
 
           {/* Quick Links Column */}
           <div className="flex flex-col gap-4">
-            <h3 className="text-base font-bold text-white uppercase tracking-wider text-amber-400">Navigation</h3>
+            <h3 className="text-base font-bold uppercase tracking-wider text-amber-400">Navigation</h3>
             <ul className="space-y-2.5 text-sm">
-              <li><ScrollLink to="home" smooth={true} offset={-90} className="hover:text-amber-400 transition cursor-pointer">Home & Hero Search</ScrollLink></li>
-              <li><ScrollLink to="about" smooth={true} offset={-90} className="hover:text-amber-400 transition cursor-pointer">About Our Brand</ScrollLink></li>
-              <li><ScrollLink to="properties" smooth={true} offset={-90} className="hover:text-amber-400 transition cursor-pointer">Featured Listings</ScrollLink></li>
-              <li><ScrollLink to="services" smooth={true} offset={-90} className="hover:text-amber-400 transition cursor-pointer">VIP Advisory Services</ScrollLink></li>
-              <li><RouterLink to="/my-favorites" className="hover:text-amber-400 transition">Saved Properties</RouterLink></li>
-              <li><ScrollLink to="contact" smooth={true} offset={-90} className="hover:text-amber-400 transition cursor-pointer">Contact Advisory</ScrollLink></li>
+              {[
+                { title: "Home & Hero Search", id: "home" },
+                { title: "About Our Brand", id: "about" },
+                { title: "Featured Listings", id: "properties" },
+                { title: "VIP Advisory Services", id: "services" },
+                { title: "Contact Advisory", id: "contact" },
+              ].map((link) => (
+                <li key={link.id}>
+                  {location.pathname === "/" ? (
+                    <ScrollLink
+                      to={link.id}
+                      smooth={true}
+                      offset={-90}
+                      className="hover:text-amber-400 transition cursor-pointer"
+                    >
+                      {link.title}
+                    </ScrollLink>
+                  ) : (
+                    <RouterLink
+                      to={`/#${link.id}`}
+                      className="hover:text-amber-400 transition"
+                    >
+                      {link.title}
+                    </RouterLink>
+                  )}
+                </li>
+              ))}
+              <li>
+                <RouterLink to="/my-favorites" className="hover:text-amber-400 transition">
+                  Saved Properties
+                </RouterLink>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={() => window.dispatchEvent(new CustomEvent('open-ai-chat'))}
+                  className="flex items-center gap-1.5 text-amber-400 hover:text-amber-300 font-bold transition cursor-pointer"
+                >
+                  <FaRobot className="size-3.5" />
+                  AI Property Assistant
+                </button>
+              </li>
             </ul>
           </div>
 
           {/* Contact Details Column */}
           <div className="flex flex-col gap-4">
-            <h3 className="text-base font-bold text-white uppercase tracking-wider text-amber-400">Headquarters</h3>
+            <h3 className="text-base font-bold uppercase tracking-wider text-amber-400">Headquarters</h3>
             <div className="flex items-start gap-3 text-sm text-slate-300">
               <FaBuilding className="size-4 mt-1 text-amber-400 shrink-0" />
-              <span>100 Real Estate Blvd, Suite 400,Uttar Pradesh, India</span>
+              <span>100 Real Estate Blvd, Suite 400, Uttar Pradesh, India</span>
             </div>
             <div className="flex items-center gap-3 text-sm text-slate-300">
               <FaMobile className="size-4 text-amber-400 shrink-0" />
@@ -98,7 +142,7 @@ const Footer = () => {
 
           {/* Newsletter Column */}
           <div className="flex flex-col gap-4">
-            <h3 className="text-base font-bold text-white uppercase tracking-wider text-amber-400">VIP Newsletter</h3>
+            <h3 className="text-base font-bold uppercase tracking-wider text-amber-400">VIP Newsletter</h3>
             <p className="text-sm text-slate-400">
               Subscribe to get exclusive first look access to private off-market listings and market insights.
             </p>
@@ -113,7 +157,7 @@ const Footer = () => {
                 />
                 <button
                   type="submit"
-                  className="absolute right-1.5 top-1.5 bottom-1.5 px-4 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 transition"
+                  className="absolute right-1.5 top-1.5 bottom-1.5 px-4 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
                 >
                   <FaPaperPlane className="text-xs" />
                   Join
@@ -126,7 +170,7 @@ const Footer = () => {
 
         {/* Bottom copyright line */}
         <div className="mt-16 border-t border-slate-800/80 pt-8 text-center text-xs text-slate-500 container mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p>&copy; {new Date().getFullYear()} PROPSSTATE Real Estate Inc. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} PROPSESTATE Real Estate Inc. All rights reserved.</p>
           <div className="flex gap-6 text-slate-400">
             <a href="#" className="hover:text-white transition">Privacy Policy</a>
             <a href="#" className="hover:text-white transition">Terms of Service</a>
@@ -135,16 +179,20 @@ const Footer = () => {
         </div>
       </footer>
 
-      {/* Floating Scroll-to-top button */}
-      <div className="fixed bottom-6 right-6 z-50">
+      {/* Floating Scroll-to-top button (stacked neatly above the AI Assistant) */}
+      <div className="fixed bottom-24 right-6 z-40">
         <button
           onClick={handleScrollToHomeTop}
           aria-label="Scroll to top"
-          className="flex items-center justify-center bg-blue-600 hover:bg-blue-500 p-3.5 rounded-full text-white cursor-pointer transition-all duration-300 shadow-xl border border-blue-400/30 hover:scale-110"
+          title="Scroll to top"
+          className="flex items-center justify-center bg-slate-800 hover:bg-amber-500 text-slate-300 hover:text-slate-950 p-3 rounded-full cursor-pointer transition-all duration-300 shadow-lg border border-slate-700/80 hover:border-amber-400 hover:scale-110"
         >
-          <FaArrowUp className="size-4" />
+          <FaArrowUp className="size-3.5" />
         </button>
       </div>
+
+      {/* Floating Bottom-Right AI Assistant Chat Box */}
+      <AiChatBox />
     </>
   );
 };

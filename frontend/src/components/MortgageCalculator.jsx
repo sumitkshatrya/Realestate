@@ -78,29 +78,55 @@ const MortgageCalculator = ({ propertyPrice }) => {
       {/* Inputs */}
       <div className="space-y-5">
         <div>
-          <label className="block text-sm font-semibold mb-2 text-slate-600">Total Amount</label>
-          <input type="number" value={totalAmount} onChange={(e) => setTotalAmount(parseFloat(e.target.value) || 0)} className="form-input" />
+          <label className="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-700">Total Amount ($)</label>
+          <input
+            type="number"
+            value={totalAmount}
+            onChange={(e) => setTotalAmount(parseFloat(e.target.value) || 0)}
+            className="w-full px-4 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition font-medium shadow-sm"
+          />
         </div>
         
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-semibold mb-2 text-slate-600">Down Payment ($)</label>
-            <input type="number" value={downPayment} onChange={handleDownPaymentChange} className="form-input" />
+            <label className="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-700">Down Payment ($)</label>
+            <input
+              type="number"
+              value={downPayment}
+              onChange={handleDownPaymentChange}
+              className="w-full px-4 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition font-medium shadow-sm"
+            />
           </div>
           <div>
-            <label className="block text-sm font-semibold mb-2 text-slate-600">Down Payment (%)</label>
-            <input type="number" value={downPaymentPercentage.toFixed(1)} onChange={handleDownPaymentPercentChange} className="form-input" />
+            <label className="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-700">Down Payment (%)</label>
+            <input
+              type="number"
+              value={downPaymentPercentage.toFixed(1)}
+              onChange={handleDownPaymentPercentChange}
+              className="w-full px-4 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition font-medium shadow-sm"
+            />
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-semibold mb-2 text-slate-600">Interest Rate (%)</label>
-            <input type="number" step="0.1" value={interestRate} onChange={(e) => setInterestRate(parseFloat(e.target.value) || 0)} className="form-input" />
+            <label className="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-700">Interest Rate (%)</label>
+            <input
+              type="number"
+              step="0.1"
+              value={interestRate}
+              onChange={(e) => setInterestRate(parseFloat(e.target.value) || 0)}
+              className="w-full px-4 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition font-medium shadow-sm"
+            />
           </div>
           <div>
-            <label className="block text-sm font-semibold mb-2 text-slate-600">Loan Term (Years)</label>
-            <input type="number" value={loanTerm} onChange={(e) => setLoanTerm(parseFloat(e.target.value) || 0)} className="form-input" />
+            <label className="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-700">Loan Term (Years)</label>
+            <input
+              type="number"
+              value={loanTerm}
+              onChange={(e) => setLoanTerm(parseFloat(e.target.value) || 0)}
+              className="w-full px-4 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition font-medium shadow-sm"
+            />
           </div>
         </div>
       </div>

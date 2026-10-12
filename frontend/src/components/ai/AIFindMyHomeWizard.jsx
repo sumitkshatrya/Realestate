@@ -54,7 +54,7 @@ const AIFindMyHomeWizard = ({ isOpen, onClose, onApplyProfile }) => {
         {step === 1 && (
           <div className="space-y-4 animate-fade-in">
             <h3 className="text-base font-bold text-slate-900">What are you looking to do?</h3>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
               {[
                 { value: "buy", label: "Buy a Home", icon: FaHouse },
                 { value: "rent", label: "Rent Property", icon: FaKey },

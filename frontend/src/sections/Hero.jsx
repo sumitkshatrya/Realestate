@@ -4,7 +4,6 @@ import { FaSearch } from "react-icons/fa";
 import { FaBuilding, FaHouse, FaKey, FaLocationDot, FaWandMagicSparkles, FaCompass } from "react-icons/fa6";
 import { scroller } from "react-scroll";
 import heroImage from "../assets/images/hero1.webp";
-import AINaturalSearchBar from "../components/ai/AINaturalSearchBar";
 import AIConciergeModal from "../components/ai/AIConciergeModal";
 import AIFindMyHomeWizard from "../components/ai/AIFindMyHomeWizard";
 
@@ -89,7 +88,7 @@ const Hero = ({ setSearchCriteria = () => {} }) => {
   return (
     <section
       id="home"
-      className="relative min-h-screen bg-cover bg-center bg-no-repeat bg-fixed flex items-center pt-28 pb-16"
+      className="relative min-h-screen bg-cover bg-center bg-no-repeat md:bg-fixed flex items-center pt-28 pb-16"
       style={{
         backgroundImage: `url(${heroImage})`,
       }}
@@ -112,11 +111,11 @@ const Hero = ({ setSearchCriteria = () => {} }) => {
               The Pinnacle of Real Estate Search
             </div>
 
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight text-white tracking-tight">
+            <h1 className="text-3xl xs:text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight text-white tracking-tight">
               Discover Spaces Designed For Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-amber-400 to-amber-500">Legacy.</span>
             </h1>
 
-            <p className="text-base sm:text-lg text-slate-300 max-w-2xl leading-relaxed">
+            <p className="text-sm sm:text-base lg:text-lg text-slate-300 max-w-2xl leading-relaxed">
               Explore curated luxury residences, architectural penthouses, beachfront villas, and high-yield commercial portfolios across top-tier global markets.
             </p>
 
@@ -158,7 +157,7 @@ const Hero = ({ setSearchCriteria = () => {} }) => {
             </div>
 
             {/* Stats Row */}
-            <div className="pt-6 grid grid-cols-3 gap-4 border-t border-slate-800/80 max-w-xl">
+            <div className="pt-6 grid grid-cols-3 gap-2 sm:gap-4 border-t border-slate-800/80 max-w-xl">
               {stats.map((stat, index) => (
                 <Motion.div
                   key={stat.label}
@@ -167,10 +166,10 @@ const Hero = ({ setSearchCriteria = () => {} }) => {
                   transition={{ delay: index * 0.15 + 0.3 }}
                   className="space-y-1"
                 >
-                  <h2 className="text-2xl sm:text-3xl font-black text-amber-400 tracking-tight">
+                  <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-amber-400 tracking-tight">
                     {stat.value}
                   </h2>
-                  <p className="text-xs text-slate-400 font-medium">
+                  <p className="text-[11px] sm:text-xs text-slate-400 font-medium">
                     {stat.label}
                   </p>
                 </Motion.div>

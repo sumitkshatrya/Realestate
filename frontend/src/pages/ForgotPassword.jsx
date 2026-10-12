@@ -53,6 +53,10 @@ const ForgotPassword = () => {
     try {
       const response = await authAPI.requestPasswordReset({ email });
       setSuccess(response.message || "Reset code sent to your email.");
+      const receivedCode = response.resetCode || response.code || response.data?.resetCode;
+      if (receivedCode) {
+        setCode(String(receivedCode));
+      }
       setStep(2);
     } catch (err) {
       setError(err.message || "Failed to send reset code. Please check your email.");

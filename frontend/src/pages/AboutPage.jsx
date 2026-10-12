@@ -26,24 +26,44 @@ const AboutPage = () => {
   }, []);
 
   if (loading) {
-    return <div className="text-center py-20 text-xl">Loading...</div>;
+    return (
+      <div className="min-h-screen pt-36 pb-20 flex items-center justify-center bg-slate-50">
+        <div className="text-center space-y-3">
+          <div className="w-10 h-10 border-4 border-blue-600/30 border-t-blue-600 rounded-full animate-spin mx-auto" />
+          <p className="text-slate-500 text-sm font-medium">Loading our story...</p>
+        </div>
+      </div>
+    );
   }
 
   if (error) {
-    return <div className="text-center py-20 text-xl text-red-500">{error}</div>;
+    return (
+      <div className="min-h-screen pt-36 pb-20 flex items-center justify-center bg-slate-50">
+        <div className="text-center p-8 bg-red-50 rounded-2xl border border-red-200 max-w-md mx-auto">
+          <p className="text-red-700 font-bold">{error}</p>
+        </div>
+      </div>
+    );
   }
 
   if (!content) {
-    return <div className="text-center py-20 text-xl">Content not available.</div>;
+    return (
+      <div className="min-h-screen pt-36 pb-20 flex items-center justify-center bg-slate-50">
+        <div className="text-center p-8 bg-slate-100 rounded-2xl max-w-md mx-auto">
+          <p className="text-slate-600 font-medium">Content not available.</p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="section-shell py-12 bg-slate-50">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-      >
+    <div className="min-h-screen pt-32 pb-24 bg-slate-50">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
         <div className="text-center mb-12">
           <span className="text-sm font-semibold uppercase tracking-wider text-rose-600">
             {content.subtitle}
@@ -83,6 +103,7 @@ const AboutPage = () => {
           </div>
         </div>
       </motion.div>
+      </div>
     </div>
   );
 };

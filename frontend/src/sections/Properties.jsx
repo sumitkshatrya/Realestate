@@ -8,7 +8,6 @@ import { userAPI } from "../api/userApi.js";
 import { useDebounce } from "../hooks/useDebounce";
 import toast from "react-hot-toast";
 import PropertyCard from "../components/PropertyCard";
-import AINaturalSearchBar from "../components/ai/AINaturalSearchBar";
 import AIPropertyComparisonModal from "../components/ai/AIPropertyComparisonModal";
 
 import { getSocket } from "../api/socketClient";
@@ -190,44 +189,35 @@ const Properties = ({ searchCriteria, setSearchCriteria }) => {
     : "";
 
   return (
-    <section id="properties" className="bg-slate-50 py-24 border-t border-slate-200/60">
+    <section id="properties" className="bg-slate-50 pt-10 pb-16 border-t border-slate-200/60">
       <div className="container mx-auto px-4 sm:px-6">
         
         {/* Header Title */}
         <Motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.2 }}
-          transition={{ duration: 0.6 }}
-          className="text-center max-w-3xl mx-auto mb-12"
+          transition={{ duration: 0.5 }}
+          className="text-center max-w-2xl mx-auto mb-8"
         >
-          <span className="text-xs font-extrabold uppercase tracking-widest text-amber-500 bg-amber-500/10 px-3.5 py-1.5 rounded-full border border-amber-500/20 inline-block mb-3">
-            Curated Portfolio
-          </span>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 tracking-tight">
-            Explore Standout Properties
+          <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 shadow-xs mb-3">
+            <FaWandMagicSparkles className="text-amber-500 text-xs" />
+            <span className="text-[11px] font-extrabold uppercase tracking-widest text-amber-600">
+              Curated Portfolio
+            </span>
+          </div>
+
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight leading-tight">
+            Explore <span className="text-amber-600">Standout</span> Properties
           </h2>
-          <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed">
+
+          <p className="mt-2 text-sm sm:text-base text-slate-600 leading-relaxed max-w-xl mx-auto">
             Find residential houses, luxury apartments, and prime commercial real estate available for buy or rent.
           </p>
         </Motion.div>
 
         {/* Filter Bar Controls */}
-        <div className="max-w-4xl mx-auto mb-10 space-y-4">
-          
-          {/* AI Natural Language Search */}
-          <AINaturalSearchBar
-            onApplySearch={(structured) => {
-              setSearchCriteria((prev) => ({
-                ...prev,
-                q: structured.q !== undefined ? structured.q : prev.q,
-                purpose: structured.purpose || prev.purpose,
-                category: structured.category || prev.category,
-                type: structured.purpose || prev.type,
-              }));
-            }}
-          />
-
+        <div className="max-w-4xl mx-auto mb-8 space-y-3">
           {/* Purpose Tabs (Buy / Rent / Commercial) */}
           <div className="flex items-center justify-center gap-2 p-1.5 bg-slate-200/70 backdrop-blur-md rounded-2xl max-w-xl mx-auto">
             {purposeList.map((p) => (
@@ -385,15 +375,15 @@ const Properties = ({ searchCriteria, setSearchCriteria }) => {
                       <p className="text-xs text-slate-300">{selectedProperty.address}</p>
                     </div>
                   </div>
-                  <a
-                    href={`https://www.openstreetmap.org/?mlat=${selectedProperty.latitude}&mlon=${selectedProperty.longitude}#map=14/${selectedProperty.latitude}/${selectedProperty.longitude}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-md transition"
-                  >
-                    Open Fullscreen Map
-                  </a>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    <a
+                      href={`https://www.openstreetmap.org/?mlat=${selectedProperty.latitude}&mlon=${selectedProperty.longitude}#map=14/${selectedProperty.latitude}/${selectedProperty.longitude}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 font-bold text-xs shadow-md transition cursor-pointer"
+                    >
+                      Open Fullscreen Map
+                    </a>
                     <a
                       href={
                         typeof selectedProperty.latitude === "number" && typeof selectedProperty.longitude === "number"
@@ -402,7 +392,7 @@ const Properties = ({ searchCriteria, setSearchCriteria }) => {
                       }
                       target="_blank"
                       rel="noreferrer"
-                      className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-md transition cursor-pointer"
+                      className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-md transition cursor-pointer"
                     >
                       Open Google Maps
                     </a>

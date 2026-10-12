@@ -140,15 +140,34 @@ const AgentProfile = () => {
   }, [properties, searchQuery, sortBy]);
 
   if (loading) {
-    return <div className="text-center py-20 text-xl">Loading Agent Profile...</div>;
+    return (
+      <div className="min-h-screen pt-36 pb-20 flex items-center justify-center bg-slate-50">
+        <div className="text-center space-y-3">
+          <div className="w-10 h-10 border-4 border-blue-600/30 border-t-blue-600 rounded-full animate-spin mx-auto" />
+          <p className="text-slate-500 text-sm font-medium">Loading Agent Profile...</p>
+        </div>
+      </div>
+    );
   }
 
   if (error) {
-    return <div className="text-center py-20 text-xl text-red-500">{error}</div>;
+    return (
+      <div className="min-h-screen pt-36 pb-20 flex items-center justify-center bg-slate-50">
+        <div className="text-center p-8 bg-red-50 rounded-2xl border border-red-200 max-w-md mx-auto">
+          <p className="text-red-700 font-bold">{error}</p>
+        </div>
+      </div>
+    );
   }
 
   if (!agent) {
-    return <div className="text-center py-20 text-xl">Agent not found.</div>;
+    return (
+      <div className="min-h-screen pt-36 pb-20 flex items-center justify-center bg-slate-50">
+        <div className="text-center p-8 bg-slate-100 rounded-2xl max-w-md mx-auto">
+          <p className="text-slate-600 font-medium">Agent not found.</p>
+        </div>
+      </div>
+    );
   }
 
   const handleMarkerClick = (propertyId) => {
@@ -161,12 +180,13 @@ const AgentProfile = () => {
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
   return (
-    <div className="section-shell py-12">
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="relative">
-        <Link to="/#properties" className="inline-flex items-center gap-2 text-rose-600 font-semibold mb-8 hover:underline">
-          <FaArrowLeft />
-          Back to Listings
-        </Link>
+    <div className="min-h-screen pt-32 pb-24 bg-slate-50">
+      <div className="container mx-auto px-4 sm:px-6 max-w-7xl">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="relative">
+          <Link to="/#properties" className="inline-flex items-center gap-2 text-blue-600 font-semibold mb-8 hover:underline">
+            <FaArrowLeft />
+            Back to Listings
+          </Link>
 
         <div className="relative bg-white p-8 rounded-2xl shadow-lg border border-slate-200 mb-12 flex flex-col md:flex-row items-center gap-8">
           {agent.profilePicture ? (
@@ -401,6 +421,7 @@ const AgentProfile = () => {
           </motion.button>
         )}
       </AnimatePresence>
+      </div>
     </div>
   );
 };

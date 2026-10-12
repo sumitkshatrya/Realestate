@@ -147,7 +147,7 @@ export default function SubmitTestimonial() {
   };
 
   return (
-    <div className="bg-slate-950 min-h-screen pt-24 pb-20 text-slate-100 relative overflow-hidden">
+    <div className="bg-slate-950 min-h-screen pt-28 sm:pt-32 pb-20 text-slate-100 relative overflow-hidden">
       {/* Ambient background glows */}
       <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-amber-500/10 blur-[120px] rounded-full pointer-events-none" />
       <div className="absolute bottom-10 right-10 w-96 h-96 bg-blue-600/10 blur-[120px] rounded-full pointer-events-none" />

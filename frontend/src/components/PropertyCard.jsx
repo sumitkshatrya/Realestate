@@ -74,10 +74,10 @@ const PropertyCard = ({
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent" />
 
           {/* Badges */}
-          <div className="absolute top-4 left-4 flex flex-wrap gap-1.5 z-10 items-center">
+          <div className="absolute top-4 left-4 flex flex-wrap gap-1.5 z-10 items-center max-w-[calc(100%-140px)]">
             {/* Purpose Tag */}
             <span
-              className={`rounded-full px-3 py-1 text-[11px] font-extrabold uppercase tracking-wider text-white shadow-md ${
+              className={`rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider text-white shadow-md ${
                 currentPurpose === "rent"
                   ? "bg-blue-600"
                   : currentPurpose === "commercial"
@@ -94,39 +94,14 @@ const PropertyCard = ({
 
             {/* Category Tag */}
             {category && (
-              <span className="rounded-full bg-slate-900/80 backdrop-blur-md px-3 py-1 text-[11px] font-semibold text-slate-200 border border-white/20 shadow-md">
+              <span className="rounded-full bg-slate-900/80 backdrop-blur-md px-2.5 py-1 text-[10px] font-semibold text-slate-200 border border-white/20 shadow-md">
                 {category}
               </span>
             )}
-            {/* AI Match Score Badge */}
-            <AIMatchScoreBadge property={prop} searchCriteria={searchCriteria} />
-          </div>
 
-          {/* Compare Checkbox Button */}
-          {onToggleCompare && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                onToggleCompare(prop);
-              }}
-              className={`absolute top-4 right-16 z-20 flex h-9 items-center gap-1.5 rounded-full px-3 text-[10px] font-extrabold uppercase tracking-wider shadow-md backdrop-blur-md transition cursor-pointer ${
-                isCompared
-                  ? "bg-amber-500 text-slate-950 border border-amber-400"
-                  : "bg-slate-900/70 text-slate-200 hover:bg-slate-800 border border-white/20"
-              }`}
-              title="Add to AI comparison"
-            >
-              <FaScaleUnbalanced className="text-xs" />
-              {isCompared ? "Compared" : "+ Compare"}
-            </button>
-          )}
-
-          {/* Availability Status Tag */}
-          <div className="absolute top-4 right-16 z-10">
+            {/* Availability Status Tag */}
             <span
-              className={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wider shadow-md ${
+              className={`rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider shadow-md ${
                 currentStatus === "sold"
                   ? "bg-rose-600 text-white"
                   : currentStatus === "rented"
@@ -138,39 +113,53 @@ const PropertyCard = ({
             >
               {currentStatus}
             </span>
+
+            {/* AI Match Score Badge */}
+            <AIMatchScoreBadge property={prop} searchCriteria={searchCriteria} />
           </div>
 
-          {/* Status Overlay for Sold / Rented / Booked */}
-          {currentStatus !== "available" && (
-            <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-[2px] flex items-center justify-center pointer-events-none">
-              <span className="transform -rotate-6 border-2 border-white text-white font-black text-xl tracking-widest uppercase px-6 py-2 rounded-2xl shadow-2xl bg-slate-900/80">
-                {currentStatus === "sold"
-                  ? "SOLD"
-                  : currentStatus === "rented"
-                  ? "RENTED"
-                  : "BOOKED"}
-              </span>
-            </div>
-          )}
+          {/* Top-Right Action Controls (Compare + Favorite) */}
+          <div className="absolute top-4 right-4 z-20 flex items-center gap-1.5">
+            {/* Compare Checkbox Button */}
+            {onToggleCompare && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  onToggleCompare(prop);
+                }}
+                className={`flex h-9 items-center gap-1 rounded-full px-2.5 text-[10px] font-extrabold uppercase tracking-wider shadow-md backdrop-blur-md transition cursor-pointer ${
+                  isCompared
+                    ? "bg-amber-500 text-slate-950 border border-amber-400"
+                    : "bg-slate-900/70 text-slate-200 hover:bg-slate-800 border border-white/20"
+                }`}
+                title="Add to AI comparison"
+              >
+                <FaScaleUnbalanced className="text-xs" />
+                <span className="hidden xs:inline">{isCompared ? "Compared" : "+ Compare"}</span>
+              </button>
+            )}
 
-          {/* Favorite Heart Button */}
-          {onToggleFavorite && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                if (targetId) onToggleFavorite(targetId);
-              }}
-              className={`absolute top-4 right-4 z-20 flex h-10 w-10 items-center justify-center rounded-full backdrop-blur-md transition-all duration-300 shadow-md cursor-pointer ${
-                isFavorite
-                  ? "bg-red-500 text-white scale-105"
-                  : "bg-slate-900/60 text-white hover:bg-red-500 hover:text-white"
-              }`}
-              aria-label={`Save ${name} to favorites`}
-            >
-              <FaHeart className={`text-base transition-transform ${isFavorite ? "scale-110" : ""}`} />
-            </button>
-          )}
+            {/* Favorite Heart Button */}
+            {onToggleFavorite && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  if (targetId) onToggleFavorite(targetId);
+                }}
+                className={`flex h-9 w-9 items-center justify-center rounded-full backdrop-blur-md transition-all duration-300 shadow-md cursor-pointer shrink-0 ${
+                  isFavorite
+                    ? "bg-red-500 text-white scale-105"
+                    : "bg-slate-900/60 text-white hover:bg-red-500 hover:text-white"
+                }`}
+                aria-label={`Save ${name} to favorites`}
+              >
+                <FaHeart className={`text-sm transition-transform ${isFavorite ? "scale-110" : ""}`} />
+              </button>
+            )}
+          </div>
 
           {/* Bottom Title & Address overlay */}
           <div className="absolute bottom-0 left-0 right-0 p-5 text-white z-10">

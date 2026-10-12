@@ -8,10 +8,13 @@ import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 
+import { userAPI } from '../api/userApi';
+import toast from 'react-hot-toast';
+
 const RecentlyViewed = () => {
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
+  const { user, isAuthenticated, updateUser } = useAuth();
 
   useEffect(() => {
     const fetchRecentlyViewed = async () => {
@@ -26,7 +29,7 @@ const RecentlyViewed = () => {
         const response = await propertyAPI.getPropertiesByIds(viewedIds);
         // Ensure the order is the same as the viewedIds (most recent first)
         const sortedProperties = viewedIds
-          .map(id => response.data.find(p => p._id === id))
+          .map(id => response.data?.find(p => p._id === id))
           .filter(Boolean); // Filter out any properties that might not have been found
         setProperties(sortedProperties);
       } catch (error) {
@@ -39,40 +42,65 @@ const RecentlyViewed = () => {
     fetchRecentlyViewed();
   }, []);
 
+  const handleToggleFavorite = async (propertyId) => {
+    if (!isAuthenticated) {
+      toast.error("Please sign in to save properties.");
+      return;
+    }
+    try {
+      const res = await userAPI.toggleFavorite(propertyId);
+      if (updateUser && res?.data?.favorites) {
+        updateUser({ favorites: res.data.favorites });
+      }
+      const isFav = user?.favorites?.includes(propertyId);
+      toast.success(isFav ? "Removed from favorites." : "Added to favorites!");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to update favorites.");
+    }
+  };
+
   if (loading || properties.length === 0) {
     return null; // Don't render the section if there's nothing to show or it's loading
   }
 
   return (
-    <div className="section-shell py-16 bg-slate-50">
-      <div className="text-center mb-12">
-        <h2 className="font-serif text-3xl font-bold text-slate-900">Recently Viewed Properties</h2>
-        <p className="text-slate-600 mt-2">Pick up where you left off.</p>
+    <section className="py-20 bg-slate-50 border-t border-slate-200/60 overflow-hidden">
+      <div className="container mx-auto px-4 sm:px-6">
+        <div className="text-center max-w-2xl mx-auto mb-12">
+          <span className="text-xs font-extrabold uppercase tracking-widest text-amber-500 bg-amber-500/10 px-3.5 py-1.5 rounded-full border border-amber-500/20 inline-block mb-3">
+            Your History
+          </span>
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">Recently Viewed Properties</h2>
+          <p className="text-slate-600 mt-2 text-sm sm:text-base">Pick up where you left off in your search.</p>
+        </div>
+        <Swiper
+          modules={[Navigation, Pagination, A11y]}
+          spaceBetween={24}
+          slidesPerView={1}
+          navigation
+          pagination={{ clickable: true }}
+          breakpoints={{
+            640: { slidesPerView: 2, spaceBetween: 24 },
+            1024: { slidesPerView: 3, spaceBetween: 30 },
+          }}
+          className="pb-14"
+        >
+          {properties.map((property) => (
+            <SwiperSlide key={property._id}>
+              <div className="h-full">
+                <PropertyCard
+                  property={property}
+                  isFavorite={user?.favorites?.includes(property._id)}
+                  onToggleFavorite={handleToggleFavorite}
+                  isAuthenticated={isAuthenticated}
+                />
+              </div>
+            </SwiperSlide>
+          ))}
+        </Swiper>
       </div>
-      <Swiper
-        modules={[Navigation, Pagination, A11y]}
-        spaceBetween={30}
-        slidesPerView={1}
-        navigation
-        pagination={{ clickable: true }}
-        breakpoints={{
-          640: { slidesPerView: 2 },
-          1024: { slidesPerView: 3 },
-        }}
-        className="pb-12" // Add padding for pagination
-      >
-        {properties.map((property) => (
-          <SwiperSlide key={property._id}>
-            <PropertyCard
-              property={property}
-              isFavorite={user?.favorites?.includes(property._id)}
-              // The onToggleFavorite prop would need to be passed if you want that functionality here
-              onToggleFavorite={null} 
-            />
-          </SwiperSlide>
-        ))}
-      </Swiper>
-    </div>
+    </section>
   );
 };
 

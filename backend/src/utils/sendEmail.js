@@ -17,15 +17,19 @@ export const sendEmail = async (to, subject, html) => {
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
-        user: smtpUser,
-        pass: smtpPass,
+        user: smtpUser.trim(),
+        pass: smtpPass.trim(),
       },
     });
 
+    const senderEmail = smtpUser.trim();
+    const plainText = typeof html === "string" ? html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim() : "";
+
     await transporter.sendMail({
-      from: `"Website Contact" <${smtpUser}>`,
+      from: senderEmail,
       to,
       subject,
+      text: plainText,
       html,
     });
 

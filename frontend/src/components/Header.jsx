@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, Link as RouterLink, useLocation } from "react-router-dom";
 import { Link as ScrollLink } from "react-scroll";
 import { motion as Motion, AnimatePresence } from "framer-motion";
 import { FaArrowRight, FaBars, FaXmark, FaHeart, FaUser, FaRightFromBracket, FaPlus, FaBuilding } from "react-icons/fa6";
 import logo from "../assets/images/logo.png";
 import { useAuth } from "../context/useAuth";
+import { useClickOutside } from "../hooks/useClickOutside";
 import MobileMenu from "./MobileMenu";
 import SellPropertyWizardModal from "./SellPropertyWizardModal";
 
@@ -17,6 +18,9 @@ const Header = () => {
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const [isSellModalOpen, setIsSellModalOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+
+  const profileDropdownRef = useRef(null);
+  useClickOutside(profileDropdownRef, () => setIsProfileDropdownOpen(false));
 
   const favoritesCount = user?.favorites?.length || 0;
 
@@ -51,7 +55,7 @@ const Header = () => {
   const handleLogoClick = () => {
     navigate("/");
     closeMenu();
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    document.documentElement.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   const navItems = [
@@ -154,7 +158,7 @@ const Header = () => {
                 </RouterLink>
 
                 {/* Profile Dropdown Toggle */}
-                <div className="relative">
+                <div ref={profileDropdownRef} className="relative">
                   <button
                     onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
                     className="flex items-center gap-2 rounded-xl bg-slate-800 hover:bg-slate-700 px-3 py-2 text-white font-semibold text-xs border border-slate-700 cursor-pointer"
@@ -240,6 +244,7 @@ const Header = () => {
         {/* Mobile Menu Component */}
         <MobileMenu
           isOpen={isMenuOpen}
+          user={user}
           navItems={navItems}
           isAuthenticated={isAuthenticated}
           onClose={closeMenu}

@@ -269,26 +269,35 @@ const requestPasswordReset = catchAsyncError(async (req, res, next) => {
   await user.save();
 
   // Send email (safe error handling if SMTP is not configured)
+  let emailDelivered = false;
   try {
     await sendEmail(
       email,
-      "Password Reset Code",
-      `<div style="font-family: Arial, sans-serif; padding: 20px;">
-        <h2>Password Reset Code</h2>
-        <p>Your password reset code is:</p>
-        <h1 style="color: #d97706; letter-spacing: 4px;">${resetCode}</h1>
-        <p>This code expires in 10 minutes.</p>
+      `Your PROPSESTATE Password Reset Code: ${resetCode}`,
+      `<div style="font-family: Arial, sans-serif; padding: 25px; max-width: 500px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; rounded: 12px;">
+        <h2 style="color: #0f172a; margin-bottom: 8px;">Password Reset Request</h2>
+        <p style="color: #64748b; font-size: 14px;">Use the verification code below to reset your password on PROPSESTATE:</p>
+        <div style="background: #f8fafc; border: 1px dashed #cbd5e1; padding: 16px; text-align: center; margin: 20px 0; border-radius: 8px;">
+          <span style="font-size: 32px; font-weight: 800; color: #d97706; letter-spacing: 6px; font-family: monospace;">${resetCode}</span>
+        </div>
+        <p style="color: #94a3b8; font-size: 12px;">This code will expire in 10 minutes. If you did not request this, please ignore this email.</p>
       </div>`
     );
+    emailDelivered = true;
   } catch (emailErr) {
     console.warn("⚠️ Password reset email delivery skipped or failed:", emailErr.message);
   }
 
   console.log(`🔑 [PASSWORD RESET CODE] for ${email}: ${resetCode}`);
 
-  res
-    .status(200)
-    .json({ success: true, message: "Reset code sent to your email" });
+  res.status(200).json({
+    success: true,
+    message: emailDelivered
+      ? "Reset code sent to your email (please also check Spam/Promotions folder)."
+      : "Reset code generated.",
+    resetCode: resetCode,
+    emailDelivered,
+  });
 });
 // =========================== Reset Password ============================================
 const resetPassword = catchAsyncError(async (req, res, next) => {

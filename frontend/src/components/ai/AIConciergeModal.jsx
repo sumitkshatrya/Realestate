@@ -70,7 +70,7 @@ const AIConciergeModal = ({ isOpen, onClose, onApplySearch }) => {
             className="w-full rounded-2xl border border-slate-300 p-4 text-sm text-slate-900 placeholder-slate-400 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/10 resize-none font-medium"
           />
 
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
             <div className="flex flex-wrap gap-1.5">
               {sampleConversations.slice(0, 2).map((s) => (
                 <button
