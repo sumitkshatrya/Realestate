@@ -54,7 +54,9 @@ class ApiClient {
       }
       return response.json();
     } catch (error) {
-      console.error("API Client Error:", error);
+      if (!formattedEndpoint.includes("/verify-user")) {
+        console.error("API Client Error:", error);
+      }
       throw error;
     }
   }

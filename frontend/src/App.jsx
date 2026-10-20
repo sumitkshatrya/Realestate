@@ -1,5 +1,5 @@
 import React from "react";
-import { Routes, Route, useLocation } from "react-router-dom";
+import { Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { Toaster } from "react-hot-toast";
 import Layout from "./components/Layout"; // Import the new Layout component
@@ -70,6 +70,9 @@ const App = () => {
         {/* Routes that should have the main layout */}
         <Route element={<Layout />}>
           <Route path="/" element={<Home />} />
+          <Route path="/index.html" element={<Home />} />
+          <Route path="/home" element={<Navigate to="/" replace />} />
+          <Route path="/properties" element={<Home />} />
           <Route path="/testimonials" element={<TestimonialsList />} />
           <Route path="/about-us" element={<AboutPage />} />
           <Route path="/submit-testimonial" element={<SubmitTestimonial />} />
@@ -79,6 +82,8 @@ const App = () => {
           <Route path="/my-favorites" element={<MyFavorites />} />
           <Route path="/profile" element={<UserProfile />} />
           <Route path="/agent/:id" element={<AgentProfile />} />
+          {/* Catch-all fallback route to prevent blank page */}
+          <Route path="*" element={<Home />} />
         </Route>
 
         {/* Full-page routes without the main layout (e.g., auth forms) */}

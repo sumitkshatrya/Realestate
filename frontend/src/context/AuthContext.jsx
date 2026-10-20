@@ -47,6 +47,11 @@ export const AuthProvider = ({ children }) => {
     window.addEventListener("auth:unauthorized", handleUnauthorized);
 
     const verifyUser = async () => {
+      const token = localStorage.getItem("userToken");
+      if (!token) {
+        handleStoredUser();
+        return;
+      }
       try {
         const response = await authAPI.verify();
         const userData = response?.data || response?.user || null;
@@ -56,6 +61,8 @@ export const AuthProvider = ({ children }) => {
         }
       } catch {
         console.log("No active session or token is invalid.");
+        localStorage.removeItem("userToken");
+        localStorage.removeItem("user");
       }
       handleStoredUser();
     };
