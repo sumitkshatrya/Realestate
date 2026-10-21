@@ -4,6 +4,7 @@ import {
   loginAdmin,
   forgotPassword,
   resetPassword,
+  changePassword,
 } from "../controllers/adminController.js";
 import { getAllContacts, deleteContact } from "../controllers/ContactController.js";
 import {
@@ -25,6 +26,9 @@ router.post("/login", loginAdmin);
 // Forgot / Reset password
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password", resetPassword);
+
+// Change password for logged-in admin
+router.put("/change-password", protectAdmin, changePassword);
 
 // Admin routes
 router.get("/contacts", protectAdmin, getAllContacts);

@@ -15,6 +15,7 @@ import {
 } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { clearFetchCache } from "../api/useFetchData";
+import { changeAdminPassword } from "../api/adminApi";
 
 const Settings = () => {
   const [activeTab, setActiveTab] = useState("general");
@@ -51,7 +52,7 @@ const Settings = () => {
     }, 600);
   };
 
-  const handleSaveSecurity = (e) => {
+  const handleSaveSecurity = async (e) => {
     e.preventDefault();
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       toast.error("New passwords do not match!");
@@ -63,11 +64,19 @@ const Settings = () => {
     }
 
     setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      const res = await changeAdminPassword({
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword,
+      });
       setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
-      toast.success("Admin password updated successfully!");
-    }, 600);
+      toast.success(res.message || "Admin password updated successfully!");
+    } catch (err) {
+      // Axios interceptor will display toast error if returned
+      console.error("Change password error:", err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleClearCache = () => {

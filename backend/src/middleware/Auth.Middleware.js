@@ -8,9 +8,9 @@ export const protectAdmin = (req, res, next) => {
     }
 
     const token = authHeader.split(" ")[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "testing-realstate");
 
-    req.admin = decoded; // { id, role }
+    req.admin = decoded; // { id, role, email }
     next();
   } catch (error) {
     res.status(401).json({ error: "Token failed or expired" });

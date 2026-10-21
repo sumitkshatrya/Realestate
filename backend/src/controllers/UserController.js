@@ -18,12 +18,16 @@ const register = catchAsyncError(async (req, res, next) => {
       return next(new ErrorHandler("All fields are required", 400));
     }
 
+    const cleanEmail = String(email).trim().toLowerCase();
+    const cleanUsername = String(username).trim();
+    const cleanPhone = String(phone).trim();
+
     if (!["email", "sms", "call"].includes(method)) {
       return next(new ErrorHandler("Invalid verification method", 400));
     }
 
     const phoneRegex = /^\+\d{10,15}$/;
-    if (!phoneRegex.test(phone)) {
+    if (!phoneRegex.test(cleanPhone)) {
       return next(
         new ErrorHandler(
           "Phone must be in E.164 format, e.g., +919999999999",
@@ -32,7 +36,13 @@ const register = catchAsyncError(async (req, res, next) => {
       );
     }
 
-    let user = await User.findOne({ $or: [{ email }, { phone }] });
+    const escapedEmail = cleanEmail.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    let user = await User.findOne({
+      $or: [
+        { email: { $regex: new RegExp(`^${escapedEmail}$`, "i") } },
+        { phone: cleanPhone },
+      ],
+    });
 
     if (user && user.accountVerified) {
       return next(new ErrorHandler("Phone or Email is already used", 400));
@@ -40,7 +50,10 @@ const register = catchAsyncError(async (req, res, next) => {
 
     if (user && !user.accountVerified) {
       const attempts = await User.countDocuments({
-        $or: [{ email }, { phone }],
+        $or: [
+          { email: { $regex: new RegExp(`^${escapedEmail}$`, "i") } },
+          { phone: cleanPhone },
+        ],
         accountVerified: false,
       });
       if (attempts >= 3) {
@@ -53,9 +66,9 @@ const register = catchAsyncError(async (req, res, next) => {
       }
     } else if (!user) {
       user = await User.create({
-        username,
-        email,
-        phone,
+        username: cleanUsername,
+        email: cleanEmail,
+        phone: cleanPhone,
         password,
         verificationMethod: method,
       });
@@ -68,9 +81,9 @@ const register = catchAsyncError(async (req, res, next) => {
       await sendVerificationCode(
         method,
         verificationCode,
-        phone,
-        email,
-        username
+        cleanPhone,
+        cleanEmail,
+        cleanUsername
       );
       res
         .status(200)
@@ -94,7 +107,8 @@ const register = catchAsyncError(async (req, res, next) => {
     next(error);
   }
 });
-//=======================loginUser==========
+
+// ================= LOGIN USER =================
 const loginUser = async (req, res, next) => {
   try {
     const { username, password } = req.body;
@@ -104,7 +118,14 @@ const loginUser = async (req, res, next) => {
         .json(new ApiResponse(null, "All fields are required", 400));
     }
 
-    const user = await User.findOne({ username });
+    const cleanInput = String(username).trim();
+    const escapedInput = cleanInput.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const user = await User.findOne({
+      $or: [
+        { username: { $regex: new RegExp(`^${escapedInput}$`, "i") } },
+        { email: { $regex: new RegExp(`^${escapedInput}$`, "i") } },
+      ],
+    });
     if (!user) {
       return res.status(404).json(new ApiResponse(null, "User not found", 404));
     }
@@ -131,13 +152,13 @@ const loginUser = async (req, res, next) => {
     // Generate JWT
     const accessToken = jwt.sign(
       { id: user._id },
-      process.env.ACCESS_TOKEN_SECRET,
+      process.env.ACCESS_TOKEN_SECRET || "testing-realstate",
       { expiresIn: "1h" }
     );
 
     const refreshToken = jwt.sign(
       { id: user._id },
-      process.env.REFRESH_TOKEN_SECRET,
+      process.env.REFRESH_TOKEN_SECRET || "testing-refreshtoken",
       { expiresIn: "7d" }
     );
 
@@ -197,7 +218,7 @@ const refreshAccessToken = async (req, res, next) => {
 
     let decoded;
     try {
-      decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+      decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET || "testing-refreshtoken");
     } catch (err) {
       return res.status(401).json({ message: "Invalid refresh token" });
     }
@@ -209,13 +230,13 @@ const refreshAccessToken = async (req, res, next) => {
 
     const accessToken = jwt.sign(
       { id: user._id },
-      process.env.ACCESS_TOKEN_SECRET,
+      process.env.ACCESS_TOKEN_SECRET || "testing-realstate",
       { expiresIn: "1h" }
     );
 
     const newRefreshToken = jwt.sign(
       { id: user._id },
-      process.env.REFRESH_TOKEN_SECRET,
+      process.env.REFRESH_TOKEN_SECRET || "testing-refreshtoken",
       { expiresIn: "7d" }
     );
 
@@ -254,33 +275,41 @@ const verifyUser = async (req, res) => {
     });
   }
 };
-//==================== FORGOT PASSWORD ===========
+
+// ================= FORGOT PASSWORD =================
 const requestPasswordReset = catchAsyncError(async (req, res, next) => {
   const { email } = req.body;
   if (!email) return next(new ErrorHandler("Email is required", 400));
 
-  const user = await User.findOne({ email });
-  if (!user) return next(new ErrorHandler("User not found", 404));
+  const cleanEmail = String(email).trim().toLowerCase();
+  const escapedEmail = cleanEmail.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const user = await User.findOne({
+    email: { $regex: new RegExp(`^${escapedEmail}$`, "i") },
+  });
+  if (!user) return next(new ErrorHandler("User not found with this email address", 404));
 
   // Generate reset code (5-digit)
   const resetCode = Math.floor(10000 + Math.random() * 90000);
   user.resetPassword = String(resetCode);
-  user.resetPasswordExpire = Date.now() + 10 * 60 * 1000; // 10 min
+  user.resetPasswordExpire = Date.now() + 15 * 60 * 1000; // 15 min
   await user.save();
 
   // Send email (safe error handling if SMTP is not configured)
   let emailDelivered = false;
   try {
     await sendEmail(
-      email,
+      cleanEmail,
       `Your PROPSESTATE Password Reset Code: ${resetCode}`,
-      `<div style="font-family: Arial, sans-serif; padding: 25px; max-width: 500px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; rounded: 12px;">
-        <h2 style="color: #0f172a; margin-bottom: 8px;">Password Reset Request</h2>
-        <p style="color: #64748b; font-size: 14px;">Use the verification code below to reset your password on PROPSESTATE:</p>
-        <div style="background: #f8fafc; border: 1px dashed #cbd5e1; padding: 16px; text-align: center; margin: 20px 0; border-radius: 8px;">
-          <span style="font-size: 32px; font-weight: 800; color: #d97706; letter-spacing: 6px; font-family: monospace;">${resetCode}</span>
+      `<div style="font-family: Arial, sans-serif; padding: 25px; max-width: 500px; margin: 0 auto; background: #0f172a; color: #f8fafc; border: 1px solid #334155; border-radius: 16px;">
+        <h2 style="color: #f59e0b; margin-top: 0; font-size: 22px;">Password Reset Request</h2>
+        <p style="color: #cbd5e1; font-size: 14px; line-height: 1.6;">Hello ${user.username || "User"},</p>
+        <p style="color: #cbd5e1; font-size: 14px; line-height: 1.6;">Use the 5-digit verification code below to reset your password on <strong>PROPSESTATE</strong>:</p>
+        <div style="background: #1e293b; border: 1px dashed #f59e0b; padding: 18px; text-align: center; margin: 25px 0; border-radius: 12px;">
+          <span style="font-size: 34px; font-weight: 800; color: #f59e0b; letter-spacing: 8px; font-family: monospace;">${resetCode}</span>
         </div>
-        <p style="color: #94a3b8; font-size: 12px;">This code will expire in 10 minutes. If you did not request this, please ignore this email.</p>
+        <p style="color: #94a3b8; font-size: 12px; line-height: 1.5;">This code will expire in <strong>15 minutes</strong>. If you did not request this, please secure your account or ignore this email.</p>
+        <hr style="border: 0; border-top: 1px solid #334155; margin: 20px 0;" />
+        <p style="color: #64748b; font-size: 11px;">PROPSESTATE Security Team</p>
       </div>`
     );
     emailDelivered = true;
@@ -288,18 +317,19 @@ const requestPasswordReset = catchAsyncError(async (req, res, next) => {
     console.warn("⚠️ Password reset email delivery skipped or failed:", emailErr.message);
   }
 
-  console.log(`🔑 [PASSWORD RESET CODE] for ${email}: ${resetCode}`);
+  console.log(`🔑 [USER PASSWORD RESET CODE] for ${cleanEmail}: ${resetCode}`);
 
   res.status(200).json({
     success: true,
     message: emailDelivered
-      ? "Reset code sent to your email (please also check Spam/Promotions folder)."
+      ? "Reset code sent to your email (please also check your Spam/Promotions folder)."
       : "Reset code generated.",
     resetCode: resetCode,
     emailDelivered,
   });
 });
-// =========================== Reset Password ============================================
+
+// ================= RESET PASSWORD =================
 const resetPassword = catchAsyncError(async (req, res, next) => {
   const { email, code, newPassword } = req.body;
   if (!email || !code || !newPassword)
@@ -307,8 +337,12 @@ const resetPassword = catchAsyncError(async (req, res, next) => {
       new ErrorHandler("Email, code, and new password are required", 400)
     );
 
-  const user = await User.findOne({ email });
-  if (!user) return next(new ErrorHandler("User not found", 404));
+  const cleanEmail = String(email).trim().toLowerCase();
+  const escapedEmail = cleanEmail.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const user = await User.findOne({
+    email: { $regex: new RegExp(`^${escapedEmail}$`, "i") },
+  });
+  if (!user) return next(new ErrorHandler("User not found with this email address", 404));
 
   if (!user.resetPassword || String(user.resetPassword).trim() !== String(code).trim())
     return next(new ErrorHandler("Invalid reset code", 400));
@@ -414,12 +448,13 @@ function generateEmailTemplate(username, verificationCode) {
         </div>
         <p>This code will expire in <b>10 minutes</b>.</p>
         <p>If you did not request this, please ignore this email.</p>
-        <p style="font-size:12px;color:#888;">&copy; 2025 Your Company</p>
+        <p style="font-size:12px;color:#888;">&copy; 2025 PROPSESTATE</p>
       </div>
     </body>
   </html>
   `;
 }
+
 // ================= VERIFY OTP =================
 const verifyOtp = catchAsyncError(async (req, res, next) => {
   const { email, phone, code, verificationCode } = req.body;
@@ -431,7 +466,17 @@ const verifyOtp = catchAsyncError(async (req, res, next) => {
   }
 
   // 2. Find user
-  const user = await User.findOne({ $or: [{ email }, { phone }] });
+  const cleanEmail = email ? String(email).trim().toLowerCase() : null;
+  const escapedEmail = cleanEmail ? cleanEmail.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") : null;
+  const conditions = [];
+  if (escapedEmail) {
+    conditions.push({ email: { $regex: new RegExp(`^${escapedEmail}$`, "i") } });
+  }
+  if (phone) {
+    conditions.push({ phone: String(phone).trim() });
+  }
+
+  const user = await User.findOne({ $or: conditions });
   if (!user) return next(new ErrorHandler("User not found", 404));
 
   // 3. Check verification code
@@ -456,13 +501,13 @@ const verifyOtp = catchAsyncError(async (req, res, next) => {
   // Generate JWT tokens
   const accessToken = jwt.sign(
     { id: user._id },
-    process.env.ACCESS_TOKEN_SECRET,
+    process.env.ACCESS_TOKEN_SECRET || "testing-realstate",
     { expiresIn: "1h" }
   );
 
   const refreshToken = jwt.sign(
     { id: user._id },
-    process.env.REFRESH_TOKEN_SECRET,
+    process.env.REFRESH_TOKEN_SECRET || "testing-refreshtoken",
     { expiresIn: "7d" }
   );
 

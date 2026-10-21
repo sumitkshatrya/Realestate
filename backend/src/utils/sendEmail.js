@@ -10,32 +10,34 @@ export const sendEmail = async (to, subject, html) => {
     }
 
     if (!smtpUser || !smtpPass) {
-      console.warn("SMTP mail credentials are missing in environment variables. Skipping actual email send.");
+      console.warn("⚠️ SMTP mail credentials are missing in environment variables. Skipping actual email send.");
       return;
     }
+
+    const cleanedUser = smtpUser.trim();
+    const cleanedPass = smtpPass.replace(/\s+/g, "");
 
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
-        user: smtpUser.trim(),
-        pass: smtpPass.trim(),
+        user: cleanedUser,
+        pass: cleanedPass,
       },
     });
 
-    const senderEmail = smtpUser.trim();
     const plainText = typeof html === "string" ? html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim() : "";
 
     await transporter.sendMail({
-      from: senderEmail,
-      to,
+      from: `"PROPSESTATE" <${cleanedUser}>`,
+      to: typeof to === "string" ? to.trim() : to,
       subject,
       text: plainText,
       html,
     });
 
-    console.log(`Email successfully sent to ${to}`);
+    console.log(`✅ Email successfully sent to ${to}`);
   } catch (error) {
-    console.error("Email sending error:", error.message || error);
+    console.error("❌ Email sending error:", error.message || error);
     throw error;
   }
-};
+};

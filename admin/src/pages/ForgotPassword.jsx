@@ -18,18 +18,20 @@ const ForgotPassword = () => {
     setMessage("");
 
     try {
-      const response = await forgotPassword({ email });
+      const cleanEmail = String(email).trim().toLowerCase();
+      const response = await forgotPassword({ email: cleanEmail });
 
       setMessage(
         response.message ||
           "If an account with that email exists, a password reset link has been sent."
       );
     } catch (error) {
-      console.error(error);
-      // Generic response prevents email enumeration
-      setMessage(
-        "If an account with that email exists, a password reset link has been sent."
-      );
+      console.error("Forgot password error:", error);
+      const errMsg =
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        "If an account with that email exists, a password reset link has been sent.";
+      setMessage(errMsg);
     }
   };
 
