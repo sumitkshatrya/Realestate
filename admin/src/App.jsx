@@ -37,7 +37,7 @@ const AdminLayout = () => {
           />
           <main className="flex-1 px-3 sm:px-6 lg:px-8 py-4 sm:py-6 overflow-y-auto">
             <Routes>
-              <Route index element={<Navigate to="dashboard" replace />} />
+              <Route index element={<Navigate to="/dashboard" replace />} />
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="testimonials" element={<TestimonialsManager />} />
               <Route path="services" element={<ServicesManager />} />
@@ -49,7 +49,7 @@ const AdminLayout = () => {
               <Route path="properties" element={<PropertiesManager />} />
               <Route path="users" element={<UsersManager />} />
               <Route path="settings" element={<Settings />} />
-              <Route path="*" element={<Navigate to="dashboard" replace />} />
+              <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Routes>
           </main>
         </div>
@@ -67,6 +67,8 @@ const App = () => {
   return (
     <Routes>
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/index.html" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/index.html/*" element={<Navigate to="/dashboard" replace />} />
       <Route path="/login" element={<Login />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password/:token" element={<ResetPassword />} />
